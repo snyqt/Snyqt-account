@@ -1,0 +1,110 @@
+:root {
+    --bg-color: #F8F9FA;
+    --bg-gradient-start: #B8C4FF;
+    --bg-gradient-middle1: #98A8F8;
+    --bg-gradient-middle2: #FFD6BA;
+    --bg-gradient-end: #FF9E7D;
+    --bg-gradient-opacity: 0.1;
+    --text-color: #343A40;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-border: #E9ECEF;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+    --primary-bg: linear-gradient(135deg, #B8C4FF 0%, #98A8F8 100%);
+    --primary-bg-hover: linear-gradient(135deg, #98A8F8 0%, #B8C4FF 100%);
+    --primary-shadow: rgba(184, 196, 255, 0.4);
+    --danger-bg: linear-gradient(135deg, #FF9E7D 0%, #FFD6BA 100%);
+    --danger-bg-hover: linear-gradient(135deg, #FFD6BA 0%, #FF9E7D 100%);
+    --danger-shadow: rgba(255, 158, 125, 0.4);
+    --success-bg: linear-gradient(135deg, #B8C4FF 0%, #98A8F8 100%);
+    --success-bg-hover: linear-gradient(135deg, #98A8F8 0%, #B8C4FF 100%);
+    --success-shadow: rgba(184, 196, 255, 0.4);
+    --input-bg: #F8F9FA;
+    --input-border: #E9ECEF;
+    --input-text: #343A40;
+    --input-placeholder: #6C757D;
+    --secondary-text: #6C757D;
+    --tag-bg: #E9ECEF;
+    --tag-text: #495057;
+    --table-border: #DEE2E6;
+    --table-stripe-bg: #F8F9FA;
+    --danger-color: #DC3545;
+    --success-color: #28A745;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-middle1: #16213e;
+    --bg-gradient-middle2: #0f3460;
+    --bg-gradient-end: #1a1a2e;
+    --bg-gradient-opacity: 0.3;
+    --text-color: #E0E0E0;
+    --card-bg: rgba(30, 30, 30, 0.95);
+    --card-border: #2D2D2D;
+    --card-shadow: rgba(0, 0, 0, 0.3);
+    --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-bg-hover: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    --primary-shadow: rgba(102, 126, 234, 0.4);
+    --danger-bg: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    --danger-bg-hover: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+    --danger-shadow: rgba(231, 76, 60, 0.4);
+    --success-bg: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    --success-bg-hover: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    --success-shadow: rgba(46, 204, 113, 0.4);
+    --input-bg: #1E1E1E;
+    --input-border: #3D3D3D;
+    --input-text: #E0E0E0;
+    --input-placeholder: #888888;
+    --secondary-text: #9E9E9E;
+    --tag-bg: #2D2D2D;
+    --tag-text: #CCCCCC;
+    --table-border: #3D3D3D;
+    --table-stripe-bg: #1E1E1E;
+    --danger-color: #FF6B6B;
+    --success-color: #6BCB77;
+}
+
+.theme-toggle-btn {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--input-bg);
+    transform: rotate(15deg);
+}
+
+.theme-toggle-btn i {
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .theme-toggle-btn .fa-sun {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle-btn .fa-moon {
+    display: none;
+}
+
+.theme-toggle-btn .fa-sun {
+    display: none;
+}
+
+.theme-toggle-btn .fa-moon {
+    display: block;
+}
+
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}

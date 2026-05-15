@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限申请 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-profile {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 1px solid var(--card-border);
+            object-fit: cover;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 15px 20px;
+            font-size: 15px;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .logout-btn {
+            color: var(--secondary-text) !important;
+            width: calc(100% - 10px);
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            color: var(--danger-color);
+            background-color: rgba(255, 158, 125, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 10px;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px var(--primary-shadow);
+            background: var(--card-bg);
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid var(--danger-color);
+            padding-left: 15px;
+        }
+
+        .permission-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 3px var(--primary-shadow);
+            background-color: #ffffff;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message.success {
+            background-color: rgba(255, 214, 186, 0.2);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 158, 125, 0.2);
+            display: block;
+        }
+
+        .message.error {
+            background-color: rgba(255, 158, 125, 0.1);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 158, 125, 0.2);
+            display: block;
+        }
+
+        .footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-title {
+                font-size: 20px;
+            }
+
+            .user-avatar {
+                width: 60px;
+                height: 60px;
+            }
+
+            .container {
+                padding: 0 15px;
+                margin: 20px auto;
+            }
+
+            .content-card {
+                padding: 20px;
+            }
+
+            .card-title {
+                font-size: 20px;
+            }
+
+            .permissions-list {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 15px !important;
+            }
+        }
+
+        .permissions-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        .permission-info {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .delete-btn {
+            background-color: rgba(255, 158, 125, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .delete-btn:hover {
+            background-color: var(--danger-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 158, 125, 0.3);
+        }
+
+        .delete-btn:active {
+            background-color: #FF8A65;
+        }
+
+        .loading-message {
+            text-align: center;
+            color: #666666;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .no-permissions {
+            text-align: center;
+            color: #666666;
+            padding: 40px 20px;
+            font-size: 16px;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+            <div class="user-profile" id="user-profile">
+                <div class="avatar-container" id="avatar-container">
+                    <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item profile-item">个人信息</div>
+                    <div class="dropdown-item permission-item" id="permission-item">权限管理</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content-card">
+            <h2 class="card-title">权限申请</h2>
+
+            <div class="permission-form">
+                <div class="form-group">
+                    <label for="permission-type" class="form-label">选择您需要的权限：</label>
+                    <select id="permission-type" class="form-control" required>
+                        <option value="">请选择权限类型</option>
+                        <option value="管理员">管理员</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <button type="button" id="submit-button" class="btn btn-primary btn-block">提交申请</button>
+                </div>
+
+                <div id="message" class="message"></div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">我的权限管理</h2>
+
+            <div id="permissions-container" class="permissions-list">
+                <div class="loading-message">加载中...</div>
+            </div>
+
+            <div id="permissions-message" class="message"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+
+    <script>
+        function checkUserLoginStatus() {
+            const userInfo = localStorage.getItem('userInfo');
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                const userAvatar = document.getElementById('user-avatar');
+                userAvatar.src = user.avatar || '/static/img/default-avatar.png';
+
+                document.getElementById('user-profile').style.display = 'block';
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserLoginStatus();
+
+            const avatarContainer = document.getElementById('avatar-container');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+
+            avatarContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+            });
+
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('active');
+            });
+
+            document.querySelector('.profile-item').addEventListener('click', function() {
+                window.location.href = '/profile';
+                dropdownMenu.classList.remove('active');
+            });
+
+            document.querySelector('.permission-item').addEventListener('click', function() {
+                dropdownMenu.classList.remove('active');
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/logout')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            localStorage.removeItem('userInfo');
+                            window.location.href = '/';
+                        }
+                    });
+            });
+
+            document.getElementById('submit-button').addEventListener('click', function() {
+                const permissionType = document.getElementById('permission-type').value;
+                const messageDiv = document.getElementById('message');
+
+                if (!permissionType) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '请选择权限类型';
+                    return;
+                }
+
+                const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+                const requestData = {
+                    user_id: userInfo.id,
+                    type: permissionType
+                };
+
+                fetch('/api/permission-apply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        messageDiv.className = 'message success';
+                        messageDiv.textContent = '权限申请已提交，请等待审核';
+                        document.getElementById('permission-type').value = '';
+                    } else {
+                        messageDiv.className = 'message error';
+                        messageDiv.textContent = data.message || '申请提交失败，请重试';
+                    }
+                })
+                .catch(error => {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '网络错误，请稍后重试';
+                    console.error('Error submitting permission application:', error);
+                });
+            });
+
+            function getUserPermissions() {
+                const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+                const permissionsContainer = document.getElementById('permissions-container');
+                const permissionsMessage = document.getElementById('permissions-message');
+
+                permissionsContainer.innerHTML = '<div class="loading-message">加载中...</div>';
+
+                fetch(`/api/get-user-permissions?user_id=${userInfo.id}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络响应错误');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        permissionsContainer.innerHTML = '';
+
+                        permissionsMessage.className = 'message';
+                        permissionsMessage.textContent = '';
+
+                        if (data.success && data.permissions && data.permissions.length > 0) {
+                            data.permissions.forEach(permission => {
+                                const permissionItem = document.createElement('div');
+                                permissionItem.className = 'permission-item';
+                                permissionItem.innerHTML = `
+                                    <div class="permission-info">${permission.type}</div>
+                                    <button class="delete-btn" data-permission-id="${permission.id}">
+                                        解绑权限
+                                    </button>
+                                `;
+                                permissionsContainer.appendChild(permissionItem);
+                            });
+
+                            document.querySelectorAll('.delete-btn').forEach(button => {
+                                button.addEventListener('click', function() {
+                                    const permissionId = this.getAttribute('data-permission-id');
+                                    deletePermission(permissionId);
+                                });
+                            });
+                        } else {
+                            permissionsContainer.innerHTML = '<div class="no-permissions">暂无权限，请先申请权限</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取权限列表失败:', error);
+                        permissionsContainer.innerHTML = '<div class="no-permissions">获取权限列表失败，请刷新页面重试</div>';
+                    });
+            }
+
+            function deletePermission(permissionId) {
+                const permissionsMessage = document.getElementById('permissions-message');
+
+                if (!confirm('确定要解绑此权限吗？解绑后需要重新申请。')) {
+                    return;
+                }
+
+                fetch('/api/delete-permission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ permission_id: permissionId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应错误');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        permissionsMessage.className = 'message success';
+                        permissionsMessage.textContent = '权限解绑成功';
+
+                        getUserPermissions();
+                    } else {
+                        permissionsMessage.className = 'message error';
+                        permissionsMessage.textContent = data.message || '解绑失败，请重试';
+                    }
+                })
+                .catch(error => {
+                    console.error('删除权限失败:', error);
+                    permissionsMessage.className = 'message error';
+                    permissionsMessage.textContent = '解绑失败，请稍后重试';
+                });
+            }
+
+            getUserPermissions();
+        });
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

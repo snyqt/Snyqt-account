@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人信息管理 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 黄昏海边背景渐变 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+        
+        /* 头部样式 */
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: #333333;
+        }
+        
+        /* Logo链接样式 */
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 用户头像和下拉菜单 */
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .avatar-container {
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .avatar-container:hover {
+            background-color: var(--card-shadow);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-item {
+            padding: 15px 20px;
+            font-size: 15px;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+        }
+        
+        .dropdown-item.profile-item {
+            color: var(--text-color);
+        }
+        
+        .dropdown-item.profile-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+        
+        .dropdown-item.logout-btn {
+            color: var(--secondary-text);
+        }
+        
+        .dropdown-item.logout-btn:hover {
+            background-color: rgba(255, 158, 125, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .dropdown-item.login-log-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+        
+        /* 主容器 */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 10px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .content-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--card-shadow);
+            padding: 25px;
+            width: 100%;
+            max-width: 1000px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px var(--primary-shadow);
+            background: var(--card-bg);
+        }
+        
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--text-color);
+            border-left: 4px solid var(--bg-gradient-start);
+            padding-left: 15px;
+        }
+        
+        /* 用户信息展示 */
+        .user-info-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eeeeee;
+        }
+        
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #eeeeee;
+            box-shadow: 0 4px 12px var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .profile-avatar:hover {
+            transform: scale(1.05);
+        }
+        
+        .user-details {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--secondary-text);
+            min-width: 80px;
+        }
+        
+        .detail-value {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        /* 功能按钮网格 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 25px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+        }
+        
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            color: var(--bg-gradient-start);
+        }
+        
+        .feature-card:hover .feature-icon {
+            opacity: 1;
+            transform: scale(1.1);
+            color: var(--text-color);
+        }
+        
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+        
+        .feature-card:hover .feature-title {
+            color: var(--text-color);
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px var(--primary-shadow);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background-color: #f5f5f5;
+            color: #333333;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 3px var(--primary-shadow);
+            background-color: #ffffff;
+        }
+        
+        .form-input.error {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(255, 158, 125, 0.1);
+        }
+        
+        .form-input.success {
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 3px var(--primary-shadow);
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 5px;
+            min-height: 18px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .send-code-btn {
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border: 1px solid var(--bg-gradient-start);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .send-code-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+            background: var(--primary-bg-hover);
+        }
+        
+        .send-code-btn:disabled {
+            background: var(--card-border);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            border-color: var(--card-border);
+        }
+        
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--card-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--bg-gradient-start) 0%, var(--danger-color) 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .password-strength-bar.weak {
+            width: 33%;
+        }
+        
+        .password-strength-bar.medium {
+            width: 66%;
+        }
+        
+        .password-strength-bar.strong {
+            width: 100%;
+        }
+        
+        .password-hint {
+            margin-top: 5px;
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 12px 20px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+        
+        .btn-secondary {
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-start);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-color);
+            border-color: var(--card-border);
+        }
+        
+        .btn-cancel:hover {
+            background: var(--primary-shadow);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+        
+        /* 头像上传区域 */
+        .avatar-upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            border: 2px dashed var(--card-border);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .avatar-upload-area:hover {
+            background-color: var(--primary-shadow);
+            border-color: var(--bg-gradient-start);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: var(--bg-gradient-start);
+            opacity: 0.7;
+        }
+        
+        .upload-text {
+            font-size: 16px;
+            color: var(--secondary-text);
+            text-align: center;
+        }
+        
+        .upload-note {
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+        
+        #avatar-upload-input {
+            display: none;
+        }
+        
+        /* 成功提示 */
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-bg);
+            color: var(--text-color);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--primary-shadow);
+            z-index: 3000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .success-message.active {
+            transform: translateX(0);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .logo {
+                height: 60px;
+                width: 60px;
+            }
+            
+            .header-title {
+                font-size: 20px;
+            }
+            
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .content-card {
+                padding: 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        /* Footer样式 */
+        .footer {
+            background: var(--card-bg);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 20px 0;
+            margin-top: auto;
+            font-size: 14px;
+            box-shadow: 0 -2px 10px var(--primary-shadow);
+            border-top: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .footer p {
+            margin: 0;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+</head>
+<body>
+    <!-- 头部 -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+            <!-- 已登录状态 -->
+            <div class="user-profile" id="user-profile">
+                <div class="avatar-container" id="avatar-container">
+                    <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item profile-item">个人信息</div>
+                    <div class="dropdown-item permission-item" id="permission-item">权限管理</div>
+                    <div class="dropdown-item login-log-item" id="login-log-item">登录日志</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 用户基本信息卡片 -->
+        <div class="content-card">
+            <h2 class="card-title">用户基本信息</h2>
+            <div class="user-info-section">
+                <img id="current-avatar" src="" alt="用户头像" class="profile-avatar">
+                <div class="user-details">
+                    <div class="detail-item">
+                        <span class="detail-label">用户名:</span>
+                        <span class="detail-value" id="current-username">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">用户ID:</span>
+                        <span class="detail-value" id="current-userid">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">邮箱:</span>
+                        <span class="detail-value" id="current-email">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">手机号:</span>
+                        <span class="detail-value" id="current-phone">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 功能卡片 -->
+        <div class="content-card">
+            <h2 class="card-title">账户设置</h2>
+            <div class="features-grid">
+                <div class="feature-card" id="edit-username-card">
+                    <div class="feature-icon"><i class="fas fa-user-edit"></i></div>
+                    <div class="feature-title">修改用户名</div>
+                </div>
+                <div class="feature-card" id="edit-email-card">
+                    <div class="feature-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="feature-title">修改邮箱</div>
+                </div>
+                <div class="feature-card" id="change-password-card">
+                    <div class="feature-icon"><i class="fas fa-key"></i></div>
+                    <div class="feature-title">修改密码</div>
+                </div>
+                <div class="feature-card" id="change-avatar-card">
+                    <div class="feature-icon"><i class="fas fa-camera"></i></div>
+                    <div class="feature-title">修改头像</div>
+                </div>
+                <div class="feature-card" id="change-phone-card">
+                    <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div class="feature-title">更换手机号</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 修改用户名模态框 -->
+    <div class="modal" id="edit-username-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">修改用户名</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="edit-username-form">
+                <div class="form-group">
+                    <label for="new-username">新用户名</label>
+                    <input type="text" id="new-username" class="form-input" placeholder="请输入新用户名">
+                    <span class="error-message" id="new-username-error"></span>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel close-modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 修改邮箱模态框 -->
+    <div class="modal" id="edit-email-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">修改邮箱</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <!-- 验证旧邮箱 -->
+            <div id="verify-old-email-step">
+                <div class="form-group">
+                    <label for="old-email">当前邮箱</label>
+                    <input type="email" id="old-email" class="form-input" placeholder="请输入当前邮箱">
+                    <span class="error-message" id="old-email-error"></span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="old-email-code">验证码</label>
+                        <input type="text" id="old-email-code" class="form-input" placeholder="请输入验证码">
+                    </div>
+                    <button type="button" class="send-code-btn" id="send-old-email-code">获取验证码</button>
+                </div>
+                <span class="error-message" id="old-email-code-error"></span>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel close-modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="verify-old-email-btn">验证</button>
+                </div>
+            </div>
+            <!-- 设置新邮箱 -->
+            <div id="set-new-email-step" style="display: none;">
+                <div class="form-group">
+                    <label for="new-email">新邮箱</label>
+                    <input type="email" id="new-email" class="form-input" placeholder="请输入新邮箱">
+                    <span class="error-message" id="new-email-error"></span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-email-code">验证码</label>
+                        <input type="text" id="new-email-code" class="form-input" placeholder="请输入验证码">
+                    </div>
+                    <button type="button" class="send-code-btn" id="send-new-email-code">获取验证码</button>
+                </div>
+                <span class="error-message" id="new-email-code-error"></span>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="back-to-old-email">返回</button>
+                    <button type="button" class="btn btn-primary" id="confirm-new-email-btn">确认修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 修改密码模态框 -->
+    <div class="modal" id="change-password-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">修改密码</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="change-password-form">
+                <div class="form-group">
+                    <label for="old-password">当前密码</label>
+                    <input type="password" id="old-password" class="form-input" placeholder="请输入当前密码">
+                    <span class="error-message" id="old-password-error"></span>
+                    <!-- 忘记密码链接 -->
+                    <br><br>
+                    <div style="text-align: right; margin-bottom: 20px;">
+                        <a href="/forgot_password" style="color: var(--danger-color); text-decoration: none;">忘记密码？</a>
+                    </div>
+                </div>
+                <div id="new-password-section" style="display: none;">
+                    <div class="form-group">
+                        <label for="new-password">新密码</label>
+                        <input type="password" id="new-password" class="form-input" placeholder="请输入新密码">
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="password-strength-bar"></div>
+                        </div>
+                        <div class="password-hint" id="password-hint">密码强度：弱</div>
+                        <span class="error-message" id="new-password-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">确认新密码</label>
+                        <input type="password" id="confirm-password" class="form-input" placeholder="请再次输入新密码">
+                        <span class="error-message" id="confirm-password-error"></span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel close-modal">取消</button>
+                    <button type="button" id="verify-old-password-btn" class="btn btn-primary">验证密码</button>
+                    <button type="submit" id="confirm-password-btn" class="btn btn-primary" style="display: none;">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 修改头像模态框 -->
+    <div class="modal" id="change-avatar-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">修改头像</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="avatar-upload-area" id="avatar-upload-area">
+                <input type="file" id="avatar-upload-input" accept="image/*">
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <div class="upload-text">点击或拖拽文件到此处上传</div>
+                <div class="upload-note">支持JPG、PNG、GIF格式，大小不超过2MB</div>
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>预览</label>
+                <div style="display: flex; justify-content: center;">
+                    <img id="avatar-preview" src="" alt="预览" style="max-width: 200px; max-height: 200px; display: none; border-radius: 8px;">
+                </div>
+                <span class="error-message" id="avatar-error"></span>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-cancel close-modal">取消</button>
+                <button type="button" id="confirm-avatar-btn" class="btn btn-primary">确认上传</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 更换手机号模态框 -->
+    <div class="modal" id="change-phone-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">更换手机号</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <!-- 验证旧手机号 -->
+            <div id="verify-old-phone-step">
+                <div class="form-group">
+                    <label for="old-phone">当前手机号</label>
+                    <input type="text" id="old-phone" class="form-input" placeholder="请输入当前手机号" readonly>
+                    <span class="error-message" id="old-phone-error"></span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="old-phone-code">验证码</label>
+                        <input type="text" id="old-phone-code" class="form-input" placeholder="请输入验证码">
+                    </div>
+                    <button type="button" class="send-code-btn" id="send-old-phone-code">获取验证码</button>
+                </div>
+                <span class="error-message" id="old-phone-code-error"></span>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel close-modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="verify-old-phone-btn">验证</button>
+                </div>
+            </div>
+            <!-- 设置新手机号 -->
+            <div id="set-new-phone-step" style="display: none;">
+                <div class="form-group">
+                    <label for="new-phone">新手机号</label>
+                    <input type="text" id="new-phone" class="form-input" placeholder="请输入新手机号">
+                    <span class="error-message" id="new-phone-error"></span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-phone-code">验证码</label>
+                        <input type="text" id="new-phone-code" class="form-input" placeholder="请输入验证码">
+                    </div>
+                    <button type="button" class="send-code-btn" id="send-new-phone-code">获取验证码</button>
+                </div>
+                <span class="error-message" id="new-phone-code-error"></span>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="back-to-old-phone">返回</button>
+                    <button type="button" class="btn btn-primary" id="confirm-new-phone-btn">确认修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成功提示 -->
+    <div class="success-message" id="success-message">修改成功！</div>
+    
+    <script>
+        // 用户信息管理
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取用户信息
+            function getUserInfo() {
+                fetch('/get_user_info')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const user = data.user;
+                            // 更新页面上的用户信息
+                            document.getElementById('current-username').textContent = user.username || '--';
+                            document.getElementById('current-userid').textContent = user.id || '--';
+                            document.getElementById('current-avatar').src = user.avatar || '/static/img/default_avatar.png';
+                            document.getElementById('user-avatar').src = user.avatar || '/static/img/default_avatar.png';
+                            
+                            // 获取邮箱信息需要额外请求，因为user_info中没有返回
+                            fetch('/get_user_email')
+                                .then(response => response.json())
+                                .then(emailData => {
+                                    if (emailData.success) {
+                                        document.getElementById('current-email').textContent = emailData.email || '--';
+                                    }
+                                });
+                            
+                            // 获取手机号信息
+                            fetch('/get_user_phone')
+                                .then(response => response.json())
+                                .then(phoneData => {
+                                    if (phoneData.success) {
+                                        document.getElementById('current-phone').textContent = phoneData.phone || '--';
+                                    }
+                                });
+                        } else {
+                            // 用户未登录，跳转到登录页面
+                            window.location.href = '/login';
+                        }
+                    });
+            }
+            
+            // 初始化用户信息
+            getUserInfo();
+            
+            // 下拉菜单交互
+            const avatarContainer = document.getElementById('avatar-container');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            
+            avatarContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+            });
+            
+            // 点击其他区域关闭下拉菜单
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('active');
+            });
+            
+            // 个人信息菜单项点击事件（保留，虽然当前就在个人信息页面）
+            document.querySelector('.profile-item').addEventListener('click', function() {
+                dropdownMenu.classList.remove('active');
+            });
+            
+            // 权限管理菜单项点击事件
+            document.querySelector('.permission-item').addEventListener('click', function() {
+                window.location.href = '/permission';
+                dropdownMenu.classList.remove('active');
+            });
+            
+            // 登录日志菜单项点击事件
+            document.getElementById('login-log-item').addEventListener('click', function() {
+                window.location.href = '/user-login-logs';
+                dropdownMenu.classList.remove('active');
+            });
+            
+            // 退出登录
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/logout')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            localStorage.removeItem('userInfo');
+                            window.location.href = '/';
+                        }
+                    });
+            });
+            
+            // 模态框管理
+            const modals = document.querySelectorAll('.modal');
+            const closeButtons = document.querySelectorAll('.close-btn, .close-modal');
+            
+            // 打开模态框函数
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.add('active');
+                // 禁用背景滚动
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // 关闭模态框函数
+            function closeModal() {
+                modals.forEach(modal => modal.classList.remove('active'));
+                // 启用背景滚动
+                document.body.style.overflow = '';
+                // 重置所有模态框表单
+                resetAllForms();
+            }
+            
+            // 重置所有表单
+            function resetAllForms() {
+                document.querySelectorAll('form').forEach(form => form.reset());
+                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+                document.querySelectorAll('.form-input').forEach(input => {
+                    input.classList.remove('error', 'success');
+                });
+                
+                // 重置邮箱修改步骤
+                document.getElementById('verify-old-email-step').style.display = 'block';
+                document.getElementById('set-new-email-step').style.display = 'none';
+                
+                // 重置手机号修改步骤
+                document.getElementById('verify-old-phone-step').style.display = 'block';
+                document.getElementById('set-new-phone-step').style.display = 'none';
+                
+                // 重置密码修改步骤
+                document.getElementById('new-password-section').style.display = 'none';
+                document.getElementById('verify-old-password-btn').style.display = 'inline-block';
+                document.getElementById('confirm-password-btn').style.display = 'none';
+                
+                // 重置头像预览
+                document.getElementById('avatar-preview').src = '';
+                document.getElementById('avatar-preview').style.display = 'none';
+                document.getElementById('avatar-upload-input').value = '';
+            }
+            
+            // 关闭按钮点击事件
+            closeButtons.forEach(button => {
+                button.addEventListener('click', closeModal);
+            });
+            
+            // 点击模态框背景关闭
+            modals.forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            });
+            
+            // 功能卡片点击事件
+            document.getElementById('edit-username-card').addEventListener('click', function() {
+                openModal('edit-username-modal');
+            });
+            
+            document.getElementById('edit-email-card').addEventListener('click', function() {
+                openModal('edit-email-modal');
+            });
+            
+            document.getElementById('change-password-card').addEventListener('click', function() {
+                openModal('change-password-modal');
+            });
+            
+            document.getElementById('change-avatar-card').addEventListener('click', function() {
+                openModal('change-avatar-modal');
+            });
+            
+            document.getElementById('change-phone-card').addEventListener('click', function() {
+                openModal('change-phone-modal');
+                // 获取当前手机号并填充到输入框
+                fetch('/get_user_phone')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const phone = data.phone || '';
+                            console.log('获取到的手机号:', phone);
+                            document.getElementById('old-phone').value = phone;
+                            console.log('填充到输入框的手机号:', document.getElementById('old-phone').value);
+                        }
+                    });
+            });
+            
+            // 修改用户名表单提交
+            document.getElementById('edit-username-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newUsername = document.getElementById('new-username').value.trim();
+                const usernameError = document.getElementById('new-username-error');
+                
+                // 验证用户名
+                if (newUsername.length < 2) {
+                    usernameError.textContent = '用户名至少需要2个字符';
+                    return;
+                }
+                
+                // 清除错误信息
+                usernameError.textContent = '';
+                
+                // 提交修改
+                fetch('/update_username', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `new_username=${encodeURIComponent(newUsername)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新页面上的用户名
+                        document.getElementById('current-username').textContent = newUsername;
+                        // 显示成功提示
+                        showSuccessMessage('用户名修改成功！');
+                        // 关闭模态框
+                        closeModal();
+                    } else {
+                        usernameError.textContent = data.message || '修改失败，请稍后重试';
+                    }
+                });
+            });
+            
+            // 发送验证码功能 - 通用函数
+            function sendVerificationCode(email, buttonId) {
+                const button = document.getElementById(buttonId);
+                
+                // 禁用按钮并开始倒计时
+                let countdown = 60;
+                button.disabled = true;
+                button.textContent = `${countdown}秒后重新获取`;
+                
+                const timer = setInterval(() => {
+                    countdown--;
+                    button.textContent = `${countdown}秒后重新获取`;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        button.disabled = false;
+                        button.textContent = '获取验证码';
+                    }
+                }, 1000);
+                
+                // 发送请求
+                fetch('/send_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `email=${encodeURIComponent(email)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        // 如果发送失败，恢复按钮
+                        clearInterval(timer);
+                        button.disabled = false;
+                        button.textContent = '获取验证码';
+                        
+                        // 显示错误信息
+                        const errorElement = buttonId.includes('old') ? 
+                            document.getElementById('old-email-error') : 
+                            document.getElementById('new-email-error');
+                        errorElement.textContent = data.message || '发送验证码失败';
+                    }
+                });
+            }
+            
+            // 发送旧邮箱验证码
+            document.getElementById('send-old-email-code').addEventListener('click', function() {
+                const oldEmail = document.getElementById('old-email').value.trim();
+                const errorElement = document.getElementById('old-email-error');
+                
+                // 验证邮箱
+                if (!isValidEmail(oldEmail)) {
+                    errorElement.textContent = '请输入有效的邮箱地址';
+                    return;
+                }
+                
+                errorElement.textContent = '';
+                sendVerificationCode(oldEmail, 'send-old-email-code');
+            });
+            
+            // 发送新邮箱验证码
+            document.getElementById('send-new-email-code').addEventListener('click', function() {
+                const newEmail = document.getElementById('new-email').value.trim();
+                const errorElement = document.getElementById('new-email-error');
+                
+                // 验证邮箱
+                if (!isValidEmail(newEmail)) {
+                    errorElement.textContent = '请输入有效的邮箱地址';
+                    return;
+                }
+                
+                errorElement.textContent = '';
+                sendVerificationCode(newEmail, 'send-new-email-code');
+            });
+            
+            // 验证旧邮箱
+            document.getElementById('verify-old-email-btn').addEventListener('click', function() {
+                const oldEmail = document.getElementById('old-email').value.trim();
+                const oldEmailCode = document.getElementById('old-email-code').value.trim();
+                const oldEmailError = document.getElementById('old-email-error');
+                const oldEmailCodeError = document.getElementById('old-email-code-error');
+                
+                // 验证输入
+                if (!isValidEmail(oldEmail)) {
+                    oldEmailError.textContent = '请输入有效的邮箱地址';
+                    return;
+                }
+                
+                if (oldEmailCode.length !== 6 || !/^\d+$/.test(oldEmailCode)) {
+                    oldEmailCodeError.textContent = '请输入6位数字验证码';
+                    return;
+                }
+                
+                // 清除错误信息
+                oldEmailError.textContent = '';
+                oldEmailCodeError.textContent = '';
+                
+                // 验证旧邮箱和验证码
+                fetch('/verify_email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `email=${encodeURIComponent(oldEmail)}&verification_code=${encodeURIComponent(oldEmailCode)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 验证成功，显示设置新邮箱步骤
+                        document.getElementById('verify-old-email-step').style.display = 'none';
+                        document.getElementById('set-new-email-step').style.display = 'block';
+                    } else {
+                        oldEmailCodeError.textContent = data.message || '验证失败，请检查验证码';
+                    }
+                });
+            });
+            
+            // 返回旧邮箱验证步骤
+            document.getElementById('back-to-old-email').addEventListener('click', function() {
+                document.getElementById('set-new-email-step').style.display = 'none';
+                document.getElementById('verify-old-email-step').style.display = 'block';
+                // 清除新邮箱相关错误
+                document.getElementById('new-email-error').textContent = '';
+                document.getElementById('new-email-code-error').textContent = '';
+            });
+            
+            // 确认修改邮箱
+            document.getElementById('confirm-new-email-btn').addEventListener('click', function() {
+                const newEmail = document.getElementById('new-email').value.trim();
+                const newEmailCode = document.getElementById('new-email-code').value.trim();
+                const newEmailError = document.getElementById('new-email-error');
+                const newEmailCodeError = document.getElementById('new-email-code-error');
+                
+                // 验证输入
+                if (!isValidEmail(newEmail)) {
+                    newEmailError.textContent = '请输入有效的邮箱地址';
+                    return;
+                }
+                
+                if (newEmailCode.length !== 6 || !/^\d+$/.test(newEmailCode)) {
+                    newEmailCodeError.textContent = '请输入6位数字验证码';
+                    return;
+                }
+                
+                // 清除错误信息
+                newEmailError.textContent = '';
+                newEmailCodeError.textContent = '';
+                
+                // 更新邮箱
+                fetch('/update_email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `new_email=${encodeURIComponent(newEmail)}&verification_code=${encodeURIComponent(newEmailCode)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新页面上的邮箱
+                        document.getElementById('current-email').textContent = newEmail;
+                        // 显示成功提示
+                        showSuccessMessage('邮箱修改成功！');
+                        // 关闭模态框
+                        closeModal();
+                    } else {
+                        newEmailCodeError.textContent = data.message || '修改失败，请检查验证码';
+                    }
+                });
+            });
+            
+            // 验证旧密码
+            document.getElementById('verify-old-password-btn').addEventListener('click', function() {
+                const oldPassword = document.getElementById('old-password').value;
+                const oldPasswordError = document.getElementById('old-password-error');
+                
+                if (!oldPassword) {
+                    oldPasswordError.textContent = '请输入当前密码';
+                    return;
+                }
+                
+                oldPasswordError.textContent = '';
+                
+                // 验证旧密码
+                fetch('/verify_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `old_password=${encodeURIComponent(oldPassword)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 验证成功，隐藏旧密码框，显示新密码输入区域
+                        document.getElementById('old-password').style.display = 'none';
+                        document.querySelector('label[for="old-password"]').style.display = 'none';
+                        document.getElementById('old-password-error').style.display = 'none';
+                        document.getElementById('new-password-section').style.display = 'block';
+                        document.getElementById('verify-old-password-btn').style.display = 'none';
+                        document.getElementById('confirm-password-btn').style.display = 'inline-block';
+                    } else {
+                        oldPasswordError.textContent = data.message || '当前密码不正确';
+                    }
+                });
+            });
+            
+            // 密码强度检测
+            document.getElementById('new-password').addEventListener('input', function() {
+                const password = this.value;
+                const strengthBar = document.getElementById('password-strength-bar');
+                const passwordHint = document.getElementById('password-hint');
+                
+                // 简单的密码强度检测
+                let strength = 0;
+                if (password.length >= 8) strength++;
+                if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+                if (/\d/.test(password)) strength++;
+                if (/[^A-Za-z0-9]/.test(password)) strength++;
+                
+                // 更新强度条和提示
+                strengthBar.className = 'password-strength-bar';
+                
+                if (strength <= 1) {
+                    strengthBar.classList.add('weak');
+                    passwordHint.textContent = '密码强度：弱（建议使用字母、数字和特殊符号的组合）';
+                } else if (strength <= 2) {
+                    strengthBar.classList.add('medium');
+                    passwordHint.textContent = '密码强度：中（建议增加长度和复杂性）';
+                } else {
+                    strengthBar.classList.add('strong');
+                    passwordHint.textContent = '密码强度：强';
+                }
+            });
+            
+            // 修改密码表单提交
+            document.getElementById('change-password-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                const newPasswordError = document.getElementById('new-password-error');
+                const confirmPasswordError = document.getElementById('confirm-password-error');
+                
+                // 验证新密码
+                if (!newPassword) {
+                    newPasswordError.textContent = '请输入新密码';
+                    return;
+                }
+                
+                // 密码强度验证
+                let strength = 0;
+                if (newPassword.length >= 8) strength++;
+                if (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) strength++;
+                if (/\d/.test(newPassword)) strength++;
+                if (/[^A-Za-z0-9]/.test(newPassword)) strength++;
+                
+                if (strength < 2) {
+                    newPasswordError.textContent = '密码必须至少包含字母和数字，建议8位以上并包含特殊符号';
+                    return;
+                }
+                
+                // 验证确认密码
+                if (newPassword !== confirmPassword) {
+                    confirmPasswordError.textContent = '两次输入的密码不一致';
+                    return;
+                }
+                
+                // 清除错误信息
+                newPasswordError.textContent = '';
+                confirmPasswordError.textContent = '';
+                
+                // 提交修改
+                fetch('/update_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `new_password=${encodeURIComponent(newPassword)}&confirm_password=${encodeURIComponent(confirmPassword)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 显示成功提示
+                        showSuccessMessage('密码修改成功！');
+                        // 关闭模态框
+                        closeModal();
+                    } else {
+                        newPasswordError.textContent = data.message || '修改失败，请稍后重试';
+                    }
+                });
+            });
+            
+            // 头像上传处理
+            const avatarUploadArea = document.getElementById('avatar-upload-area');
+            const avatarUploadInput = document.getElementById('avatar-upload-input');
+            const avatarPreview = document.getElementById('avatar-preview');
+            const avatarError = document.getElementById('avatar-error');
+            
+            // 点击上传区域触发文件选择
+            avatarUploadArea.addEventListener('click', function() {
+                avatarUploadInput.click();
+            });
+            
+            // 拖拽上传
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                avatarUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                avatarUploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                avatarUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                avatarUploadArea.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+            }
+            
+            function unhighlight() {
+                avatarUploadArea.style.backgroundColor = 'transparent';
+            }
+            
+            // 处理文件拖放
+            avatarUploadArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    handleFiles(files[0]);
+                }
+            }
+            
+            // 处理文件选择
+            avatarUploadInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    handleFiles(this.files[0]);
+                }
+            });
+            
+            // 处理文件预览
+            function handleFiles(file) {
+                // 检查文件类型
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    avatarError.textContent = '只支持JPG、PNG、GIF格式的图片';
+                    return;
+                }
+                
+                // 检查文件大小
+                if (file.size > 2 * 1024 * 1024) {
+                    avatarError.textContent = '文件大小不能超过2MB';
+                    return;
+                }
+                
+                avatarError.textContent = '';
+                
+                // 显示预览
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                    avatarPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // 确认上传头像
+            document.getElementById('confirm-avatar-btn').addEventListener('click', function() {
+                const fileInput = document.getElementById('avatar-upload-input');
+                
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    avatarError.textContent = '请选择要上传的图片';
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('avatar', file);
+                
+                // 上传头像
+                fetch('/update_avatar', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新页面上的头像
+                        const avatarUrl = data.avatar_url + '?' + new Date().getTime(); // 添加时间戳避免缓存
+                        document.getElementById('current-avatar').src = avatarUrl;
+                        document.getElementById('user-avatar').src = avatarUrl;
+                        // 更新本地存储中的用户信息
+                        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                        userInfo.avatar = avatarUrl;
+                        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                        // 显示成功提示
+                        showSuccessMessage('头像修改成功！');
+                        // 关闭模态框
+                        closeModal();
+                    } else {
+                        avatarError.textContent = data.message || '上传失败，请稍后重试';
+                    }
+                });
+            });
+            
+            // 显示成功提示
+            function showSuccessMessage(message) {
+                const successMessage = document.getElementById('success-message');
+                successMessage.textContent = message;
+                successMessage.classList.add('active');
+                
+                // 3秒后隐藏
+                setTimeout(() => {
+                    successMessage.classList.remove('active');
+                }, 3000);
+            }
+            
+            // 邮箱验证函数
+            function isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+            
+            // 手机号验证函数 - 支持纯数字和带区号格式
+            function isValidPhone(phone) {
+                if (!phone) return false;
+                // 提取纯数字部分（移除 +, -, 空格等）
+                const purePhone = phone.replace(/[\+\-\s]/g, '');
+                // 如果是带区号的手机号，只取最后11位（假设是中国手机号）
+                const phone11 = purePhone.length > 11 ? purePhone.slice(-11) : purePhone;
+                const re = /^1[3-9]\d{9}$/;
+                return re.test(phone11);
+            }
+
+            // 提取纯手机号（用于API调用，只提取最后11位）
+            function extractPurePhone(phone) {
+                if (!phone) return '';
+                const purePhone = phone.replace(/[\+\-\s]/g, '');
+                // 如果是带区号的手机号，只取最后11位
+                return purePhone.length > 11 ? purePhone.slice(-11) : purePhone;
+            }
+            
+            // 发送短信验证码功能 - 通用函数
+            function sendSmsVerificationCode(phone, buttonId) {
+                const button = document.getElementById(buttonId);
+                
+                // 禁用按钮并开始倒计时
+                let countdown = 60;
+                button.disabled = true;
+                button.textContent = `${countdown}秒后重新获取`;
+                
+                const timer = setInterval(() => {
+                    countdown--;
+                    button.textContent = `${countdown}秒后重新获取`;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        button.disabled = false;
+                        button.textContent = '获取验证码';
+                    }
+                }, 1000);
+                
+                // 发送请求
+                fetch('/api/send-sms-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone: phone })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        // 如果发送失败，恢复按钮
+                        clearInterval(timer);
+                        button.disabled = false;
+                        button.textContent = '获取验证码';
+                        
+                        // 显示错误信息
+                        const errorElement = buttonId.includes('old') ? 
+                            document.getElementById('old-phone-error') : 
+                            document.getElementById('new-phone-error');
+                        errorElement.textContent = data.message || '发送验证码失败';
+                    }
+                });
+            }
+            
+            // 发送旧手机号验证码
+            document.getElementById('send-old-phone-code').addEventListener('click', function() {
+                const oldPhone = document.getElementById('old-phone').value.trim();
+                const errorElement = document.getElementById('old-phone-error');
+
+                console.log('原始手机号:', oldPhone);
+                console.log('验证结果:', isValidPhone(oldPhone));
+                console.log('提取纯手机号:', extractPurePhone(oldPhone));
+
+                // 验证手机号
+                if (!isValidPhone(oldPhone)) {
+                    errorElement.textContent = '请输入有效的手机号码';
+                    return;
+                }
+
+                errorElement.textContent = '';
+                // 提取纯手机号用于API调用
+                const pureOldPhone = extractPurePhone(oldPhone);
+                sendSmsVerificationCode(pureOldPhone, 'send-old-phone-code');
+            });
+            
+            // 发送新手机号验证码
+            document.getElementById('send-new-phone-code').addEventListener('click', function() {
+                const newPhone = document.getElementById('new-phone').value.trim();
+                const errorElement = document.getElementById('new-phone-error');
+                
+                // 验证手机号
+                if (!isValidPhone(newPhone)) {
+                    errorElement.textContent = '请输入有效的手机号码';
+                    return;
+                }
+                
+                errorElement.textContent = '';
+                // 提取纯手机号用于API调用
+                const pureNewPhone = extractPurePhone(newPhone);
+                sendSmsVerificationCode(pureNewPhone, 'send-new-phone-code');
+            });
+            
+            // 验证旧手机号
+            document.getElementById('verify-old-phone-btn').addEventListener('click', function() {
+                const oldPhone = document.getElementById('old-phone').value.trim();
+                const oldPhoneCode = document.getElementById('old-phone-code').value.trim();
+                const oldPhoneError = document.getElementById('old-phone-error');
+                const oldPhoneCodeError = document.getElementById('old-phone-code-error');
+                
+                // 验证输入
+                if (!isValidPhone(oldPhone)) {
+                    oldPhoneError.textContent = '请输入有效的手机号码';
+                    return;
+                }
+                
+                if (oldPhoneCode.length !== 6 || !/^\d+$/.test(oldPhoneCode)) {
+                    oldPhoneCodeError.textContent = '请输入6位数字验证码';
+                    return;
+                }
+                
+                // 清除错误信息
+                oldPhoneError.textContent = '';
+                oldPhoneCodeError.textContent = '';
+                
+                // 验证旧手机号和验证码（使用纯手机号）
+                const pureOldPhone = extractPurePhone(oldPhone);
+                fetch('/api/verify-sms-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone: pureOldPhone, code: oldPhoneCode })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 验证成功，显示设置新手机号步骤
+                        document.getElementById('verify-old-phone-step').style.display = 'none';
+                        document.getElementById('set-new-phone-step').style.display = 'block';
+                    } else {
+                        oldPhoneCodeError.textContent = data.message || '验证失败，请检查验证码';
+                    }
+                });
+            });
+            
+            // 返回旧手机号验证步骤
+            document.getElementById('back-to-old-phone').addEventListener('click', function() {
+                document.getElementById('set-new-phone-step').style.display = 'none';
+                document.getElementById('verify-old-phone-step').style.display = 'block';
+                // 清除新手机号相关错误
+                document.getElementById('new-phone-error').textContent = '';
+                document.getElementById('new-phone-code-error').textContent = '';
+            });
+            
+            // 确认修改手机号
+            document.getElementById('confirm-new-phone-btn').addEventListener('click', function() {
+                const newPhone = document.getElementById('new-phone').value.trim();
+                const newPhoneCode = document.getElementById('new-phone-code').value.trim();
+                const newPhoneError = document.getElementById('new-phone-error');
+                const newPhoneCodeError = document.getElementById('new-phone-code-error');
+                
+                // 验证输入
+                if (!isValidPhone(newPhone)) {
+                    newPhoneError.textContent = '请输入有效的手机号码';
+                    return;
+                }
+                
+                if (newPhoneCode.length !== 6 || !/^\d+$/.test(newPhoneCode)) {
+                    newPhoneCodeError.textContent = '请输入6位数字验证码';
+                    return;
+                }
+                
+                // 清除错误信息
+                newPhoneError.textContent = '';
+                newPhoneCodeError.textContent = '';
+                
+                // 提取纯手机号用于API调用
+                const pureNewPhone = extractPurePhone(newPhone);
+                
+                // 更新手机号
+                fetch('/update_phone', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `new_phone=${encodeURIComponent(pureNewPhone)}&verification_code=${encodeURIComponent(newPhoneCode)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新页面上的手机号
+                        document.getElementById('current-phone').textContent = newPhone;
+                        // 显示成功提示
+                        showSuccessMessage('手机号修改成功！');
+                        // 关闭模态框
+                        closeModal();
+                    } else {
+                        newPhoneCodeError.textContent = data.message || '修改失败，请检查验证码';
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

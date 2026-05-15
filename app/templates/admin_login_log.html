@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录日志管理 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+        
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .avatar-container {
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .avatar-container:hover {
+            background-color: var(--card-shadow);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #eeeeee;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--card-shadow);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-item {
+            padding: 15px 20px;
+            font-size: 15px;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+        
+        .logout-btn {
+            color: var(--secondary-text) !important;
+            width: calc(100% - 10px);
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        
+        .logout-btn:hover {
+            color: var(--danger-color);
+            background-color: rgba(255, 158, 125, 0.1);
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+        
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 10px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .content-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(152, 168, 248, 0.3);
+            padding: 25px;
+            width: 100%;
+            max-width: 1400px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(152, 168, 248, 0.4);
+        }
+        
+        .page-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 25px;
+            text-align: center;
+            border-left: 4px solid var(--danger-color);
+            padding-left: 15px;
+        }
+        
+        .search-container {
+            margin-bottom: 25px;
+        }
+        
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .search-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .search-group label {
+            font-size: 14px;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .search-group input {
+            padding: 10px 15px;
+            border: 1px solid rgba(152, 168, 248, 0.3);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-group input:focus {
+            outline: none;
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(255, 158, 125, 0.1);
+            background-color: #ffffff;
+        }
+        
+        .search-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border: 1px solid var(--bg-gradient-middle2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: flex-end;
+            height: 48px;
+            box-sizing: border-box;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .log-table th,
+        .log-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        .log-table th {
+            background: var(--primary-shadow);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .log-table tr:hover {
+            background-color: var(--primary-shadow);
+        }
+        
+        .danger-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .danger-tag.danger {
+            background-color: rgba(255, 158, 125, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .danger-tag.normal {
+            background-color: rgba(152, 168, 248, 0.2);
+            color: var(--bg-gradient-middle1);
+        }
+        
+        .delete-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--bg-gradient-middle2);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background: rgba(255, 158, 125, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .delete-btn:hover {
+            background: rgba(255, 158, 125, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 158, 125, 0.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary-text);
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        
+        .empty-state small {
+            color: var(--secondary-text);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px var(--primary-shadow);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        .confirm-btn,
+        .cancel-btn {
+            padding: 10px 25px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .confirm-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+        
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+        
+        .cancel-btn {
+            background: transparent;
+            color: var(--text-color);
+            border-color: var(--card-border);
+        }
+        
+        .cancel-btn:hover {
+            background: var(--primary-shadow);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-text);
+        }
+        
+        .message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .message.success {
+            background-color: rgba(152, 168, 248, 0.2);
+            color: var(--text-color);
+            border: 1px solid rgba(152, 168, 248, 0.2);
+        }
+        
+        .message.error {
+            background-color: rgba(255, 158, 125, 0.1);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 158, 125, 0.2);
+        }
+        
+        #main-message-container {
+            width: 100%;
+            max-width: 1400px;
+            background-color: var(--danger-color);
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 0;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(255, 158, 125, 0.3);
+        }
+        
+        #main-message-container.error {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        #main-message-container.success {
+            background-color: var(--bg-gradient-middle1);
+            color: white;
+        }
+        
+        footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            box-shadow: 0 -2px 10px rgba(152, 168, 248, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            font-size: 16px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+            <div class="user-profile">
+                <div class="avatar-container">
+                    <img id="user-avatar" src="/static/img/default_avatar.png" alt="用户头像" class="user-avatar">
+                </div>
+                <div id="dropdown-menu" class="dropdown-menu">
+                    <div class="dropdown-item profile-item" onclick="window.location.href='/profile'">个人信息</div>
+                    <div class="dropdown-item profile-item" onclick="window.location.href='/permission'">权限管理</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div id="main-message-container" class="message" style="display: none;"></div>
+        
+        <div class="content-card">
+            <h1 class="page-title">管理员登录日志管理</h1>
+            
+            <div id="message-container"></div>
+            
+            <div class="search-container">
+                <form id="search-form" class="search-form">
+                    <div class="search-group">
+                        <label for="search-user-id">用户ID</label>
+                        <input type="text" id="search-user-id" placeholder="输入用户ID">
+                    </div>
+                    <div class="search-group">
+                        <label for="search-start-time">开始时间</label>
+                        <input type="datetime-local" id="search-start-time">
+                    </div>
+                    <div class="search-group">
+                        <label for="search-end-time">结束时间</label>
+                        <input type="datetime-local" id="search-end-time">
+                    </div>
+                    <div class="search-group">
+                        <label for="search-ip">IP地址</label>
+                        <input type="text" id="search-ip" placeholder="输入IP地址">
+                    </div>
+                    <button type="submit" class="search-btn">查询</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="logs-table" class="log-table">
+                    <thead>
+                        <tr>
+                            <th>用户ID</th>
+                            <th>用户名</th>
+                            <th>IP地址</th>
+                            <th>登录时间</th>
+                            <th>浏览器</th>
+                            <th>位置</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-list">
+                        <tr class="loading">
+                            <td colspan="7">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+
+    <script>
+        let pendingDeleteLog = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchUserInfo();
+            loadLogs();
+            
+            document.getElementById('user-avatar').addEventListener('click', toggleDropdown);
+            
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('dropdown-menu');
+                const userAvatar = document.getElementById('user-avatar');
+                if (!userAvatar.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('确定要退出登录吗？')) {
+                    fetch('/logout')
+                        .then(response => response.json())
+                        .then(data => {
+                            window.location.href = '/login';
+                        })
+                        .catch(() => {
+                            window.location.href = '/login';
+                        });
+                }
+            });
+            
+            document.getElementById('search-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadLogs();
+            });
+            
+            document.getElementById('modal-cancel').addEventListener('click', function() {
+                document.getElementById('delete-modal').classList.remove('active');
+                pendingDeleteLog = null;
+            });
+            
+            document.getElementById('modal-confirm').addEventListener('click', function() {
+                if (pendingDeleteLog) {
+                    deleteLog(pendingDeleteLog);
+                    document.getElementById('delete-modal').classList.remove('active');
+                    pendingDeleteLog = null;
+                }
+            });
+        });
+        
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown-menu');
+            dropdown.classList.toggle('active');
+        }
+        
+        function fetchUserInfo() {
+            fetch('/get_user_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.user;
+                        const avatar = document.getElementById('user-avatar');
+                        avatar.src = user.avatar || '/static/img/default_avatar.png';
+                    } else {
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取用户信息失败:', error);
+                });
+        }
+        
+        function loadLogs() {
+            const logsList = document.getElementById('logs-list');
+            logsList.innerHTML = '<tr class="loading"><td colspan="8">加载中...</td></tr>';
+            
+            const user_id = document.getElementById('search-user-id').value;
+            let start_time = document.getElementById('search-start-time').value;
+            let end_time = document.getElementById('search-end-time').value;
+            const ip = document.getElementById('search-ip').value;
+            
+            if (start_time) {
+                start_time = start_time.replace('T', ' ');
+            }
+            if (end_time) {
+                end_time = end_time.replace('T', ' ');
+            }
+            
+            const params = new URLSearchParams({
+                user_id: user_id,
+                start_time: start_time,
+                end_time: end_time,
+                ip: ip
+            });
+            
+            fetch(`/api/admin-login-logs?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.logs.length === 0) {
+                            logsList.innerHTML = `
+                                <tr class="empty-state">
+                                    <td colspan="8">
+                                        <p>暂无登录日志记录</p>
+                                        <small>当有用户登录时，将显示在这里</small>
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            let html = '';
+                            data.logs.forEach(log => {
+                                // 直接使用原始时间（数据库返回的格式已兼容MySQL）
+                                let timeValue = log.time;
+                                html += `
+                                    <tr>
+                                        <td>${log['user-id'] || '-'}</td>
+                                        <td>${log.username || '-'}</td>
+                                        <td>${log.ip || '-'}</td>
+                                        <td>${log.time || '-'}</td>
+                                        <td>${log.browser || '-'}</td>
+                                        <td>${log.place || '-'}</td>
+                                        <td>
+                                            <span class="danger-tag ${log.is_danger == 1 ? 'danger' : 'normal'}">
+                                                ${log.is_danger == 1 ? '异常登录' : '正常登录'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                            logsList.innerHTML = html;
+                        }
+                    } else {
+                        showMessage(data.message || '获取登录日志失败', 'error');
+                        logsList.innerHTML = `
+                            <tr class="empty-state">
+                                <td colspan="8">
+                                    <p>获取登录日志失败</p>
+                                    <small>${data.message || '请稍后重试'}</small>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('获取登录日志失败:', error);
+                    showMessage('获取登录日志失败，请稍后重试', 'error');
+                    logsList.innerHTML = `
+                        <tr class="empty-state">
+                            <td colspan="8">
+                                <p>获取登录日志失败</p>
+                                <small>网络错误，请稍后重试</small>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+        
+        function bindDeleteButtons() {
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const time = this.getAttribute('data-time');
+                    const userId = this.getAttribute('data-user-id');
+                    const ip = this.getAttribute('data-ip');
+                    console.log('按钮属性值:', {time, userId, ip});
+                    pendingDeleteLog = {
+                        time: time,
+                        user_id: userId,
+                        ip: ip
+                    };
+                    document.getElementById('delete-modal').classList.add('active');
+                });
+            });
+        }
+        
+        function deleteLog(logData) {
+            console.log('删除日志数据:', logData);
+            const formData = new FormData();
+            formData.append('time', logData.time);
+            formData.append('user_id', logData.user_id);
+            formData.append('ip', logData.ip);
+            
+            fetch('/api/delete-login-log', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('删除成功', 'success');
+                    loadLogs();
+                } else {
+                    showMessage(data.message || '删除失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('删除失败:', error);
+                showMessage('删除失败，请稍后重试', 'error');
+            });
+        }
+        
+        function showMessage(message, type) {
+            const container = document.getElementById('main-message-container');
+            container.textContent = message;
+            container.className = 'message ' + type;
+            container.style.display = 'block';
+            
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

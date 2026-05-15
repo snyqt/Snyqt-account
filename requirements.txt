@@ -1,0 +1,12 @@
+Flask==2.3.3
+pymysql==1.1.0
+Pillow==12.1.1
+cryptography==41.0.7
+Werkzeug==2.3.7
+uwsgi==2.0.31
+pyotp==2.9.0
+qrcode==7.4.2
+alibabacloud_dypnsapi20170525
+alibabacloud_tea_openapi
+alibabacloud_tea_util
+alibabacloud_tea_console

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - 禁止访问</title>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* 黄昏海边背景渐变 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+        
+        .error-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--card-shadow);
+            padding: 60px 40px;
+            max-width: 500px;
+            text-align: center;
+            transform: translateY(-20px);
+            animation: fadeIn 0.6s ease-out forwards;
+            border: 1px solid var(--card-border);
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-code {
+            font-size: 100px;
+            font-weight: bold;
+            background: var(--danger-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+        
+        .error-title {
+            font-size: 32px;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .error-message {
+            color: var(--secondary-text);
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-color);
+            border-color: var(--card-border);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-shadow);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .footer {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        .theme-toggle-fixed {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 600px) {
+            .error-container {
+                padding: 40px 20px;
+                margin: 20px;
+            }
+            
+            .error-code {
+                font-size: 80px;
+            }
+            
+            .error-title {
+                font-size: 24px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-fixed">
+        <button class="theme-toggle-btn" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+            <i class="fas fa-sun"></i>
+        </button>
+    </div>
+    <div class="error-container">
+        <div class="error-code">403</div>
+        <h1 class="error-title">禁止访问</h1>
+        <p class="error-message">
+            您没有权限访问该页面或资源。
+            这可能是因为您需要登录，或者您的账户没有足够的权限执行此操作。
+        </p>
+        <div class="action-buttons">
+            <a href="/login" class="btn btn-primary">登录账户</a>
+            <a href="/" class="btn btn-secondary">返回首页</a>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

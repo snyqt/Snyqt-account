@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户权限管理 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-container {
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .avatar-container:hover {
+            background-color: var(--card-shadow);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #eeeeee;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--card-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 15px 20px;
+            font-size: 15px;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .logout-btn {
+            color: var(--secondary-text) !important;
+            width: calc(100% - 10px);
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            color: var(--danger-color);
+            background-color: rgba(255, 158, 125, 0.1);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 10px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(152, 168, 248, 0.3);
+            padding: 25px;
+            width: 100%;
+            max-width: 1400px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(152, 168, 248, 0.4);
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 25px;
+            text-align: center;
+            border-left: 4px solid var(--danger-color);
+            padding-left: 15px;
+        }
+
+        .search-container {
+            margin-bottom: 25px;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .search-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-group label {
+            font-size: 14px;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .search-group input {
+            padding: 10px 15px;
+            border: 1px solid rgba(152, 168, 248, 0.3);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-group input:focus {
+            outline: none;
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(255, 158, 125, 0.1);
+            background-color: #ffffff;
+        }
+
+        .search-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border: 1px solid var(--bg-gradient-middle2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: flex-end;
+            height: 48px;
+            box-sizing: border-box;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+
+        .batch-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            flex-wrap: wrap;
+        }
+
+        .batch-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border: 1px solid var(--bg-gradient-middle2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            box-sizing: border-box;
+        }
+
+        .batch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+
+        .batch-btn:disabled {
+            background: var(--card-border);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .application-table,
+        .permission-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .application-table th,
+        .application-table td,
+        .permission-table th,
+        .permission-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .application-table th,
+        .permission-table th {
+            background: var(--primary-shadow);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .application-table tr:hover,
+        .permission-table tr:hover {
+            background-color: var(--primary-shadow);
+        }
+
+        .user-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            vertical-align: middle;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: 1px solid #eeeeee;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333333;
+            background-color: #f5f5f5;
+        }
+
+        .approve-btn {
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-start);
+            padding: 8px 12px;
+            border: 1px solid #eeeeee;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .approve-btn:hover {
+            background: var(--primary-bg-hover);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .reject-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+            padding: 8px 12px;
+            border: 1px solid #eeeeee;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .reject-btn:hover {
+            background: var(--danger-bg);
+            box-shadow: 0 4px 12px rgba(255, 158, 125, 0.3);
+        }
+
+        .delete-btn {
+            padding: 8px 12px;
+            border: 1px solid #eeeeee;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background-color: #f5f5f5;
+            background: rgba(255, 158, 125, 0.1);
+            color: var(--danger-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 158, 125, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 158, 125, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary-text);
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .empty-state small {
+            color: var(--secondary-text);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px var(--primary-shadow);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .confirm-btn,
+        .cancel-btn {
+            padding: 10px 25px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+
+        .cancel-btn {
+            background: transparent;
+            color: var(--text-color);
+            border-color: var(--card-border);
+        }
+
+        .cancel-btn:hover {
+            background: var(--primary-shadow);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-text);
+        }
+
+        .message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background-color: rgba(255, 214, 186, 0.2);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 158, 125, 0.2);
+        }
+
+        .message.error {
+            background-color: rgba(255, 158, 125, 0.1);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 158, 125, 0.2);
+        }
+
+        #main-message-container {
+            width: 100%;
+            max-width: 1400px;
+            background-color: var(--danger-color);
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 0;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(255, 158, 125, 0.3);
+        }
+
+        #main-message-container.error {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        #main-message-container.success {
+            background-color: var(--bg-gradient-middle1);
+            color: white;
+        }
+
+        footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            box-shadow: 0 -2px 10px rgba(152, 168, 248, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .permission-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .permission-modal-content {
+            background-color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 8px;
+            box-shadow: 0 8px 25px var(--card-shadow);
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        .permission-modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .permission-modal-content p {
+            margin-bottom: 20px;
+            color: var(--secondary-text);
+            font-size: 14px;
+        }
+
+        #permission-options {
+            margin-bottom: 20px;
+        }
+
+        .permission-option {
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid var(--card-border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--bg-color);
+            font-size: 15px;
+            color: var(--tag-text);
+            font-weight: 500;
+        }
+
+        .permission-option:hover {
+            background-color: rgba(184, 196, 255, 0.15);
+            border-color: var(--bg-gradient-start);
+            transform: translateY(-2px);
+        }
+
+        .permission-option.selected {
+            background-color: rgba(184, 196, 255, 0.25);
+            border-color: var(--bg-gradient-start);
+            color: var(--tag-text);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+            <div class="user-profile">
+                <div class="avatar-container">
+                    <img id="user-avatar" src="/static/img/default_avatar.png" alt="用户头像" class="user-avatar">
+                </div>
+                <div id="dropdown-menu" class="dropdown-menu">
+                    <div class="dropdown-item profile-item" onclick="window.location.href='/profile'">个人信息</div>
+                    <div class="dropdown-item profile-item" onclick="window.location.href='/permission'">权限管理</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div id="main-message-container" class="message" style="display: none;"></div>
+
+        <div class="content-card">
+            <h1 class="page-title">用户权限申请审核</h1>
+
+            <div id="message-container"></div>
+
+            <div class="batch-buttons">
+                <button id="batch-admin" class="batch-btn">一键通过管理员申请</button>
+            </div>
+
+            <div class="search-container">
+                <form id="search-form" class="search-form">
+                    <div class="search-group">
+                        <label for="search-user-id">用户ID</label>
+                        <input type="text" id="search-user-id" placeholder="输入用户ID">
+                    </div>
+                    <div class="search-group">
+                        <label for="search-username">用户名</label>
+                        <input type="text" id="search-username" placeholder="输入用户名">
+                    </div>
+                    <div class="search-group">
+                        <label for="search-email">邮箱</label>
+                        <input type="text" id="search-email" placeholder="输入邮箱">
+                    </div>
+                    <div class="search-group">
+                        <label for="search-permission">申请权限</label>
+                        <input type="text" id="search-permission" placeholder="输入申请权限类型">
+                    </div>
+                    <button type="submit" class="search-btn">查询</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="applications-table" class="application-table">
+                    <thead>
+                        <tr>
+                            <th>头像</th>
+                            <th>用户名</th>
+                            <th>用户ID</th>
+                            <th>邮箱</th>
+                            <th>申请权限</th>
+                            <th>申请时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-list">
+                        <tr class="loading">
+                            <td colspan="7">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h1 class="page-title">用户权限管理</h1>
+
+            <div id="permission-message-container"></div>
+
+            <div id="permission-search-container" class="search-container">
+                <form id="permission-search-form" class="search-form">
+                    <div class="search-group">
+                        <label for="permission-search-user-id">用户ID</label>
+                        <input type="text" id="permission-search-user-id" placeholder="输入用户ID">
+                    </div>
+                    <div class="search-group">
+                        <label for="permission-search-username">用户名</label>
+                        <input type="text" id="permission-search-username" placeholder="输入用户名">
+                    </div>
+                    <div class="search-group">
+                        <label for="permission-search-email">邮箱</label>
+                        <input type="text" id="permission-search-email" placeholder="输入邮箱">
+                    </div>
+                    <div class="search-group">
+                        <label for="permission-search-type">用户权限</label>
+                        <input type="text" id="permission-search-type" placeholder="输入用户权限（中文）">
+                    </div>
+                    <button type="submit" class="search-btn">查询</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="permissions-table" class="permission-table">
+                    <thead>
+                        <tr>
+                            <th>头像</th>
+                            <th>用户名</th>
+                            <th>用户ID</th>
+                            <th>邮箱</th>
+                            <th>用户权限</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permissions-list">
+                        <tr class="loading">
+                            <td colspan="6">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="admin-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">确认通过管理员权限申请</h3>
+            <p>您确定要通过此用户的管理员权限申请吗？管理员权限拥有系统最高操作权限。</p>
+            <div class="modal-buttons">
+                <button id="modal-cancel" class="cancel-btn">取消</button>
+                <button id="modal-confirm" class="confirm-btn">确认通过</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="permission-modal" class="permission-modal">
+        <div class="permission-modal-content">
+            <h3 class="modal-title">选择权限</h3>
+            <p>请选择使用哪个权限管理权限：</p>
+            <div id="permission-options">
+            </div>
+            <div class="modal-buttons">
+                <button id="permission-modal-cancel" class="cancel-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+
+    <script>
+        let pendingAdminApplication = null;
+
+        let currentPermission = '';
+        let availablePermissions = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchUserInfo();
+
+            fetchUserPermissions();
+
+            document.getElementById('user-avatar').addEventListener('click', toggleDropdown);
+
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('dropdown-menu');
+                const userAvatar = document.getElementById('user-avatar');
+                if (!userAvatar.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('确定要退出登录吗？')) {
+                    fetch('/logout')
+                        .then(response => response.json())
+                        .then(data => {
+                            window.location.href = '/login';
+                        })
+                        .catch(() => {
+                            window.location.href = '/login';
+                        });
+                }
+            });
+
+            document.getElementById('search-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!currentPermission) {
+                    showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                    return;
+                }
+                loadApplications();
+            });
+
+            document.getElementById('permission-search-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!currentPermission) {
+                    showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                    return;
+                }
+                loadPermissions();
+            });
+
+            document.getElementById('batch-admin').addEventListener('click', function() {
+                if (!currentPermission) {
+                    showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                    return;
+                }
+                if (confirm('确定要通过所有管理员权限申请吗？')) {
+                    batchApprove('管理员');
+                }
+            });
+
+            document.getElementById('modal-cancel').addEventListener('click', function() {
+                document.getElementById('admin-confirm-modal').classList.remove('active');
+                pendingAdminApplication = null;
+            });
+
+            document.getElementById('modal-confirm').addEventListener('click', function() {
+                if (pendingAdminApplication) {
+                    approveApplication(pendingAdminApplication.user_id, pendingAdminApplication.type, true);
+                    document.getElementById('admin-confirm-modal').classList.remove('active');
+                    pendingAdminApplication = null;
+                }
+            });
+
+            document.getElementById('permission-modal-cancel').addEventListener('click', function() {
+                document.getElementById('permission-modal').style.display = 'none';
+                showMessage('请选择权限后再操作', 'error', 'main-message-container');
+            });
+
+            window.addEventListener('click', function(event) {
+                const permissionModal = document.getElementById('permission-modal');
+                if (event.target == permissionModal) {
+                    permissionModal.style.display = 'none';
+                    showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                }
+            });
+        });
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown-menu');
+            dropdown.classList.toggle('active');
+        }
+
+        function fetchUserPermissions() {
+            fetch('/api/get-user-permissions')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const permissions = data.permissions;
+                        availablePermissions = permissions.map(p => p.type);
+
+                        const relevantPermissions = availablePermissions.filter(p =>
+                            p === 'ROOT' || p === '管理员'
+                        );
+
+                        if (relevantPermissions.length > 0) {
+                            showPermissionModal(relevantPermissions);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取用户权限失败:', error);
+                });
+        }
+
+        function showPermissionModal(permissions) {
+            const permissionOptions = document.getElementById('permission-options');
+            if (permissionOptions) {
+                permissionOptions.innerHTML = '';
+
+                permissions.forEach(permission => {
+                    const option = document.createElement('div');
+                    option.className = 'permission-option';
+                    option.textContent = permission;
+                    option.addEventListener('click', function() {
+                        document.querySelectorAll('.permission-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        option.classList.add('selected');
+                        currentPermission = permission;
+                        document.getElementById('permission-modal').style.display = 'none';
+                        updateUIByPermission();
+                        loadApplications();
+                        loadPermissions();
+                    });
+                    permissionOptions.appendChild(option);
+                });
+
+                document.getElementById('permission-modal').style.display = 'block';
+            }
+        }
+
+        function updateUIByPermission() {
+            const batchAdminBtn = document.getElementById('batch-admin');
+
+            if (currentPermission === 'ROOT' || currentPermission === '管理员') {
+                if (batchAdminBtn) batchAdminBtn.style.display = 'inline-block';
+            }
+        }
+
+        function fetchUserInfo() {
+            fetch('/get_user_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.user;
+                        const avatar = document.getElementById('user-avatar');
+                        avatar.src = user.avatar || '/static/img/default_avatar.png';
+                    } else {
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取用户信息失败:', error);
+                });
+        }
+
+        function loadApplications() {
+            const applicationsList = document.getElementById('applications-list');
+            applicationsList.innerHTML = '<tr class="loading"><td colspan="7">加载中...</td></tr>';
+
+            const user_id = document.getElementById('search-user-id').value;
+            const username = document.getElementById('search-username').value;
+            const email = document.getElementById('search-email').value;
+            const permission = document.getElementById('search-permission').value;
+
+            const params = new URLSearchParams({
+                user_id: user_id,
+                username: username,
+                email: email,
+                permission: permission
+            });
+
+            let apiUrl;
+            if (currentPermission === 'ROOT') {
+                apiUrl = `/api/get-permission-applications?${params}`;
+            } else if (currentPermission === '管理员') {
+                apiUrl = `/api/get-permission-applications?${params}`;
+            }
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const batchAdminBtn = document.getElementById('batch-admin');
+                        batchAdminBtn.disabled = true;
+
+                        if (data.applications.length === 0) {
+                            applicationsList.innerHTML = `
+                                <tr class="empty-state">
+                                    <td colspan="7">
+                                        <p>暂无权限申请记录</p>
+                                        <small>当有用户提交权限申请时，将显示在这里</small>
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            let html = '';
+                            let hasAdminApplications = false;
+
+                            data.applications.forEach(app => {
+                                html += `
+                                    <tr>
+                                        <td>
+                                            <img src="${app.avatar}" alt="用户头像" class="user-avatar-small">
+                                        </td>
+                                        <td>${app.username}</td>
+                                        <td>${app.user_id}</td>
+                                        <td>${app.email}</td>
+                                        <td>${app.permission_type}</td>
+                                        <td>${app.apply_time}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="approve-btn" data-user-id="${app.user_id}" data-type="${app.permission_type}">通过</button>
+                                                <button class="reject-btn" data-user-id="${app.user_id}" data-type="${app.permission_type}">拒绝</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+
+                                if (app.permission_type === '管理员') {
+                                    hasAdminApplications = true;
+                                }
+                            });
+
+                            applicationsList.innerHTML = html;
+
+                            batchAdminBtn.disabled = !hasAdminApplications;
+
+                            bindActionButtons();
+                        }
+                    } else {
+                        showMessage(data.message || '获取申请列表失败', 'error');
+                        applicationsList.innerHTML = `
+                            <tr class="empty-state">
+                                <td colspan="7">
+                                    <p>获取申请列表失败</p>
+                                    <small>${data.message || '请稍后重试'}</small>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('获取申请列表失败:', error);
+                    showMessage('获取申请列表失败，请稍后重试', 'error');
+                    applicationsList.innerHTML = `
+                        <tr class="empty-state">
+                            <td colspan="7">
+                                <p>获取申请列表失败</p>
+                                <small>网络错误，请稍后重试</small>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        function loadPermissions() {
+            const permissionsList = document.getElementById('permissions-list');
+            permissionsList.innerHTML = '<tr class="loading"><td colspan="6">加载中...</td></tr>';
+
+            const user_id = document.getElementById('permission-search-user-id').value;
+            const username = document.getElementById('permission-search-username').value;
+            const email = document.getElementById('permission-search-email').value;
+            const type = document.getElementById('permission-search-type').value;
+
+            const params = new URLSearchParams({
+                user_id: user_id,
+                username: username,
+                email: email,
+                permission: type
+            });
+
+            let apiUrl;
+            if (currentPermission === 'ROOT') {
+                apiUrl = `/api/get-all-user-permissions?${params}`;
+            } else if (currentPermission === '管理员') {
+                apiUrl = `/api/get-all-user-permissions?${params}`;
+            }
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.permissions.length === 0) {
+                            permissionsList.innerHTML = `
+                                <tr class="empty-state">
+                                    <td colspan="6">
+                                        <p>暂无用户权限记录</p>
+                                        <small>当有用户获得权限时，将显示在这里</small>
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            let html = '';
+                            data.permissions.forEach(perm => {
+                                html += `
+                                    <tr>
+                                        <td>
+                                            <img src="${perm.avatar || '/static/img/default_avatar.png'}" alt="用户头像" class="user-avatar-small">
+                                        </td>
+                                        <td>${perm.username}</td>
+                                        <td>${perm.user_id}</td>
+                                        <td>${perm.email}</td>
+                                        <td>${perm.permission_type}</td>
+                                        <td>
+                                            <button class="delete-btn" data-user-id="${perm.user_id}" data-type="${perm.permission_type}">删除权限</button>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+
+                            permissionsList.innerHTML = html;
+
+                            bindDeletePermissionButtons();
+                        }
+                    } else {
+                        showMessage(data.message || '获取用户权限列表失败', 'error');
+                        permissionsList.innerHTML = `
+                            <tr class="empty-state">
+                                <td colspan="6">
+                                    <p>获取用户权限列表失败</p>
+                                    <small>${data.message || '请稍后重试'}</small>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('获取用户权限列表失败:', error);
+                    showMessage('获取用户权限列表失败，请稍后重试', 'error');
+                    permissionsList.innerHTML = `
+                        <tr class="empty-state">
+                            <td colspan="6">
+                                <p>获取用户权限列表失败</p>
+                                <small>网络错误，请稍后重试</small>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        function bindActionButtons() {
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!currentPermission) {
+                        showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                        return;
+                    }
+                    const user_id = this.getAttribute('data-user-id');
+                    const type = this.getAttribute('data-type');
+
+                    if (type === '管理员') {
+                        pendingAdminApplication = { user_id, type };
+                        document.getElementById('admin-confirm-modal').classList.add('active');
+                    } else {
+                        if (confirm(`确定要通过此用户的${type}权限申请吗？`)) {
+                            approveApplication(user_id, type);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.reject-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!currentPermission) {
+                        showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                        return;
+                    }
+                    const user_id = this.getAttribute('data-user-id');
+                    const type = this.getAttribute('data-type');
+
+                    if (confirm(`确定要拒绝此用户的${type}权限申请吗？`)) {
+                        rejectApplication(user_id, type);
+                    }
+                });
+            });
+        }
+
+        function bindDeletePermissionButtons() {
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!currentPermission) {
+                        showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                        return;
+                    }
+                    const user_id = this.getAttribute('data-user-id');
+                    const type = this.getAttribute('data-type');
+
+                    if (confirm(`确定要删除此用户的${type}权限吗？`)) {
+                        deletePermission(user_id, type);
+                    }
+                });
+            });
+        }
+
+        function approveApplication(user_id, type, isConfirmed = false) {
+            fetch('/api/approve-permission', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id, type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(`成功通过${type}权限申请`, 'success');
+                    loadApplications();
+                    loadPermissions();
+                } else {
+                    showMessage(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('通过权限申请失败:', error);
+                showMessage('操作失败，请稍后重试', 'error');
+            });
+        }
+
+        function rejectApplication(user_id, type) {
+            fetch('/api/reject-permission', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id, type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(`已拒绝${type}权限申请`, 'success');
+                    loadApplications();
+                } else {
+                    showMessage(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('拒绝权限申请失败:', error);
+                showMessage('操作失败，请稍后重试', 'error');
+            });
+        }
+
+        function deletePermission(user_id, type) {
+            let apiUrl;
+            if (currentPermission === 'ROOT') {
+                apiUrl = '/api/admin-delete-permission';
+            } else if (currentPermission === '管理员') {
+                apiUrl = '/api/admin-delete-permission';
+            }
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: user_id, type: type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(`成功删除${type}权限`, 'success', 'permission-message-container');
+                    loadPermissions();
+                } else {
+                    showMessage(data.message || '操作失败', 'error', 'permission-message-container');
+                }
+            })
+            .catch(error => {
+                console.error('删除用户权限失败:', error);
+                showMessage('操作失败，请稍后重试', 'error', 'permission-message-container');
+            });
+        }
+
+        function batchApprove(type) {
+            let apiUrl;
+            if (currentPermission === 'ROOT') {
+                apiUrl = '/api/batch-approve';
+            } else if (currentPermission === '管理员') {
+                apiUrl = '/api/batch-approve';
+            }
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ type: type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(`${data.message}，共${data.count}条`, 'success');
+                    loadApplications();
+                    loadPermissions();
+                } else {
+                    showMessage(data.message || '批量操作失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('批量通过权限申请失败:', error);
+                showMessage('批量操作失败，请稍后重试', 'error');
+            });
+        }
+
+        function showMessage(message, type, containerId = 'message-container') {
+            const messageContainer = document.getElementById(containerId);
+
+            if (containerId === 'main-message-container') {
+                messageContainer.className = `message ${type}`;
+                messageContainer.textContent = message;
+                messageContainer.style.display = 'block';
+
+                setTimeout(() => {
+                    messageContainer.style.opacity = '0';
+                    messageContainer.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => {
+                        messageContainer.style.display = 'none';
+                        messageContainer.innerHTML = '';
+                    }, 300);
+                }, 3000);
+            } else {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                messageDiv.textContent = message;
+
+                messageContainer.innerHTML = '';
+                messageContainer.appendChild(messageDiv);
+
+                setTimeout(() => {
+                    messageDiv.style.opacity = '0';
+                    messageDiv.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => {
+                        messageContainer.innerHTML = '';
+                    }, 300);
+                }, 3000);
+            }
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>
