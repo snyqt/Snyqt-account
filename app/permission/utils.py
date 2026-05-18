@@ -13,17 +13,6 @@ def get_user_avatar_path(user_id):
             break
     return avatar_path
 
-def is_root(user_id):
-    conn = get_db_connection()
-    if not conn:
-        return False
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM user_permission WHERE user_id = %s AND type = 'ROOT'", (user_id,))
-            return cursor.fetchone() is not None
-    finally:
-        conn.close()
-
 def is_admin(user_id):
     conn = get_db_connection()
     if not conn:
@@ -35,13 +24,7 @@ def is_admin(user_id):
     finally:
         conn.close()
 
-def is_root_or_admin(user_id):
-    return is_root(user_id) or is_admin(user_id)
-
 def can_approve_permission(operator_id, permission_type):
-    if is_root(operator_id):
-        return True
     if is_admin(operator_id):
-        if permission_type in ['管理员']:
-            return True
+        return True
     return False

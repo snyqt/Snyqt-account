@@ -7,6 +7,9 @@
     <link rel="icon" href="/static/img/logo.png" type="image/png">
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <!-- 立即加载主题切换脚本，防止白闪 -->
+    <script src="/static/js/theme-toggle.js"></script>
     <style>
         * {
             margin: 0;
@@ -45,7 +48,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border-bottom: 1px solid var(--card-border);
         }
 
@@ -64,7 +67,7 @@
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-decoration: none;
         }
         
@@ -90,7 +93,7 @@
             border-radius: 8px;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .logo-link {
@@ -123,7 +126,7 @@
             padding: 30px;
             margin-top: 20px;
             box-shadow: var(--card-shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             position: relative;
             backdrop-filter: blur(10px);
         }
@@ -176,7 +179,7 @@
             text-align: center;
             margin: 30px 0;
             background: var(--card-bg);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             position: relative;
             backdrop-filter: blur(10px);
         }
@@ -212,7 +215,7 @@
             padding: 20px;
             text-align: center;
             box-shadow: var(--card-shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             cursor: pointer;
             border: 1px solid var(--card-border);
             backdrop-filter: blur(10px);
@@ -229,7 +232,7 @@
             font-size: 36px;
             color: var(--text-color);
             margin-bottom: 15px;
-            transition: transform 0.3s ease, color 0.3s ease;
+            transition: transform 0.2s ease, color 0.2s ease;
         }
 
         .feature-card:hover .feature-icon {
@@ -271,7 +274,12 @@
             cursor: pointer;
             padding: 5px;
             border-radius: 50%;
-            transition: background-color 0.3s ease;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
         }
 
         .avatar-container:hover {
@@ -284,7 +292,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .user-avatar:hover {
@@ -305,7 +313,7 @@
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: 1px solid var(--card-border);
             backdrop-filter: blur(10px);
         }
@@ -320,7 +328,7 @@
             padding: 12px 20px;
             font-size: 14px;
             color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
             cursor: pointer;
         }
 
@@ -339,60 +347,6 @@
             color: var(--danger-color);
         }
 
-        .dropdown-item.profile-item {
-            padding: 12px 20px;
-            color: var(--text-color);
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            background: none;
-            width: 100%;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-item.permission-item:hover {
-            background-color: var(--primary-shadow);
-            color: var(--danger-color);
-        }
-
-        .dropdown-item.permission-item {
-            padding: 12px 20px;
-            color: var(--text-color);
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            background: none;
-            width: 100%;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-item.login-log-item:hover {
-            background-color: var(--primary-shadow);
-            color: var(--danger-color);
-        }
-
-        .dropdown-item.login-log-item {
-            padding: 12px 20px;
-            color: var(--text-color);
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            background: none;
-            width: 100%;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-item.profile-item:hover {
-            background-color: var(--primary-shadow);
-            color: var(--danger-color);
-        }
-
         .logout-btn {
             width: 100%;
             text-align: left;
@@ -402,7 +356,7 @@
             font-size: 14px;
             color: var(--secondary-text);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: block;
         }
 
@@ -427,7 +381,7 @@
             font-weight: 500;
             text-decoration: none;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .login-btn:hover {
@@ -529,12 +483,12 @@
                 <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
             </a>
             <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
-        </div>
-        <div class="header-right">
             <button class="theme-toggle-btn" onclick="toggleTheme()">
                 <i class="fas fa-moon"></i>
                 <i class="fas fa-sun"></i>
             </button>
+        </div>
+        <div class="header-right">
             <a href="/login" class="login-btn" id="login-btn">登录</a>
 
             <div class="user-profile" id="user-profile" style="display: none;">
@@ -544,10 +498,6 @@
                 <div class="dropdown-menu" id="dropdown-menu">
             <div class="dropdown-item username-item" id="dropdown-username"></div>
             <div class="dropdown-item userid-item" id="dropdown-userid"></div>
-            <div class="dropdown-divider"></div>
-            <div class="dropdown-item profile-item" id="profile-item">个人信息</div>
-            <div class="dropdown-item permission-item" id="permission-item">权限管理</div>
-            <div class="dropdown-item login-log-item" id="login-log-item">登录日志</div>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
         </div>
@@ -562,6 +512,21 @@
         </section>
 
         <div class="feature-grid">
+            <div class="feature-card" id="profile-card" style="display: none;">
+                <div class="feature-icon"><i class="fas fa-user"></i></div>
+                <h3 class="feature-title">个人信息</h3>
+                <p>查看和管理您的个人资料</p>
+            </div>
+            <div class="feature-card" id="permission-card" style="display: none;">
+                <div class="feature-icon"><i class="fas fa-key"></i></div>
+                <h3 class="feature-title">权限申请</h3>
+                <p>申请和管理您的权限</p>
+            </div>
+            <div class="feature-card" id="user-login-log-card" style="display: none;">
+                <div class="feature-icon"><i class="fas fa-clock"></i></div>
+                <h3 class="feature-title">登录日志</h3>
+                <p>查看您的登录历史记录</p>
+            </div>
             <div class="feature-card" id="user-management-card" style="display: none;">
                 <div class="feature-icon"><i class="fas fa-users"></i></div>
                 <h3 class="feature-title">用户权限管理</h3>
@@ -620,6 +585,22 @@
 
                         loginBtn.style.display = 'none';
                         userProfile.style.display = 'inline-block';
+                        
+                        // 显示普通用户功能卡片
+                        document.getElementById('profile-card').style.display = 'block';
+                        document.getElementById('permission-card').style.display = 'block';
+                        document.getElementById('user-login-log-card').style.display = 'block';
+                        
+                        // 添加点击事件
+                        document.getElementById('profile-card').addEventListener('click', function() {
+                            window.location.href = '/profile';
+                        });
+                        document.getElementById('permission-card').addEventListener('click', function() {
+                            window.location.href = '/permission';
+                        });
+                        document.getElementById('user-login-log-card').addEventListener('click', function() {
+                            window.location.href = '/user-login-logs';
+                        });
                     } catch (e) {
                         console.error('解析用户信息失败:', e);
                         loginBtn.style.display = 'inline-block';
@@ -650,23 +631,16 @@
                     localStorage.removeItem('userInfo');
                     checkUserLoginStatus();
                     dropdownMenu.classList.remove('active');
+                    // 隐藏所有卡片
+                    document.getElementById('profile-card').style.display = 'none';
+                    document.getElementById('permission-card').style.display = 'none';
+                    document.getElementById('user-login-log-card').style.display = 'none';
+                    document.getElementById('user-management-card').style.display = 'none';
+                    document.getElementById('user-info-management-card').style.display = 'none';
+                    document.getElementById('login-log-management-card').style.display = 'none';
+                    document.getElementById('developer-dashboard-card').style.display = 'none';
                 });
             }
-
-            document.getElementById('profile-item').addEventListener('click', function() {
-                window.location.href = '/profile';
-                dropdownMenu.classList.remove('active');
-            });
-
-            document.getElementById('permission-item').addEventListener('click', function() {
-                window.location.href = '/permission';
-                dropdownMenu.classList.remove('active');
-            });
-
-            document.getElementById('login-log-item').addEventListener('click', function() {
-                window.location.href = '/user-login-logs';
-                dropdownMenu.classList.remove('active');
-            });
 
             function checkAdminPermission() {
                 const userInfo = localStorage.getItem('userInfo');
@@ -716,6 +690,16 @@
             checkAdminPermission();
 
             checkUserPermissionManagementPermission();
+            
+            checkDeveloperPermission();
+            
+            // 添加文档卡片点击事件
+            const docsCard = document.getElementById('docs-card');
+            if (docsCard) {
+                docsCard.addEventListener('click', function() {
+                    window.location.href = '/docs';
+                });
+            }
         });
 
         function checkUserPermissionManagementPermission() {
@@ -743,6 +727,53 @@
                 .catch(error => {
                     console.error('检查用户权限管理权限失败:', error);
                 });
+            }
+        }
+        
+        function checkDeveloperPermission() {
+            const userInfo = localStorage.getItem('userInfo');
+            console.log('[DEBUG] checkDeveloperPermission 开始执行');
+            console.log('[DEBUG] userInfo 存在:', !!userInfo);
+            
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    console.log('[DEBUG] 用户信息:', user);
+                    
+                    fetch('/check-developer-permission', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        console.log('[DEBUG] API 响应状态:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('[DEBUG] API 响应数据:', data);
+                        if (data.success && data.isDeveloper) {
+                            console.log('[DEBUG] 用户拥有开发者权限，显示卡片');
+                            const developerDashboardCard = document.getElementById('developer-dashboard-card');
+                            if (developerDashboardCard) {
+                                developerDashboardCard.style.display = 'block';
+                                developerDashboardCard.addEventListener('click', function() {
+                                    window.location.href = '/developer';
+                                });
+                                console.log('[DEBUG] 开发者平台卡片已显示');
+                            } else {
+                                console.error('[DEBUG] 找不到 developer-dashboard-card 元素');
+                            }
+                        } else {
+                            console.log('[DEBUG] 用户没有开发者权限或请求失败');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[DEBUG] 检查开发者权限失败:', error);
+                    });
+                } catch (e) {
+                    console.error('[DEBUG] 解析用户信息失败:', e);
+                }
             }
         }
     </script>

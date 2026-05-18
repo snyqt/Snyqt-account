@@ -7,6 +7,9 @@
     <link rel="icon" href="/static/img/logo.png" type="image/png">
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <!-- 立即加载主题切换脚本，防止白闪 -->
+    <script src="/static/js/theme-toggle.js"></script>
     <style>
         * {
             margin: 0;
@@ -39,17 +42,16 @@
         .header {
             background: var(--card-bg);
             color: var(--text-color);
-            padding: 15px 40px;
-            box-shadow: 0 2px 10px var(--card-shadow);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border-bottom: 1px solid var(--card-border);
-            backdrop-filter: blur(10px);
         }
 
         .header:hover {
@@ -68,7 +70,7 @@
             border-radius: 8px;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .logo:hover {
@@ -86,7 +88,7 @@
             font-size: 24px;
             font-weight: 600;
             margin: 0;
-            color: #333333;
+            color: var(--text-color);
         }
 
         .header-right {
@@ -110,7 +112,7 @@
             border-radius: 50%;
             border: 1px solid var(--card-border);
             object-fit: cover;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .user-avatar:hover {
@@ -124,14 +126,14 @@
             right: 0;
             background: var(--card-bg);
             border-radius: 8px;
-            box-shadow: 0 4px 15px var(--primary-shadow);
+            box-shadow: var(--card-shadow);
             min-width: 200px;
             margin-top: 10px;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: 1px solid var(--card-border);
             backdrop-filter: blur(10px);
         }
@@ -143,12 +145,22 @@
         }
 
         .dropdown-item {
-            padding: 15px 20px;
-            font-size: 15px;
+            padding: 12px 20px;
+            font-size: 14px;
             color: var(--text-color);
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
             cursor: pointer;
             text-align: left;
+        }
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
         }
 
         .dropdown-item:hover {
@@ -168,9 +180,12 @@
             text-align: left;
             border: none;
             background: none;
-            font-size: 16px;
+            font-size: 14px;
             font-family: inherit;
             cursor: pointer;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+            display: block;
         }
 
         .logout-btn:hover {
@@ -187,7 +202,7 @@
         }
 
         .content-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--card-bg);
             border-radius: 8px;
             box-shadow: 0 4px 15px var(--card-shadow);
             padding: 25px;
@@ -266,14 +281,14 @@
 
         .loading-message {
             text-align: center;
-            color: #666666;
+            color: var(--secondary-text);
             padding: 40px 20px;
             font-size: 16px;
         }
 
         .no-logs {
             text-align: center;
-            color: #666666;
+            color: var(--secondary-text);
             padding: 60px 20px;
             font-size: 16px;
         }
@@ -350,21 +365,21 @@
                 <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
             </a>
             <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
-        </div>
-        <div class="header-right">
             <button class="theme-toggle-btn" onclick="toggleTheme()">
                 <i class="fas fa-moon"></i>
                 <i class="fas fa-sun"></i>
             </button>
+        </div>
+        <div class="header-right">
             <div class="user-profile" id="user-profile">
                 <div class="avatar-container" id="avatar-container">
                     <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
                 </div>
                 <div class="dropdown-menu" id="dropdown-menu">
-                    <div class="dropdown-item profile-item">个人信息</div>
-                    <div class="dropdown-item permission-item" id="permission-item">权限管理</div>
+                    <div class="dropdown-item username-item" id="dropdown-username"></div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid"></div>
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
                 </div>
             </div>
         </div>
@@ -392,6 +407,10 @@
                         if (data.success) {
                             const user = data.user;
                             document.getElementById('user-avatar').src = user.avatar || '/static/img/default_avatar.png';
+                            
+                            // 更新下拉菜单中的用户信息
+                            document.getElementById('dropdown-username').textContent = user.username || '用户';
+                            document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
                         } else {
                             window.location.href = '/login';
                         }
@@ -409,16 +428,6 @@
             });
 
             document.addEventListener('click', function() {
-                dropdownMenu.classList.remove('active');
-            });
-
-            document.querySelector('.profile-item').addEventListener('click', function() {
-                window.location.href = '/profile';
-                dropdownMenu.classList.remove('active');
-            });
-
-            document.querySelector('.permission-item').addEventListener('click', function() {
-                window.location.href = '/permission';
                 dropdownMenu.classList.remove('active');
             });
 

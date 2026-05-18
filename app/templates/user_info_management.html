@@ -8,6 +8,9 @@
     <!-- 引入Font Awesome图标库 -->
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <!-- 立即加载主题切换脚本，防止白闪 -->
+    <script src="/static/js/theme-toggle.js"></script>
     <style>
         /* 全局样式 */
         * {
@@ -42,17 +45,16 @@
         .header {
             background: var(--card-bg);
             color: var(--text-color);
-            padding: 15px 40px;
-            box-shadow: 0 2px 10px var(--card-shadow);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border-bottom: 1px solid var(--card-border);
-            backdrop-filter: blur(10px);
         }
         
         .header:hover {
@@ -71,7 +73,7 @@
             border-radius: 8px;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .logo:hover {
@@ -83,7 +85,7 @@
             font-size: 24px;
             font-weight: 600;
             margin: 0;
-            color: #333333;
+            color: var(--text-color);
         }
         
         /* Logo链接样式 */
@@ -105,14 +107,8 @@
         }
         
         .avatar-container {
-            padding: 5px;
-            border-radius: 50%;
-            transition: background-color 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .avatar-container:hover {
-            background-color: var(--card-shadow);
+            position: relative;
+            display: inline-block;
         }
         
         .user-avatar {
@@ -121,12 +117,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .user-avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px var(--primary-shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .dropdown-menu {
@@ -135,14 +126,14 @@
             right: 0;
             background: var(--card-bg);
             border-radius: 8px;
-            box-shadow: 0 4px 15px var(--primary-shadow);
+            box-shadow: var(--card-shadow);
             min-width: 200px;
             margin-top: 10px;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: 1px solid var(--card-border);
             backdrop-filter: blur(10px);
         }
@@ -154,33 +145,26 @@
         }
         
         .dropdown-item {
-            padding: 15px 20px;
-            font-size: 15px;
+            padding: 12px 20px;
+            font-size: 14px;
             color: var(--text-color);
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
             cursor: pointer;
             text-align: left;
         }
-        
-        .dropdown-item:hover {
-            background-color: var(--primary-shadow);
-        }
-        
-        .dropdown-item.profile-item {
+
+        .username-item {
+            font-weight: 600;
             color: var(--text-color);
         }
-        
-        .dropdown-item.profile-item:hover {
-            background-color: var(--primary-shadow);
-            color: var(--danger-color);
-        }
-        
-        .dropdown-item.logout-btn {
+
+        .userid-item {
             color: var(--secondary-text);
+            font-size: 13px;
         }
-        
-        .dropdown-item.logout-btn:hover {
-            background-color: rgba(255, 158, 125, 0.1);
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
             color: var(--danger-color);
         }
         
@@ -188,6 +172,25 @@
             height: 1px;
             background-color: var(--card-border);
             margin: 5px 0;
+        }
+        
+        .logout-btn {
+            color: var(--secondary-text) !important;
+            width: calc(100% - 10px);
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+            display: block;
+        }
+        
+        .logout-btn:hover {
+            color: var(--danger-color);
+            background-color: rgba(255, 158, 125, 0.1);
         }
         
         /* 主容器 */
@@ -204,7 +207,7 @@
         }
         
         .content-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--card-bg);
             border-radius: 8px;
             box-shadow: 0 4px 15px var(--card-shadow);
             padding: 25px;
@@ -233,7 +236,7 @@
         /* 搜索区域 */
         .search-container {
             margin-bottom: 30px;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: var(--card-bg);
             padding: 20px;
             border-radius: 8px;
             border: 1px solid var(--card-border);
@@ -331,8 +334,8 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            color: #333333;
-            background-color: #f5f5f5;
+            color: var(--text-color);
+            background-color: var(--card-border);
         }
         
         .action-btn.primary {
@@ -430,7 +433,7 @@
         .modal-title {
             font-size: 20px;
             font-weight: 600;
-            color: #333333;
+            color: var(--text-color);
         }
         
         .close-btn {
@@ -438,7 +441,7 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: #999999;
+            color: var(--secondary-text);
             padding: 0;
             width: 30px;
             height: 30px;
@@ -450,8 +453,8 @@
         }
         
         .close-btn:hover {
-            background-color: #f5f5f5;
-            color: #333333;
+            background-color: var(--card-border);
+            color: var(--text-color);
         }
         
         /* 表单样式 */
@@ -463,7 +466,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #333333;
+            color: var(--text-color);
         }
         
         .form-input {
@@ -473,14 +476,14 @@
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s ease;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: var(--card-bg);
         }
         
         .form-input:focus {
             outline: none;
             border-color: var(--bg-gradient-start);
             box-shadow: 0 0 0 3px var(--primary-shadow);
-            background-color: #ffffff;
+            background-color: var(--card-bg);
         }
         
         .form-input.error {
@@ -638,7 +641,7 @@
             border-radius: 12px;
             transition: all 0.3s ease;
             cursor: pointer;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: var(--card-bg);
         }
         
         .avatar-upload-area:hover {
@@ -648,19 +651,19 @@
         
         .upload-icon {
             font-size: 48px;
-            color: #666666;
+            color: var(--secondary-text);
             opacity: 0.7;
         }
         
         .upload-text {
             font-size: 16px;
-            color: #333333;
+            color: var(--text-color);
             text-align: center;
         }
         
         .upload-note {
             font-size: 14px;
-            color: #999999;
+            color: var(--secondary-text);
         }
         
         #avatar-upload-input {
@@ -672,7 +675,7 @@
             height: 100px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #333333;
+            border: 3px solid var(--text-color);
         }
         
         /* 成功提示 */
@@ -815,25 +818,22 @@
                 <img src="/static/img/logo.png" alt="系统Logo" class="logo">
             </a>
             <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
-        </div>
-        <div class="header-right">
             <button class="theme-toggle-btn" onclick="toggleTheme()">
                 <i class="fas fa-moon"></i>
                 <i class="fas fa-sun"></i>
             </button>
+        </div>
+        <div class="header-right">
             <button id="login-btn" class="btn btn-primary">登录</button>
             <div id="user-profile" class="user-profile" style="display: none;">
-                <div class="avatar-container">
+                <div class="avatar-container" id="avatar-container">
                     <img id="user-avatar" src="/static/img/default_avatar.svg" alt="用户头像" class="user-avatar">
                 </div>
                 <div class="dropdown-menu" id="dropdown-menu">
-                    <div class="dropdown-item" id="dropdown-username">用户</div>
-                    <div class="dropdown-item" id="dropdown-userid">ID: N/A</div>
+                    <div class="dropdown-item username-item" id="dropdown-username">用户</div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid">ID: N/A</div>
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-item profile-item" id="profile-item">个人信息</div>
-                    <div class="dropdown-item profile-item" id="permission-item">权限申请</div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
                 </div>
             </div>
         </div>
@@ -1011,6 +1011,48 @@
         </div>
     </div>
     
+    <!-- 修改手机号模态框 -->
+    <div id="change-phone-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">修改手机号</h3>
+                <button class="close-btn" onclick="closeChangePhoneModal()">&times;</button>
+            </div>
+            <form id="change-phone-form">
+                <input type="hidden" id="phone-user-id">
+                <div class="form-group">
+                    <label for="current-phone">当前手机号</label>
+                    <input type="text" id="current-phone" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="new-phone">新手机号</label>
+                    <input type="tel" id="new-phone" class="form-input" placeholder="请输入新手机号">
+                    <div id="phone-error" class="error-message"></div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel" onclick="closeChangePhoneModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 删除用户确认模态框 -->
+    <div id="delete-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">删除用户</h3>
+                <button class="close-btn" onclick="closeDeleteUserModal()">&times;</button>
+            </div>
+            <p style="margin-bottom: 20px; color: var(--text-color);">您确定要删除用户 <strong id="delete-username"></strong> 吗？此操作将删除该用户的所有信息、权限和登录日志，且无法撤销。</p>
+            <input type="hidden" id="delete-user-id">
+            <div class="btn-group">
+                <button type="button" class="btn btn-cancel" onclick="closeDeleteUserModal()">取消</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">确认删除</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 成功提示 -->
     <div id="success-message" class="success-message"></div>
     <div id="error-message-display" class="error-message-display"></div>
@@ -1077,16 +1119,15 @@
             
             // 下拉菜单交互
             if (avatarContainer) {
-                avatarContainer.addEventListener('click', function() {
+                avatarContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     dropdownMenu.classList.toggle('active');
                 });
             }
             
             // 点击其他区域关闭下拉菜单
             document.addEventListener('click', function(event) {
-                if (userProfile && !userProfile.contains(event.target)) {
-                    dropdownMenu.classList.remove('active');
-                }
+                dropdownMenu.classList.remove('active');
             });
             
             // 退出登录功能
@@ -1100,18 +1141,6 @@
                     dropdownMenu.classList.remove('active');
                 });
             }
-            
-            // 添加个人信息菜单项的点击事件
-            document.getElementById('profile-item').addEventListener('click', function() {
-                window.location.href = '/profile';
-                dropdownMenu.classList.remove('active');
-            });
-            
-            // 添加权限管理菜单项的点击事件
-            document.getElementById('permission-item').addEventListener('click', function() {
-                window.location.href = '/permission';
-                dropdownMenu.classList.remove('active');
-            });
             
             // 检查用户是否为管理员
             function checkAdminPermission() {
@@ -1193,7 +1222,63 @@
             
             // 头像上传预览
             document.getElementById('avatar-upload-input').addEventListener('change', previewAvatar);
+            
+            // 修改手机号表单提交事件
+            document.getElementById('change-phone-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                changePhone();
+            });
         });
+        
+        // 打开删除用户模态框
+        function openDeleteUserModal(userId, username) {
+            document.getElementById('delete-user-id').value = userId;
+            document.getElementById('delete-username').textContent = username;
+            document.getElementById('delete-user-modal').classList.add('active');
+        }
+        
+        // 关闭删除用户模态框
+        function closeDeleteUserModal() {
+            document.getElementById('delete-user-modal').classList.remove('active');
+        }
+        
+        // 确认删除用户
+        function confirmDeleteUser() {
+            const userId = document.getElementById('delete-user-id').value;
+            
+            // 显示加载状态
+            const confirmBtn = document.querySelector('#delete-user-modal .btn-danger');
+            const originalText = confirmBtn.textContent;
+            confirmBtn.textContent = '删除中...';
+            confirmBtn.disabled = true;
+            
+            fetch('/api/admin-delete-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeDeleteUserModal();
+                    showSuccessMessage('用户删除成功');
+                    loadUsers(); // 刷新用户列表
+                } else {
+                    showErrorMessage(data.message || '用户删除失败');
+                }
+            })
+            .catch(error => {
+                console.error('删除用户失败:', error);
+                showErrorMessage('删除用户失败，请稍后重试');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                confirmBtn.textContent = originalText;
+                confirmBtn.disabled = false;
+            });
+        }
         
         // 加载用户列表
         function loadUsers() {
@@ -1230,7 +1315,9 @@
                                     <button class="action-btn primary" onclick="openChangePasswordModal('${user.user_id}')">修改密码</button>
                                     <button class="action-btn secondary" onclick="openChangeUsernameModal('${user.user_id}', '${user.username}')">修改用户名</button>
                                     <button class="action-btn warning" onclick="openChangeEmailModal('${user.user_id}', '${user.email}')">修改邮箱</button>
+                                    <button class="action-btn" onclick="openChangePhoneModal('${user.user_id}', '${user.phone || ''}')">修改手机号</button>
                                     <button class="action-btn danger" onclick="openChangeAvatarModal('${user.user_id}', '${user.avatar || '/static/img/user_avatar/default_avatar.svg'}')">修改头像</button>
+                                    <button class="action-btn delete" onclick="openDeleteUserModal('${user.user_id}', '${user.username}')">删除用户</button>
                                 </div>
                             </td>
                         `;
@@ -1305,6 +1392,20 @@
         // 关闭修改头像模态框
         function closeChangeAvatarModal() {
             document.getElementById('change-avatar-modal').classList.remove('active');
+        }
+        
+        // 打开修改手机号模态框
+        function openChangePhoneModal(userId, currentPhone) {
+            document.getElementById('phone-user-id').value = userId;
+            document.getElementById('current-phone').value = currentPhone || '--';
+            document.getElementById('new-phone').value = '';
+            document.getElementById('phone-error').textContent = '';
+            document.getElementById('change-phone-modal').classList.add('active');
+        }
+        
+        // 关闭修改手机号模态框
+        function closeChangePhoneModal() {
+            document.getElementById('change-phone-modal').classList.remove('active');
         }
         
         // 检查密码强度
@@ -1675,6 +1776,48 @@
             .catch(error => {
                 console.error('修改头像失败:', error);
                 errorElement.textContent = '修改头像失败，请稍后重试';
+            });
+        }
+        
+        // 修改手机号
+        function changePhone() {
+            const userId = document.getElementById('phone-user-id').value;
+            const newPhone = document.getElementById('new-phone').value.trim();
+            const errorElement = document.getElementById('phone-error');
+            
+            // 简单的手机号验证（中国手机号格式）
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            if (!newPhone) {
+                errorElement.textContent = '请输入手机号';
+                return;
+            }
+            if (!phoneRegex.test(newPhone)) {
+                errorElement.textContent = '请输入有效的手机号';
+                return;
+            }
+            
+            errorElement.textContent = '';
+            
+            fetch('/api/admin-update-phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId, new_phone: newPhone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeChangePhoneModal();
+                    showSuccessMessage('手机号修改成功');
+                    loadUsers(); // 刷新用户列表
+                } else {
+                    errorElement.textContent = data.message || '手机号修改失败';
+                }
+            })
+            .catch(error => {
+                console.error('修改手机号失败:', error);
+                errorElement.textContent = '修改手机号失败，请稍后重试';
             });
         }
         

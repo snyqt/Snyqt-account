@@ -20,18 +20,28 @@ try:
         EMAIL_CONFIG, ALIYUN_SMS_CONFIG, TURNSTILE_CONFIG,
         RISK_CONTROL, IP_LOCATION_API
     )
+    from app.env_config import configure_turnstile, configure_risk_control
 except ImportError:
     print("错误：请复制 config.example.py 为 config.py 并配置相关参数！")
     sys.exit(1)
 
+turnstile_config = configure_turnstile()
+risk_control = configure_risk_control()
+
 TURNSTILE_SECRET_KEY = TURNSTILE_CONFIG['secret_key']
 TURNSTILE_VERIFY_URL = TURNSTILE_CONFIG['verify_url']
-TURNSTILE_ENABLED = TURNSTILE_CONFIG['enabled']
+TURNSTILE_ENABLED = turnstile_config['enabled']
 
 ALIBABA_CLOUD_ACCESS_KEY_ID = ALIYUN_SMS_CONFIG['access_key_id']
 ALIBABA_CLOUD_ACCESS_KEY_SECRET = ALIYUN_SMS_CONFIG['access_key_secret']
 ALIBABA_CLOUD_SIGN_NAME = ALIYUN_SMS_CONFIG['sign_name']
 ALIBABA_CLOUD_TEMPLATE_CODE = ALIYUN_SMS_CONFIG['template_code']
+
+
+def generate_user_id():
+    """生成15位字母数字混合的用户ID"""
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choice(chars) for _ in range(15))
 
 
 def get_network_time():
@@ -209,6 +219,7 @@ def check_login_risk(user_id, current_ip, current_place, conn):
 
 
 def send_verification_email(email, code):
+    print(f'[邮件发送] 开始发送注册验证码邮件到: {email}')
     try:
         msg = MIMEMultipart()
         msg['From'] = EMAIL_CONFIG['sender']
@@ -226,20 +237,40 @@ def send_verification_email(email, code):
         """
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
+        print(f'[邮件发送] 正在连接SMTP服务器: {EMAIL_CONFIG["smtp_server"]}:{EMAIL_CONFIG["port"]}')
         server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['port'])
         server.starttls()
+        print(f'[邮件发送] SMTP连接成功，正在登录...')
         server.login(EMAIL_CONFIG['sender'], EMAIL_CONFIG['password'])
         text = msg.as_string()
+        print(f'[邮件发送] 正在发送邮件...')
         server.sendmail(EMAIL_CONFIG['sender'], email, text)
         server.quit()
+        print(f'[邮件发送] 邮件发送成功！')
 
-        return True
+        return True, None
+    except smtplib.SMTPAuthenticationError as e:
+        error_msg = f'SMTP认证失败: {str(e)}'
+        print(f'[邮件发送] {error_msg}')
+        return False, error_msg
+    except smtplib.SMTPConnectError as e:
+        error_msg = f'SMTP连接失败: {str(e)}'
+        print(f'[邮件发送] {error_msg}')
+        return False, error_msg
+    except smtplib.SMTPException as e:
+        error_msg = f'SMTP错误: {str(e)}'
+        print(f'[邮件发送] {error_msg}')
+        return False, error_msg
     except Exception as e:
-        print(f"发送邮件失败: {e}")
-        return False
+        error_msg = f'发送邮件失败: {str(e)}'
+        print(f'[邮件发送] {error_msg}')
+        import traceback
+        traceback.print_exc()
+        return False, error_msg
 
 
 def send_2fa_verification_email(email, code):
+    print(f'[二次验证邮件] 开始发送二次验证邮件到: {email}')
     try:
         msg = MIMEMultipart()
         msg['From'] = EMAIL_CONFIG['sender']
@@ -257,17 +288,36 @@ def send_2fa_verification_email(email, code):
         """
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
+        print(f'[二次验证邮件] 正在连接SMTP服务器: {EMAIL_CONFIG["smtp_server"]}:{EMAIL_CONFIG["port"]}')
         server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['port'])
         server.starttls()
+        print(f'[二次验证邮件] SMTP连接成功，正在登录...')
         server.login(EMAIL_CONFIG['sender'], EMAIL_CONFIG['password'])
         text = msg.as_string()
+        print(f'[二次验证邮件] 正在发送邮件...')
         server.sendmail(EMAIL_CONFIG['sender'], email, text)
         server.quit()
+        print(f'[二次验证邮件] 邮件发送成功！')
 
-        return True
+        return True, None
+    except smtplib.SMTPAuthenticationError as e:
+        error_msg = f'SMTP认证失败: {str(e)}'
+        print(f'[二次验证邮件] {error_msg}')
+        return False, error_msg
+    except smtplib.SMTPConnectError as e:
+        error_msg = f'SMTP连接失败: {str(e)}'
+        print(f'[二次验证邮件] {error_msg}')
+        return False, error_msg
+    except smtplib.SMTPException as e:
+        error_msg = f'SMTP错误: {str(e)}'
+        print(f'[二次验证邮件] {error_msg}')
+        return False, error_msg
     except Exception as e:
-        print(f"发送二次验证邮件失败: {e}")
-        return False
+        error_msg = f'发送二次验证邮件失败: {str(e)}'
+        print(f'[二次验证邮件] {error_msg}')
+        import traceback
+        traceback.print_exc()
+        return False, error_msg
 
 
 def create_client():

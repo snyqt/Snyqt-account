@@ -7,6 +7,9 @@
     <!-- 引入Font Awesome图标库 -->
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <!-- 立即加载主题切换脚本，防止白闪 -->
+    <script src="/static/js/theme-toggle.js"></script>
     <style>
         * {
             margin: 0;
@@ -41,7 +44,7 @@
         }
         
         .error-container {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--card-bg);
             backdrop-filter: blur(10px);
             border-radius: 8px;
             box-shadow: 0 4px 15px var(--card-shadow);
@@ -117,7 +120,7 @@
         
         .footer {
             margin-top: 40px;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--secondary-text);
             font-size: 14px;
         }
         

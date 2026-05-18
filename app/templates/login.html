@@ -8,6 +8,9 @@
     <!-- 引入Font Awesome图标库 -->
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <!-- 立即加载主题切换脚本，防止白闪 -->
+    <script src="/static/js/theme-toggle.js"></script>
     {% if turnstile_enabled %}
     <!-- Cloudflare Turnstile 资源预链接 -->
     <link rel="preconnect" href="https://challenges.cloudflare.com" />
@@ -41,7 +44,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 35%, var(--bg-gradient-middle2) 70%, var(--bg-gradient-end) 100%);
             opacity: var(--bg-gradient-opacity);
             z-index: -1;
         }
@@ -117,7 +120,7 @@
         
         /* 登录/注册卡片 */
         .auth-container {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--card-bg);
             border-radius: 8px;
             box-shadow: 0 4px 15px var(--card-shadow);
             width: 100%;
@@ -131,13 +134,12 @@
         .auth-container:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 20px var(--primary-shadow);
-            background: var(--card-bg);
         }
         
         /* 标签页切换 */
         .auth-tabs {
             display: flex;
-            background: rgba(255, 255, 255, 0.7);
+            background: var(--card-bg);
             border-bottom: 1px solid var(--card-border);
         }
         
@@ -155,12 +157,12 @@
         
         .auth-tab:hover {
             color: var(--danger-color);
-            background: rgba(184, 196, 255, 0.05);
+            background: var(--primary-shadow);
         }
         
         .auth-tab.active {
             color: var(--text-color);
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--card-bg);
         }
         
         .auth-tab.active::after {
@@ -203,13 +205,14 @@
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--input-bg);
+            color: var(--input-text);
         }
         
         .form-input:focus {
             outline: none;
             border-color: var(--bg-gradient-start);
-            background: #ffffff;
+            background: var(--input-bg);
             box-shadow: 0 0 0 3px var(--primary-shadow);
         }
         
@@ -307,7 +310,7 @@
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--card-bg);
             border: 2px dashed var(--card-border);
             display: flex;
             align-items: center;
@@ -320,7 +323,7 @@
         
         .avatar-preview:hover {
             border-color: var(--bg-gradient-start);
-            background: #ffffff;
+            background: var(--card-bg);
         }
         
         .avatar-preview img {
@@ -419,7 +422,7 @@
         
         /* 页脚 */
         .footer {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--card-bg);
             color: var(--secondary-text);
             padding: 20px;
             text-align: center;
@@ -1704,17 +1707,17 @@
             text-align: center;
             border: 2px solid var(--card-border);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--input-bg);
+            color: var(--input-text);
             transition: all 0.3s ease;
         }
         
         .code-input:focus {
             outline: none;
             border-color: var(--bg-gradient-start);
-            background: #ffffff;
+            background: var(--input-bg);
             box-shadow: 0 0 0 3px var(--primary-shadow);
         }
     </style>
-    <script src="/static/js/theme-toggle.js"></script>
 </body>
 </html>

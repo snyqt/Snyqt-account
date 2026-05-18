@@ -1,23 +1,37 @@
-document.addEventListener('DOMContentLoaded', function() {
+// 立即初始化主题，防止白闪
+(function() {
     initTheme();
-});
+})();
 
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
     if (savedTheme) {
-        setTheme(savedTheme);
+        setTheme(savedTheme, false);
     } else if (prefersDark) {
-        setTheme('dark');
+        setTheme('dark', false);
     } else {
-        setTheme('light');
+        setTheme('light', false);
     }
 }
 
-function setTheme(theme) {
+function setTheme(theme, animate = true) {
+    if (!animate) {
+        document.documentElement.classList.add('no-transition');
+    }
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+    
+    if (!animate) {
+        // 强制重绘后恢复过渡
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                document.documentElement.classList.remove('no-transition');
+            });
+        });
+    }
+    
     updateThemeButton(theme);
 }
 

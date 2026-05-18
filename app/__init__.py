@@ -4,6 +4,7 @@ from datetime import timedelta
 
 try:
     from config import SECRET_KEY, REMEMBER_ME_COOKIE_DURATION
+    from app.env_config import configure_turnstile, configure_risk_control, auto_configure
 except ImportError:
     print("错误：请复制 config.example.py 为 config.py 并配置相关参数！")
     import sys
@@ -21,6 +22,10 @@ def create_app():
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=REMEMBER_ME_COOKIE_DURATION)
 
+    turnstile_config = configure_turnstile()
+    risk_control = configure_risk_control()
+    env_config = auto_configure()
+
     from app.auth import auth_bp
     from app.user import user_bp
     from app.admin import admin_bp
@@ -33,6 +38,16 @@ def create_app():
 
     from app.models.db import check_and_create_tables
     check_and_create_tables()
+
+    @app.context_processor
+    def inject_config():
+        return {
+            'turnstile_enabled': turnstile_config.get('enabled', False),
+            'turnstile_sitekey': turnstile_config.get('site_key', ''),
+            'is_production': env_config['is_production'],
+            'environment': env_config['environment'],
+            'risk_control': risk_control
+        }
 
     @app.errorhandler(401)
     def unauthorized(e):

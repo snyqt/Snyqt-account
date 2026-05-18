@@ -4,7 +4,7 @@ import os
 from app.models.db import get_db_connection
 from app.auth.utils import get_network_time
 from app.auth.routes import login_required
-from app.permission.utils import get_user_avatar_path, is_root, is_admin, is_root_or_admin, can_approve_permission, avatar_extensions
+from app.permission.utils import get_user_avatar_path, is_admin, can_approve_permission, avatar_extensions
 
 permission_bp = Blueprint('permission', __name__)
 
@@ -56,7 +56,7 @@ def check_admin_permission():
     try:
         user_id = session.get('user_id')
 
-        if is_root_or_admin(user_id):
+        if is_admin(user_id):
             return jsonify({'success': True, 'isAdmin': True})
         else:
             return jsonify({'success': True, 'isAdmin': False})
@@ -71,7 +71,7 @@ def check_user_permission_management_permission():
     try:
         user_id = session.get('user_id')
 
-        if is_root_or_admin(user_id):
+        if is_admin(user_id):
             return jsonify({'success': True, 'hasPermissionManagementPermission': True})
         else:
             return jsonify({'success': True, 'hasPermissionManagementPermission': False})
@@ -86,7 +86,7 @@ def get_permission_applications():
     try:
         user_id = session.get('user_id')
 
-        if not is_root_or_admin(user_id):
+        if not is_admin(user_id):
             return jsonify({'success': False, 'message': '没有管理员权限'})
 
         search_user_id = request.args.get('user_id', '')
@@ -320,7 +320,7 @@ def get_all_user_permissions():
     try:
         admin_id = session.get('user_id')
 
-        if not is_root_or_admin(admin_id):
+        if not is_admin(admin_id):
             return jsonify({'success': False, 'message': '没有管理员权限'})
 
         search_user_id = request.args.get('user_id', '')
@@ -388,11 +388,11 @@ def admin_delete_permission():
         user_id = data.get('user_id')
         permission_type = data.get('type')
 
-        if not is_root_or_admin(admin_id):
+        if not is_admin(admin_id):
             return jsonify({'success': False, 'message': '没有管理员权限'})
 
-        if str(admin_id) == str(user_id) and permission_type in ['ROOT', '管理员']:
-            return jsonify({'success': False, 'message': '不能删除自己的ROOT或管理员权限'})
+        if str(admin_id) == str(user_id) and permission_type == '管理员':
+            return jsonify({'success': False, 'message': '不能删除自己的管理员权限'})
 
         conn = get_db_connection()
         if not conn:

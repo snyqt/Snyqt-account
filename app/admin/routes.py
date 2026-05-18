@@ -323,6 +323,63 @@ def admin_update_email():
         return jsonify({'success': False, 'message': '修改失败，请重试'})
 
 
+
+@admin_bp.route('/api/admin-update-phone', methods=['POST'])
+@admin_required
+def admin_update_phone():
+    try:
+        data = request.json
+        target_user_id = data.get('user_id')
+        new_phone = data.get('new_phone')
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor()
+
+        if not target_user_id:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '用户ID不能为空'})
+
+        if not new_phone:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '手机号不能为空'})
+
+        # 简单的手机号格式验证
+        import re
+        if not re.match(r'^1[3-9]\d{9}$', new_phone):
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '请输入有效的手机号'})
+
+        # 检查手机号是否已被其他用户使用
+        cursor.execute("SELECT COUNT(*) FROM user_info WHERE phone = %s AND id != %s", (new_phone, target_user_id))
+        if cursor.fetchone()[0] > 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '手机号已被使用，请更换手机号'})
+
+        # 更新用户手机号
+        cursor.execute("UPDATE user_info SET phone = %s WHERE id = %s", (new_phone, target_user_id))
+
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '未找到该用户'})
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '手机号修改成功'})
+    except Exception as e:
+        print(f"管理员修改用户手机号失败: {e}")
+        return jsonify({'success': False, 'message': '修改失败，请重试'})
+
+
 @admin_bp.route('/api/admin-update-avatar', methods=['POST'])
 @admin_required
 def admin_update_avatar():
@@ -387,3 +444,91 @@ def admin_update_avatar():
     except Exception as e:
         print(f"管理员修改用户头像失败: {e}")
         return jsonify({'success': False, 'message': '更新失败，请稍后重试'})
+
+
+@admin_bp.route('/api/delete-login-log', methods=['POST'])
+@admin_required
+def delete_login_log():
+    try:
+        data = request.json
+        log_id = data.get('id')
+
+        if not log_id:
+            return jsonify({'success': False, 'message': '缺少必要参数'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM login_log WHERE id = %s",
+            (log_id,)
+        )
+
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '未找到匹配的日志'})
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '日志删除成功'})
+    except Exception as e:
+        print(f"删除登录日志失败: {e}")
+        return jsonify({'success': False, 'message': '删除失败，请稍后重试'})
+
+
+@admin_bp.route('/api/admin-delete-user', methods=['POST'])
+@admin_required
+def admin_delete_user():
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+
+        if not user_id:
+            return jsonify({'success': False, 'message': '用户ID不能为空'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor()
+        
+        try:
+            # 开始事务
+            conn.begin()
+            
+            # 删除用户的登录日志
+            cursor.execute("DELETE FROM login_log WHERE `user-id` = %s", (user_id,))
+            
+            # 删除用户的权限
+            cursor.execute("DELETE FROM user_permission WHERE user_id = %s", (user_id,))
+            
+            # 删除用户的权限申请
+            cursor.execute("DELETE FROM user_permission_application WHERE user_id = %s", (user_id,))
+            
+            # 删除用户信息
+            cursor.execute("DELETE FROM user_info WHERE id = %s", (user_id,))
+            
+            if cursor.rowcount == 0:
+                conn.rollback()
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '用户不存在'})
+            
+            # 提交事务
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return jsonify({'success': True, 'message': '用户删除成功'})
+        except Exception as e:
+            # 发生错误时回滚
+            conn.rollback()
+            raise e
+    except Exception as e:
+        print(f"管理员删除用户失败: {e}")
+        return jsonify({'success': False, 'message': '删除失败，请稍后重试'})

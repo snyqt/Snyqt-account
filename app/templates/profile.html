@@ -39,17 +39,16 @@
         .header {
             background: var(--card-bg);
             color: var(--text-color);
-            padding: 15px 40px;
-            box-shadow: 0 2px 10px var(--card-shadow);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border-bottom: 1px solid var(--card-border);
-            backdrop-filter: blur(10px);
         }
         
         .header:hover {
@@ -68,7 +67,7 @@
             border-radius: 8px;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .logo:hover {
@@ -80,7 +79,7 @@
             font-size: 24px;
             font-weight: 600;
             margin: 0;
-            color: #333333;
+            color: var(--text-color);
         }
         
         /* Logo链接样式 */
@@ -102,10 +101,16 @@
         }
         
         .avatar-container {
+            position: relative;
+            cursor: pointer;
             padding: 5px;
             border-radius: 50%;
-            transition: background-color 0.3s ease;
-            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
         }
         
         .avatar-container:hover {
@@ -118,7 +123,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--card-border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .user-avatar:hover {
@@ -132,14 +137,14 @@
             right: 0;
             background: var(--card-bg);
             border-radius: 8px;
-            box-shadow: 0 4px 15px var(--primary-shadow);
+            box-shadow: var(--card-shadow);
             min-width: 200px;
             margin-top: 10px;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: 1px solid var(--card-border);
             backdrop-filter: blur(10px);
         }
@@ -151,37 +156,42 @@
         }
         
         .dropdown-item {
-            padding: 15px 20px;
-            font-size: 15px;
+            padding: 12px 20px;
+            font-size: 14px;
             color: var(--text-color);
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
             cursor: pointer;
-            text-align: left;
         }
-        
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
+        }
+
         .dropdown-item:hover {
             background-color: var(--primary-shadow);
-        }
-        
-        .dropdown-item.profile-item {
-            color: var(--text-color);
-        }
-        
-        .dropdown-item.profile-item:hover {
-            background-color: var(--primary-shadow);
             color: var(--danger-color);
         }
-        
-        .dropdown-item.logout-btn {
+
+        .logout-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
             color: var(--secondary-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
         }
-        
-        .dropdown-item.logout-btn:hover {
-            background-color: rgba(255, 158, 125, 0.1);
-            color: var(--danger-color);
-        }
-        
-        .dropdown-item.login-log-item:hover {
+
+        .logout-btn:hover {
             background-color: var(--primary-shadow);
             color: var(--danger-color);
         }
@@ -206,7 +216,7 @@
         }
         
         .content-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--card-bg);
             border-radius: 8px;
             box-shadow: 0 4px 15px var(--card-shadow);
             padding: 25px;
@@ -239,7 +249,7 @@
             align-items: center;
             gap: 20px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eeeeee;
+            border-bottom: 1px solid var(--card-border);
         }
         
         .profile-avatar {
@@ -247,7 +257,7 @@
             height: 150px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid #eeeeee;
+            border: 1px solid var(--card-border);
             box-shadow: 0 4px 12px var(--card-shadow);
             transition: transform 0.3s ease;
         }
@@ -291,7 +301,7 @@
         }
         
         .feature-card {
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--card-bg);
             border-radius: 8px;
             padding: 25px 20px;
             text-align: center;
@@ -392,7 +402,7 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: #999999;
+            color: var(--secondary-text);
             padding: 0;
             width: 30px;
             height: 30px;
@@ -404,8 +414,8 @@
         }
         
         .close-btn:hover {
-            background-color: #f5f5f5;
-            color: #333333;
+            background-color: var(--card-border);
+            color: var(--text-color);
         }
         
         /* 表单样式 */
@@ -417,7 +427,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #333333;
+            color: var(--text-color);
         }
         
         .form-input {
@@ -427,14 +437,14 @@
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s ease;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: var(--card-bg);
         }
         
         .form-input:focus {
             outline: none;
             border-color: var(--bg-gradient-start);
             box-shadow: 0 0 0 3px var(--primary-shadow);
-            background-color: #ffffff;
+            background-color: var(--card-bg);
         }
         
         .form-input.error {
@@ -713,6 +723,9 @@
     </style>
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <!-- 立即加载主题切换脚本，防止白闪 -->
+    <script src="/static/js/theme-toggle.js"></script>
 </head>
 <body>
     <!-- 头部 -->
@@ -722,23 +735,21 @@
                 <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
             </a>
             <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
-        </div>
-        <div class="header-right">
             <button class="theme-toggle-btn" onclick="toggleTheme()">
                 <i class="fas fa-moon"></i>
                 <i class="fas fa-sun"></i>
             </button>
-            <!-- 已登录状态 -->
+        </div>
+        <div class="header-right">
             <div class="user-profile" id="user-profile">
                 <div class="avatar-container" id="avatar-container">
                     <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
                 </div>
                 <div class="dropdown-menu" id="dropdown-menu">
-                    <div class="dropdown-item profile-item">个人信息</div>
-                    <div class="dropdown-item permission-item" id="permission-item">权限管理</div>
-                    <div class="dropdown-item login-log-item" id="login-log-item">登录日志</div>
+                    <div class="dropdown-item username-item" id="dropdown-username"></div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid"></div>
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-item logout-btn" id="logout-btn">退出登录</div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
                 </div>
             </div>
         </div>
@@ -1010,6 +1021,10 @@
                             document.getElementById('current-avatar').src = user.avatar || '/static/img/default_avatar.png';
                             document.getElementById('user-avatar').src = user.avatar || '/static/img/default_avatar.png';
                             
+                            // 更新下拉菜单中的用户信息
+                            document.getElementById('dropdown-username').textContent = user.username || '用户';
+                            document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
+                            
                             // 获取邮箱信息需要额外请求，因为user_info中没有返回
                             fetch('/get_user_email')
                                 .then(response => response.json())
@@ -1048,23 +1063,6 @@
             
             // 点击其他区域关闭下拉菜单
             document.addEventListener('click', function() {
-                dropdownMenu.classList.remove('active');
-            });
-            
-            // 个人信息菜单项点击事件（保留，虽然当前就在个人信息页面）
-            document.querySelector('.profile-item').addEventListener('click', function() {
-                dropdownMenu.classList.remove('active');
-            });
-            
-            // 权限管理菜单项点击事件
-            document.querySelector('.permission-item').addEventListener('click', function() {
-                window.location.href = '/permission';
-                dropdownMenu.classList.remove('active');
-            });
-            
-            // 登录日志菜单项点击事件
-            document.getElementById('login-log-item').addEventListener('click', function() {
-                window.location.href = '/user-login-logs';
                 dropdownMenu.classList.remove('active');
             });
             

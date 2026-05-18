@@ -11,15 +11,19 @@ from app.auth.utils import (
     hash_password, generate_verification_code, is_password_strong,
     verify_turnstile, parse_user_agent, get_ip_location, check_login_risk,
     send_verification_email, send_2fa_verification_email, send_sms,
-    get_network_time, get_network_timestamp
+    get_network_time, get_network_timestamp, generate_user_id
 )
 from app.models.db import get_db_connection
 
 try:
     from config import (
-        TURNSTILE_ENABLED, TURNSTILE_SITEKEY, VERIFICATION_CODE_EXPIRE,
+        TURNSTILE_CONFIG, VERIFICATION_CODE_EXPIRE,
         REMEMBER_ME_COOKIE_DURATION, EMAIL_CONFIG
     )
+    from app.env_config import configure_turnstile
+    turnstile_config = configure_turnstile()
+    TURNSTILE_ENABLED = turnstile_config.get('enabled', False)
+    TURNSTILE_SITEKEY = turnstile_config.get('site_key', '')
 except ImportError:
     from config import SECRET_KEY
     TURNSTILE_ENABLED = False
@@ -124,7 +128,14 @@ def login():
                 session.permanent = True
                 current_app.permanent_session_lifetime = timedelta(minutes=5)
 
-                send_2fa_verification_email(user_mail, verification_code)
+                print(f'[登录二次验证] 开始发送二次验证邮件')
+                send_success, error_msg = send_2fa_verification_email(user_mail, verification_code)
+                if send_success:
+                    print(f'[登录二次验证] 邮件发送成功')
+                    log_email_verification(user_mail, verification_code, '2fa', client_ip, 'success')
+                else:
+                    print(f'[登录二次验证] 邮件发送失败: {error_msg}')
+                    log_email_verification(user_mail, verification_code, '2fa', client_ip, 'failed', error_msg)
 
                 session['pending_user_id'] = user_id
                 session['pending_username'] = user[1]
@@ -286,7 +297,6 @@ def register():
             verification_code = request.form.get('verification_code')
             phone = request.form.get('phone')
             sms_verification_code = request.form.get('sms_verification_code')
-            user_id = request.form.get('user_id')
             avatar = request.files.get('avatar')
             turnstile_response = request.form.get('cf-turnstile-response')
 
@@ -330,12 +340,6 @@ def register():
 
             cursor = conn.cursor()
 
-            cursor.execute("SELECT COUNT(*) FROM user_info WHERE id = %s", (user_id,))
-            if cursor.fetchone()[0] > 0:
-                cursor.close()
-                conn.close()
-                return jsonify({'success': False, 'message': '用户ID已存在，请刷新页面重试'})
-
             cursor.execute("SELECT COUNT(*) FROM user_info WHERE Name = %s", (username,))
             if cursor.fetchone()[0] > 0:
                 cursor.close()
@@ -349,6 +353,24 @@ def register():
                 return jsonify({'success': False, 'message': '邮箱已被注册，请更换邮箱'})
 
             avatar_path = '/static/img/default_avatar.png'
+            hashed_password = hash_password(password)
+            
+            # 生成唯一的用户ID
+            new_user_id = generate_user_id()
+            # 确保ID唯一
+            while True:
+                cursor.execute("SELECT id FROM user_info WHERE id = %s", (new_user_id,))
+                if not cursor.fetchone():
+                    break
+                new_user_id = generate_user_id()
+
+            cursor.execute("""
+            INSERT INTO user_info (id, Name, password, mail, phone)
+            VALUES (%s, %s, %s, %s, %s)
+            """, (new_user_id, username, hashed_password, email, phone))
+            
+            conn.commit()
+
             if avatar and avatar.filename:
                 upload_dir = 'static/img/user_avatar'
                 if not os.path.exists(upload_dir):
@@ -356,18 +378,14 @@ def register():
 
                 extension = avatar.filename.rsplit('.', 1)[1].lower() if '.' in avatar.filename else 'png'
 
-                avatar_filename = f"{user_id}.{extension}"
+                avatar_filename = f"{new_user_id}.{extension}"
                 avatar_path = f"/static/img/user_avatar/{avatar_filename}"
                 avatar.save(os.path.join(current_app.config['PROJECT_ROOT'], avatar_path[1:]))
+                
+                # 更新用户头像路径
+                cursor.execute("UPDATE user_info SET avatar = %s WHERE id = %s", (avatar_path, new_user_id))
+                conn.commit()
 
-            hashed_password = hash_password(password)
-
-            cursor.execute("""
-            INSERT INTO user_info (id, Name, password, mail, phone)
-            VALUES (%s, %s, %s, %s, %s)
-            """, (user_id, username, hashed_password, email, phone))
-
-            conn.commit()
             cursor.close()
             conn.close()
 
@@ -459,34 +477,78 @@ def logout():
     session.clear()
     return jsonify({'success': True, 'message': '退出成功'})
 
+def log_email_verification(email, code, type_, ip, status, error_msg=None):
+    """记录邮箱验证码发送日志"""
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            cursor.execute("""
+                INSERT INTO email_verification_log (email, code, type, ip, time, status, error_msg)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (email, code, type_, ip, log_time, status, error_msg))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print(f"[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {type_}, 状态: {status}")
+    except Exception as e:
+        print(f"[邮箱验证码日志] 记录失败: {e}")
+
 @auth_bp.route('/send_code', methods=['POST'])
 def send_code():
     try:
         email = request.json.get('email') if request.is_json else request.form.get('email')
         turnstile_response = request.json.get('cf-turnstile-response') if request.is_json else request.form.get('cf-turnstile-response')
+        client_ip = request.remote_addr
+
+        print(f'========== 发送邮箱验证码日志 ==========')
+        print(f'请求时间: {get_network_time()}')
+        print(f'邮箱地址: {email}')
+        print(f'请求IP: {client_ip}')
+        print(f'=======================================')
 
         if not email:
+            print(f'[邮箱验证码] 失败：缺少邮箱地址')
+            log_email_verification(email or 'unknown', 'N/A', 'register', client_ip, 'failed', '缺少邮箱地址')
             return jsonify({'success': False, 'message': '请输入邮箱地址'})
 
         if TURNSTILE_ENABLED:
             if not turnstile_response:
+                print(f'[邮箱验证码] 失败：未完成人机验证')
+                log_email_verification(email, 'N/A', 'register', client_ip, 'failed', '未完成人机验证')
                 return jsonify({'success': False, 'message': '请完成人机验证'})
 
-            if not verify_turnstile(turnstile_response, request.remote_addr):
+            if not verify_turnstile(turnstile_response, client_ip):
+                print(f'[邮箱验证码] 失败：人机验证失败')
+                log_email_verification(email, 'N/A', 'register', client_ip, 'failed', '人机验证失败')
                 return jsonify({'success': False, 'message': '人机验证失败，请重试'})
 
         code = generate_verification_code()
+        print(f'[邮箱验证码] 生成验证码: {code}')
 
         session[f'verification_code_{email}'] = code
         session.permanent = True
         current_app.permanent_session_lifetime = timedelta(minutes=5)
+        print(f'[邮箱验证码] 验证码已存入Session，有效期5分钟')
 
-        if send_verification_email(email, code):
+        print(f'[邮箱验证码] 开始发送邮件...')
+        send_success, error_msg = send_verification_email(email, code)
+        
+        if send_success:
+            print(f'[邮箱验证码] 发送成功！')
+            log_email_verification(email, code, 'register', client_ip, 'success')
             return jsonify({'success': True, 'message': '验证码已发送，请查收邮箱'})
         else:
+            print(f'[邮箱验证码] 发送失败: {error_msg}')
+            log_email_verification(email, code, 'register', client_ip, 'failed', error_msg)
             return jsonify({'success': False, 'message': '发送验证码失败，请稍后重试'})
     except Exception as e:
-        print(f"发送验证码失败: {e}")
+        print(f'[邮箱验证码] 异常: {e}')
+        import traceback
+        traceback.print_exc()
+        email_for_log = request.json.get('email') if request.is_json else request.form.get('email', 'unknown')
+        log_email_verification(email_for_log, 'N/A', 'register', request.remote_addr, 'error', str(e))
         return jsonify({'success': False, 'message': '发送验证码失败，请稍后重试'})
 
 @auth_bp.route('/verify_code', methods=['POST'])
@@ -694,7 +756,15 @@ def reset_password():
         print(f"数据库手机号: {db_phone}, 提取后: {db_pure_phone}")
         print(f"用户输入手机号: {phone}, 提取后: {input_pure_phone}")
 
-        if db_pure_phone != input_pure_phone:
+        # 比较手机号时，考虑可能的国家代码前缀，只比较后11位（中国手机号长度）
+        phone_match = False
+        if db_pure_phone and input_pure_phone:
+            if len(db_pure_phone) >= 11 and len(input_pure_phone) >= 11:
+                phone_match = db_pure_phone[-11:] == input_pure_phone[-11:]
+            else:
+                phone_match = db_pure_phone == input_pure_phone
+        
+        if not phone_match:
             print("错误：手机号不匹配")
             cursor.close()
             conn.close()

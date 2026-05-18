@@ -22,7 +22,7 @@ sdist/
 var/
 wheels/
 *.egg-info/
-.installed.cfg
+.installed.cfg、
 *.egg
 
 # PyInstaller
@@ -93,3 +93,6 @@ config.pyc
 
 # Pytest
 .pytest_cache/
+
+#img
+img/
