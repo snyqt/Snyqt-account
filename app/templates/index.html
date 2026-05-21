@@ -252,6 +252,17 @@
             font-size: 14px;
         }
 
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            background-color: var(--danger-color);
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
         .footer {
             text-align: center;
             padding: 30px 20px;
@@ -527,6 +538,13 @@
                 <h3 class="feature-title">登录日志</h3>
                 <p>查看您的登录历史记录</p>
             </div>
+            {% if is_developer() %}
+            <div class="feature-card" id="app-management-card" onclick="window.location.href='/developer-app-management'">
+                <div class="feature-icon"><i class="fas fa-code"></i></div>
+                <h3 class="feature-title">应用管理</h3>
+                <p>管理您的开发者应用</p>
+            </div>
+            {% endif %}
             <div class="feature-card" id="user-management-card" style="display: none;">
                 <div class="feature-icon"><i class="fas fa-users"></i></div>
                 <h3 class="feature-title">用户权限管理</h3>
@@ -542,6 +560,13 @@
                 <h3 class="feature-title">登录日志管理</h3>
                 <p>查看所有用户的登录日志记录</p>
             </div>
+            {% if is_admin() %}
+            <div class="feature-card" id="admin-app-management-card" style="display: none;">
+                <div class="feature-icon"><i class="fas fa-cog"></i></div>
+                <h3 class="feature-title">应用管理</h3>
+                <p>管理和审核所有开发者应用</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -639,6 +664,8 @@
                     document.getElementById('user-info-management-card').style.display = 'none';
                     document.getElementById('login-log-management-card').style.display = 'none';
                     document.getElementById('developer-dashboard-card').style.display = 'none';
+                    document.getElementById('app-management-card').style.display = 'none';
+                    document.getElementById('admin-app-management-card').style.display = 'none';
                 });
             }
 
@@ -679,6 +706,16 @@
                                     window.location.href = '/admin-login-logs';
                                 });
                             }
+
+                            const adminAppManagementCard = document.getElementById('admin-app-management-card');
+                            if (adminAppManagementCard) {
+                                adminAppManagementCard.style.display = 'block';
+                                adminAppManagementCard.addEventListener('click', function() {
+                                    window.location.href = '/app-management';
+                                });
+                            }
+
+                            checkAdminPermission();
                         }
                     })
                     .catch(error => {
@@ -729,7 +766,7 @@
                 });
             }
         }
-        
+
         function checkDeveloperPermission() {
             const userInfo = localStorage.getItem('userInfo');
             console.log('[DEBUG] checkDeveloperPermission 开始执行');
@@ -776,6 +813,7 @@
                 }
             }
         }
+
     </script>
     <script src="/static/js/theme-toggle.js"></script>
 </body>

@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者应用管理 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/theme-toggle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-container {
+            position: relative;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+        }
+
+        .avatar-container:hover {
+            background-color: var(--primary-shadow);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .logout-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--secondary-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .page-title {
+            color: var(--text-color);
+            font-size: 28px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-title i {
+            color: var(--danger-color);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-bg);
+            color: white;
+            border-color: var(--bg-gradient-start);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-color: var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-shadow);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .tab-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            border: 1px solid var(--card-border);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 15px;
+            border-bottom: 2px solid var(--card-border);
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--secondary-text);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-color);
+        }
+
+        .tab-btn.active {
+            color: var(--danger-color);
+            border-bottom-color: var(--danger-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .app-card:hover {
+            box-shadow: 0 6px 20px var(--primary-shadow);
+            transform: translateY(-3px);
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .app-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .app-description {
+            color: var(--secondary-text);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .app-info {
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: var(--secondary-text);
+            min-width: 80px;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: var(--text-color);
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .info-value a {
+            color: var(--danger-color);
+            text-decoration: none;
+        }
+
+        .info-value a:hover {
+            text-decoration: underline;
+        }
+
+        .app-id-box {
+            background: var(--primary-shadow);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        .app-id-label {
+            font-size: 13px;
+            color: var(--secondary-text);
+            margin-bottom: 6px;
+        }
+
+        .app-id-value {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text-color);
+            word-break: break-all;
+        }
+
+        .app-secret-box {
+            background: var(--primary-shadow);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        .app-secret-label {
+            font-size: 13px;
+            color: var(--secondary-text);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-secret-value {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text-color);
+            word-break: break-all;
+        }
+
+        .app-secret-hidden {
+            color: var(--secondary-text);
+            letter-spacing: 2px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+
+        .status-approved {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(40, 167, 69, 0.1) 100%);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-rejected {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .app-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .action-btn.primary {
+            background: var(--primary-bg);
+            color: white;
+            border-color: var(--bg-gradient-start);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .action-btn.danger {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+
+        .action-btn.danger:hover {
+            background: var(--danger-bg);
+            transform: translateY(-2px);
+            box-shadow: rgba(255, 158, 125, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary-text);
+        }
+
+        .empty-state i {
+            font-size: 80px;
+            margin-bottom: 25px;
+            color: var(--secondary-text);
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            color: var(--text-color);
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px var(--primary-shadow);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--secondary-text);
+            transition: color 0.2s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            background-color: var(--card-border);
+            color: var(--danger-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 3px var(--primary-shadow);
+        }
+
+        .form-input.error,
+        .form-textarea.error {
+            border-color: var(--danger-color);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 13px;
+            margin-top: 6px;
+            min-height: 18px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-cancel:hover {
+            background: var(--primary-shadow);
+        }
+
+        .btn-submit {
+            background: var(--primary-bg);
+            color: white;
+            border: none;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            z-index: 3000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .success-message.active {
+            transform: translateX(0);
+        }
+
+        .error-message-display {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            z-index: 3000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .error-message-display.active {
+            transform: translateX(0);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            color: var(--secondary-text);
+            font-size: 14px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        .search-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-input-container {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid var(--card-border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--secondary-text);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-text);
+            font-size: 16px;
+        }
+
+        .search-btn {
+            background: var(--primary-bg);
+            color: white;
+            border: 2px solid var(--bg-gradient-start);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-btn:hover {
+            background: var(--primary-bg-hover);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            background: var(--card-border);
+            color: var(--text-color);
+            border: 2px solid var(--secondary-text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-btn:hover {
+            background: var(--secondary-text);
+            color: var(--card-bg);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .filter-select {
+            padding: 8px 15px;
+            border: 2px solid var(--card-border);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+        }
+
+        .search-results-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 2px solid var(--card-border);
+            margin-bottom: 15px;
+        }
+
+        .results-count {
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .results-count span {
+            color: var(--bg-gradient-start);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .highlight {
+            background: rgba(255, 193, 7, 0.3);
+            color: var(--text-color);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .docs-content {
+            line-height: 1.8;
+        }
+
+        .docs-content h3 {
+            color: var(--text-color);
+            font-size: 18px;
+            margin: 25px 0 15px;
+        }
+
+        .docs-content p {
+            color: var(--secondary-text);
+            margin-bottom: 15px;
+        }
+
+        .docs-link {
+            color: var(--danger-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .docs-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .tab-buttons {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+                text-align: left;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+                padding: 12px 15px;
+            }
+
+            .tab-btn.active {
+                border-left-color: var(--danger-color);
+                border-bottom-color: transparent;
+            }
+
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .app-actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <div class="user-profile" id="user-profile" style="display: none;">
+                <div class="avatar-container" id="avatar-container">
+                    <img src="/static/img/default_avatar.svg" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item username-item" id="dropdown-username">用户</div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid">ID: N/A</div>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h2 class="page-title">
+                <i class="fas fa-cog"></i>
+                我的应用
+            </h2>
+            <button class="btn btn-primary" onclick="openCreateAppModal()">
+                <i class="fas fa-plus"></i>
+                创建应用
+            </button>
+        </div>
+
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="search-input-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="search-input" placeholder="搜索应用名称、所属权..." onkeypress="if(event.key==='Enter') performSearch()">
+                </div>
+                <button class="search-btn" onclick="performSearch()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+                <button class="clear-btn" onclick="clearSearch()">
+                    <i class="fas fa-times"></i> 清空
+                </button>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">状态筛选：</label>
+                    <select class="filter-select" id="status-filter" onchange="performSearch()">
+                        <option value="">全部状态</option>
+                        <option value="pending">待审核</option>
+                        <option value="approved">已通过</option>
+                        <option value="rejected">已拒绝</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('apps', this)">
+                    <i class="fas fa-th-large"></i>
+                    我的应用
+                </button>
+                <button class="tab-btn" onclick="switchTab('docs', this)">
+                    <i class="fas fa-book"></i>
+                    开发者文档
+                </button>
+            </div>
+
+            <div id="apps-tab" class="tab-content active">
+                <div id="loading" style="text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--secondary-text);"></i>
+                    <p style="color: var(--secondary-text); margin-top: 20px;">加载中...</p>
+                </div>
+
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>暂无应用</h3>
+                    <p>您还没有创建任何应用，请联系管理员申请开发者权限后创建应用</p>
+                </div>
+
+                <div id="apps-grid" class="apps-grid" style="display: none;">
+                </div>
+
+                <div id="search-results-info" class="search-results-info" style="display: none;">
+                    <div class="results-count" id="results-count"></div>
+                </div>
+            </div>
+
+            <div id="docs-tab" class="tab-content">
+                <div class="docs-content">
+                    <h3>欢迎使用开发者平台</h3>
+                    <p>我们的开发者平台提供了完整的 OAuth 2.0 授权流程和 API 接口，帮助您快速集成统一账户认证功能。</p>
+                    
+                    <h3>快速开始</h3>
+                    <p>1. 创建应用并提交审核<br>
+                    2. 审核通过后获取 App ID 和 App Secret<br>
+                    3. 配置回调地址<br>
+                    4. 参考 API 文档进行开发</p>
+                    
+                    <h3>获取帮助</h3>
+                    <p>查看完整的 API 文档和开发指南，请访问：<a href="/developer-docs" class="docs-link">开发者文档页面</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="create-app-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">创建新应用</h3>
+                <button class="close-btn" onclick="closeCreateAppModal()">&times;</button>
+            </div>
+            <form id="create-app-form">
+                <div class="form-group">
+                    <label for="app-name">应用名称 <span style="color: var(--danger-color);">*</span></label>
+                    <input type="text" id="app-name" class="form-input" placeholder="请输入应用名称" maxlength="100">
+                    <div class="error-message" id="app-name-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="app-description">应用概述 <span style="color: var(--danger-color);">*</span></label>
+                    <textarea id="app-description" class="form-textarea" placeholder="请简要描述您的应用功能"></textarea>
+                    <div class="error-message" id="app-description-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="app-owner">所属权 <span style="color: var(--danger-color);">*</span></label>
+                    <input type="text" id="app-owner" class="form-input" placeholder="请输入应用所属公司/组织/个人">
+                    <div class="error-message" id="app-owner-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="app-website">应用网址 <span style="color: var(--danger-color);">*</span></label>
+                    <input type="url" id="app-website" class="form-input" placeholder="https://example.com">
+                    <div class="error-message" id="app-website-error"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel" onclick="closeCreateAppModal()">取消</button>
+                    <button type="submit" class="btn btn-submit">创建应用</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="callback-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">配置回调地址</h3>
+                <button class="close-btn" onclick="closeCallbackModal()">&times;</button>
+            </div>
+            <form id="callback-form">
+                <input type="hidden" id="callback-app-id">
+
+                <div class="form-group">
+                    <label for="login-callback-url">登录回调地址</label>
+                    <input type="url" id="login-callback-url" class="form-input" placeholder="https://your-app.com/callback">
+                    <div class="error-message" id="login-callback-error"></div>
+                    <small style="color: var(--secondary-text); font-size: 13px; margin-top: 5px; display: block;">
+                        用户授权成功后，系统将通过此地址返回授权码
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="verification-callback-url">验证码回调地址</label>
+                    <input type="url" id="verification-callback-url" class="form-input" placeholder="https://your-app.com/verification">
+                    <div class="error-message" id="verification-callback-error"></div>
+                    <small style="color: var(--secondary-text); font-size: 13px; margin-top: 5px; display: block;">
+                        系统发送验证码时将通过此地址回调通知您
+                    </small>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel" onclick="closeCallbackModal()">取消</button>
+                    <button type="submit" class="btn btn-submit">保存配置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="secret-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">应用创建成功</h3>
+                <button class="close-btn" onclick="closeSecretModal()">&times;</button>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <p style="color: var(--secondary-text); margin-bottom: 15px;">
+                    应用已成功创建，当前处于待审核状态。审核通过后，您将获得完整的应用凭证。
+                </p>
+                <div style="background: var(--primary-shadow); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-size: 13px; color: var(--secondary-text); margin-bottom: 5px;">App ID（审核通过后可使用）</div>
+                    <div id="created-app-id" style="font-family: monospace; font-size: 15px; color: var(--text-color); word-break: break-all;"></div>
+                </div>
+                <div style="background: rgba(40, 167, 69, 0.1); border-left: 4px solid #28a745; padding: 12px; border-radius: 0 8px 8px 0; margin-top: 15px;">
+                    <p style="color: #28a745; font-size: 13px; font-weight: 500;">
+                        <i class="fas fa-info-circle"></i> 提示：App Secret 将在管理员审核通过后生成，请耐心等待审核结果。
+                    </p>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-cancel" onclick="closeSecretModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-message" id="success-message">操作成功！</div>
+    <div class="error-message-display" id="error-message"></div>
+
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+
+    <script>
+        let apps = [];
+        let currentCreatedAppId = null;
+        let currentCreatedAppSecret = null;
+        let currentSearchTerm = '';
+        let currentStatusFilter = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            loadApps();
+            setupEventListeners();
+        });
+
+        function performSearch() {
+            currentSearchTerm = document.getElementById('search-input').value.trim();
+            currentStatusFilter = document.getElementById('status-filter').value;
+            filterAndRenderApps();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('status-filter').value = '';
+            currentSearchTerm = '';
+            currentStatusFilter = '';
+            filterAndRenderApps();
+        }
+
+        function filterAndRenderApps() {
+            let filteredApps = apps;
+
+            if (currentStatusFilter) {
+                filteredApps = filteredApps.filter(app => app.status === currentStatusFilter);
+            }
+
+            if (currentSearchTerm) {
+                const searchLower = currentSearchTerm.toLowerCase();
+                filteredApps = filteredApps.filter(app => {
+                    const nameMatch = app.name && app.name.toLowerCase().includes(searchLower);
+                    const ownerMatch = app.owner && app.owner.toLowerCase().includes(searchLower);
+                    const descriptionMatch = app.description && app.description.toLowerCase().includes(searchLower);
+                    return nameMatch || ownerMatch || descriptionMatch;
+                });
+            }
+
+            if (filteredApps.length === 0) {
+                document.getElementById('apps-grid').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'block';
+                document.getElementById('search-results-info').style.display = 'none';
+            } else {
+                document.getElementById('empty-state').style.display = 'none';
+                document.getElementById('apps-grid').style.display = 'grid';
+                
+                if (currentSearchTerm || currentStatusFilter) {
+                    document.getElementById('search-results-info').style.display = 'flex';
+                    let infoText = `找到 <span>${filteredApps.length}</span> 个匹配结果`;
+                    if (currentSearchTerm) {
+                        infoText += ` (搜索: "${currentSearchTerm}")`;
+                    }
+                    document.getElementById('results-count').innerHTML = infoText;
+                } else {
+                    document.getElementById('search-results-info').style.display = 'none';
+                }
+                
+                renderApps(filteredApps);
+            }
+        }
+
+        function highlightText(text, searchTerm) {
+            if (!searchTerm || !text) return text;
+            const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function checkLoginStatus() {
+            const userInfo = localStorage.getItem('userInfo');
+            const userProfile = document.getElementById('user-profile');
+            
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    document.getElementById('dropdown-username').textContent = user.username || '用户';
+                    document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
+                    document.getElementById('user-avatar').src = user.avatar || '/static/img/default_avatar.svg';
+                    userProfile.style.display = 'inline-block';
+                } catch (e) {
+                    userProfile.style.display = 'none';
+                }
+            } else {
+                userProfile.style.display = 'none';
+            }
+        }
+
+        function setupEventListeners() {
+            const avatarContainer = document.getElementById('avatar-container');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+
+            avatarContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+            });
+
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('active');
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('userInfo');
+                window.location.href = '/';
+            });
+
+            document.getElementById('create-app-form').addEventListener('submit', handleCreateApp);
+            document.getElementById('callback-form').addEventListener('submit', handleSaveCallback);
+        }
+
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            if (tabName === 'apps') {
+                document.getElementById('apps-tab').classList.add('active');
+            } else {
+                document.getElementById('docs-tab').classList.add('active');
+            }
+            btn.classList.add('active');
+        }
+
+        function loadApps() {
+            fetch('/api/developer/apps', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success && data.apps && data.apps.length > 0) {
+                    apps = data.apps;
+                    filterAndRenderApps();
+                    document.getElementById('apps-grid').style.display = 'grid';
+                } else {
+                    document.getElementById('empty-state').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('加载应用失败:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p style="color: var(--danger-color);">加载失败，请刷新页面重试</p>
+                `;
+            });
+        }
+
+        function renderApps(appsToRender) {
+            const grid = document.getElementById('apps-grid');
+            grid.innerHTML = '';
+
+            appsToRender.forEach(app => {
+                const card = document.createElement('div');
+                card.className = 'app-card';
+                
+                const highlightedName = currentSearchTerm ? highlightText(escapeHtml(app.name), currentSearchTerm) : escapeHtml(app.name);
+                const highlightedDescription = currentSearchTerm ? highlightText(escapeHtml(app.description || '无描述'), currentSearchTerm) : escapeHtml(app.description || '无描述');
+                const highlightedOwner = currentSearchTerm ? highlightText(escapeHtml(app.owner || '未知'), currentSearchTerm) : escapeHtml(app.owner || '未知');
+                
+                card.innerHTML = `
+                    <div class="app-header">
+                        <div>
+                            <div class="app-name">${highlightedName}</div>
+                            <span class="status-badge status-${app.status}">${getStatusText(app.status)}</span>
+                        </div>
+                    </div>
+                    <div class="app-description">${highlightedDescription}</div>
+                    
+                    <div class="app-info">
+                        <div class="info-item">
+                            <span class="info-label">所属权：</span>
+                            <span class="info-value">${highlightedOwner}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">官网：</span>
+                            <span class="info-value">
+                                ${app.website ? `<a href="${escapeHtml(app.website)}" target="_blank">${escapeHtml(app.website)}</a>` : '无'}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">创建时间：</span>
+                            <span class="info-value">${app.created_at || '未知'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="app-id-box">
+                        <div class="app-id-label">App ID（15位）</div>
+                        <div class="app-id-value">${app.id}</div>
+                    </div>
+                    
+                    ${app.status === 'approved' ? `
+                    <div class="app-secret-box">
+                        <div class="app-secret-label">
+                            <span>App Secret（64位）</span>
+                            <button class="action-btn" style="padding: 5px 10px; min-width: auto;" onclick="toggleSecret(this, '${app.id}')">
+                                <i class="fas fa-eye"></i> 查看
+                            </button>
+                        </div>
+                        <div class="app-secret-value app-secret-hidden">••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="app-actions">
+                        ${app.status === 'approved' ? `
+                        <button class="action-btn primary" onclick="openCallbackModal('${app.id}')">
+                            <i class="fas fa-cog"></i> 回调配置
+                        </button>
+                        ` : ''}
+                        <button class="action-btn danger" onclick="confirmDeleteApp('${app.id}', '${escapeHtml(app.name)}')">
+                            <i class="fas fa-trash"></i> 删除应用
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleSecret(btn, appId) {
+            const secretBox = btn.closest('.app-secret-box');
+            const secretValue = secretBox.querySelector('.app-secret-value');
+            
+            if (secretValue.classList.contains('app-secret-hidden')) {
+                fetch(`/api/developer/app-secret/${appId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        secretValue.textContent = data.app_secret;
+                        secretValue.classList.remove('app-secret-hidden');
+                        btn.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏';
+                    } else {
+                        showError(data.message || '获取密钥失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('获取密钥失败:', error);
+                    showError('获取密钥失败，请重试');
+                });
+            } else {
+                secretValue.textContent = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
+                secretValue.classList.add('app-secret-hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> 查看';
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待审核',
+                'approved': '已通过',
+                'rejected': '已拒绝'
+            };
+            return statusMap[status] || status;
+        }
+
+        function openCreateAppModal() {
+            document.getElementById('create-app-form').reset();
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            document.querySelectorAll('.form-input, .form-textarea').forEach(el => el.classList.remove('error'));
+            document.getElementById('create-app-modal').classList.add('active');
+        }
+
+        function closeCreateAppModal() {
+            document.getElementById('create-app-modal').classList.remove('active');
+        }
+
+        function handleCreateApp(e) {
+            e.preventDefault();
+
+            const appName = document.getElementById('app-name').value.trim();
+            const appDescription = document.getElementById('app-description').value.trim();
+            const appOwner = document.getElementById('app-owner').value.trim();
+            const appWebsite = document.getElementById('app-website').value.trim();
+
+            let hasError = false;
+
+            if (!appName) {
+                document.getElementById('app-name-error').textContent = '请输入应用名称';
+                document.getElementById('app-name').classList.add('error');
+                hasError = true;
+            } else if (appName.length > 100) {
+                document.getElementById('app-name-error').textContent = '应用名称不能超过100个字符';
+                document.getElementById('app-name').classList.add('error');
+                hasError = true;
+            }
+
+            if (!appDescription) {
+                document.getElementById('app-description-error').textContent = '请输入应用概述';
+                document.getElementById('app-description').classList.add('error');
+                hasError = true;
+            }
+
+            if (!appOwner) {
+                document.getElementById('app-owner-error').textContent = '请输入所属权';
+                document.getElementById('app-owner').classList.add('error');
+                hasError = true;
+            }
+
+            if (!appWebsite) {
+                document.getElementById('app-website-error').textContent = '请输入应用网址';
+                document.getElementById('app-website').classList.add('error');
+                hasError = true;
+            } else if (!isValidUrl(appWebsite)) {
+                document.getElementById('app-website-error').textContent = '请输入有效的网址格式';
+                document.getElementById('app-website').classList.add('error');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            fetch('/api/developer/create-app', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: appName,
+                    description: appDescription,
+                    owner: appOwner,
+                    website: appWebsite
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeCreateAppModal();
+                    currentCreatedAppId = data.app.id;
+                    currentCreatedAppSecret = data.app.app_secret;
+                    
+                    document.getElementById('created-app-id').textContent = currentCreatedAppId;
+                    document.getElementById('created-app-secret').textContent = currentCreatedAppSecret;
+                    document.getElementById('secret-modal').classList.add('active');
+                    
+                    loadApps();
+                } else {
+                    showError(data.message || '创建应用失败');
+                }
+            })
+            .catch(error => {
+                console.error('创建应用失败:', error);
+                showError('创建应用失败，请重试');
+            });
+        }
+
+        function closeSecretModal() {
+            document.getElementById('secret-modal').classList.remove('active');
+            currentCreatedAppId = null;
+            currentCreatedAppSecret = null;
+        }
+
+        function copyCredentials() {
+            if (!currentCreatedAppId || !currentCreatedAppSecret) return;
+            
+            const credentials = `App ID: ${currentCreatedAppId}\nApp Secret: ${currentCreatedAppSecret}`;
+            navigator.clipboard.writeText(credentials).then(() => {
+                showSuccess('凭证已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showError('复制失败，请手动复制');
+            });
+        }
+
+        function openCallbackModal(appId) {
+            document.getElementById('callback-app-id').value = appId;
+            document.getElementById('login-callback-url').value = '';
+            document.getElementById('verification-callback-url').value = '';
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+            
+            fetch(`/api/developer/app-config/${appId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('login-callback-url').value = data.config.login_callback_url || '';
+                    document.getElementById('verification-callback-url').value = data.config.verification_callback_url || '';
+                }
+            })
+            .catch(error => {
+                console.error('加载配置失败:', error);
+            });
+            
+            document.getElementById('callback-modal').classList.add('active');
+        }
+
+        function closeCallbackModal() {
+            document.getElementById('callback-modal').classList.remove('active');
+        }
+
+        function handleSaveCallback(e) {
+            e.preventDefault();
+
+            const appId = document.getElementById('callback-app-id').value;
+            const loginCallbackUrl = document.getElementById('login-callback-url').value.trim();
+            const verificationCallbackUrl = document.getElementById('verification-callback-url').value.trim();
+
+            let hasError = false;
+
+            if (loginCallbackUrl && !isValidUrl(loginCallbackUrl)) {
+                document.getElementById('login-callback-error').textContent = '请输入有效的URL格式';
+                document.getElementById('login-callback-url').classList.add('error');
+                hasError = true;
+            }
+
+            if (verificationCallbackUrl && !isValidUrl(verificationCallbackUrl)) {
+                document.getElementById('verification-callback-error').textContent = '请输入有效的URL格式';
+                document.getElementById('verification-callback-url').classList.add('error');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            fetch('/api/developer/configure-callback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    app_id: appId,
+                    login_callback_url: loginCallbackUrl,
+                    verification_callback_url: verificationCallbackUrl
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeCallbackModal();
+                    showSuccess('回调配置已保存');
+                } else {
+                    showError(data.message || '保存配置失败');
+                }
+            })
+            .catch(error => {
+                console.error('保存配置失败:', error);
+                showError('保存配置失败，请重试');
+            });
+        }
+
+        function confirmDeleteApp(appId, appName) {
+            if (!confirm(`确定要删除应用"${appName}"吗？此操作不可撤销。`)) {
+                return;
+            }
+
+            fetch('/api/developer/delete-app', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ app_id: appId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess('应用已删除');
+                    loadApps();
+                } else {
+                    showError(data.message || '删除应用失败');
+                }
+            })
+            .catch(error => {
+                console.error('删除应用失败:', error);
+                showError('删除应用失败，请重试');
+            });
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showSuccess(message) {
+            const successMessage = document.getElementById('success-message');
+            successMessage.textContent = message;
+            successMessage.classList.add('active');
+            setTimeout(() => {
+                successMessage.classList.remove('active');
+            }, 3000);
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

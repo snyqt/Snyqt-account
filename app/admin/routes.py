@@ -1,7 +1,10 @@
 from flask import Blueprint, request, jsonify, session, redirect, render_template, current_app
 import os
 import pymysql
+import string
+import random
 from PIL import Image
+from werkzeug.security import generate_password_hash
 
 from app.models.db import get_db_connection
 from app.auth.utils import hash_password, is_password_strong
@@ -9,6 +12,21 @@ from app.auth.routes import login_required, admin_required
 from app.admin.utils import avatar_extensions, get_user_avatar_path
 
 admin_bp = Blueprint('admin', __name__)
+
+
+def get_network_time():
+    from datetime import datetime
+    return datetime.now()
+
+
+def generate_app_id():
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choice(chars) for _ in range(15))
+
+
+def generate_app_secret():
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choice(chars) for _ in range(64))
 
 
 @admin_bp.route('/user_permission_management')
@@ -54,6 +72,26 @@ def admin_login_logs_page():
 @login_required
 def user_login_logs_page():
     return render_template('user_login_log.html')
+
+
+@admin_bp.route('/app-review')
+@admin_required
+def app_review_page():
+    try:
+        return render_template('app_review.html')
+    except Exception as e:
+        print(f"访问应用审核页面失败: {e}")
+        return "访问失败，请重试", 500
+
+
+@admin_bp.route('/app-management')
+@admin_required
+def app_management_page():
+    try:
+        return render_template('app_management.html')
+    except Exception as e:
+        print(f"访问应用管理页面失败: {e}")
+        return "访问失败，请重试", 500
 
 
 @admin_bp.route('/api/admin-login-logs', methods=['GET'])
@@ -526,9 +564,376 @@ def admin_delete_user():
 
             return jsonify({'success': True, 'message': '用户删除成功'})
         except Exception as e:
-            # 发生错误时回滚
             conn.rollback()
             raise e
     except Exception as e:
         print(f"管理员删除用户失败: {e}")
         return jsonify({'success': False, 'message': '删除失败，请稍后重试'})
+
+
+@admin_bp.route('/api/admin/pending-apps', methods=['GET'])
+@admin_required
+def get_pending_apps():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT 
+                da.id, 
+                da.developer_id, 
+                da.name, 
+                da.description, 
+                da.owner, 
+                da.website, 
+                da.status, 
+                da.created_at,
+                u.Name as developer_name
+            FROM developer_apps da
+            LEFT JOIN user_info u ON da.developer_id = u.id
+            WHERE da.status = 'pending'
+            ORDER BY da.created_at DESC
+        """)
+
+        apps = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'apps': apps})
+
+    except Exception as e:
+        print(f"获取待审批应用列表失败: {e}")
+        return jsonify({'success': False, 'message': '获取列表失败'})
+
+
+@admin_bp.route('/api/admin/approve-app', methods=['POST'])
+@admin_required
+def approve_app():
+    try:
+        data = request.json
+        app_id = data.get('app_id')
+
+        if not app_id:
+            return jsonify({'success': False, 'message': '应用ID不能为空'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("SELECT * FROM developer_apps WHERE id = %s", (app_id,))
+        app = cursor.fetchone()
+
+        if not app:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '应用不存在'})
+
+        if app['status'] != 'pending':
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '该应用不在待审批状态'})
+
+        if app['id'] and len(app['id']) == 15:
+            final_app_id = app['id']
+        else:
+            final_app_id = generate_app_id()
+            while True:
+                cursor.execute("SELECT id FROM developer_apps WHERE id = %s", (final_app_id,))
+                if not cursor.fetchone():
+                    break
+                final_app_id = generate_app_id()
+
+        app_secret = generate_app_secret()
+        app_secret_hash = generate_password_hash(app_secret)
+        approved_at = get_network_time()
+
+        cursor.execute("""
+            UPDATE developer_apps 
+            SET id = %s, app_secret = %s, status = 'approved', approved_at = %s
+            WHERE id = %s
+        """, (final_app_id, app_secret_hash, approved_at, app_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '应用审批通过',
+            'app_id': final_app_id,
+            'app_secret': app_secret
+        })
+
+    except Exception as e:
+        print(f"审批应用失败: {e}")
+        return jsonify({'success': False, 'message': '审批失败，请稍后重试'})
+
+
+@admin_bp.route('/api/admin/reject-app', methods=['POST'])
+@admin_required
+def reject_app():
+    try:
+        data = request.json
+        app_id = data.get('app_id')
+
+        if not app_id:
+            return jsonify({'success': False, 'message': '应用ID不能为空'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor()
+
+        try:
+            conn.begin()
+
+            cursor.execute("DELETE FROM app_configurations WHERE app_id = %s", (app_id,))
+            cursor.execute("DELETE FROM developer_authorizations WHERE app_id = %s", (app_id,))
+            cursor.execute("DELETE FROM developer_apps WHERE id = %s", (app_id,))
+
+            if cursor.rowcount == 0:
+                conn.rollback()
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '应用不存在'})
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return jsonify({'success': True, 'message': '应用已拒绝并删除'})
+
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    except Exception as e:
+        print(f"拒绝应用失败: {e}")
+        return jsonify({'success': False, 'message': '拒绝失败，请稍后重试'})
+
+
+@admin_bp.route('/api/admin/pending-apps-count', methods=['GET'])
+@admin_required
+def get_pending_apps_count():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM developer_apps WHERE status = 'pending'")
+        count = cursor.fetchone()[0]
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'count': count})
+
+    except Exception as e:
+        print(f"获取待审批应用数量失败: {e}")
+        return jsonify({'success': False, 'message': '获取数量失败'})
+
+
+@admin_bp.route('/api/admin/all-apps', methods=['GET'])
+@admin_required
+def get_all_apps():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT 
+                da.id, 
+                da.developer_id, 
+                da.name, 
+                da.description, 
+                da.owner, 
+                da.website, 
+                da.status, 
+                da.created_at,
+                da.approved_at,
+                u.Name as developer_name
+            FROM developer_apps da
+            LEFT JOIN user_info u ON da.developer_id = u.id
+            ORDER BY da.created_at DESC
+        """)
+
+        apps = cursor.fetchall()
+
+        for app in apps:
+            if app['created_at']:
+                app['created_at'] = app['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if app['approved_at']:
+                app['approved_at'] = app['approved_at'].strftime('%Y-%m-%d %H:%M:%S')
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'apps': apps})
+
+    except Exception as e:
+        print(f"获取所有应用列表失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'获取列表失败: {str(e)}'})
+
+
+@admin_bp.route('/api/admin/update-app', methods=['POST'])
+@admin_required
+def update_app():
+    try:
+        data = request.json
+        app_id = data.get('app_id')
+        name = data.get('name')
+        description = data.get('description')
+        owner = data.get('owner')
+        website = data.get('website')
+        status = data.get('status')
+
+        if not app_id:
+            return jsonify({'success': False, 'message': '应用ID不能为空'})
+
+        if status == 'rejected':
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': '数据库连接失败'})
+            
+            try:
+                cursor = conn.cursor()
+                conn.begin()
+                
+                cursor.execute("DELETE FROM app_configurations WHERE app_id = %s", (app_id,))
+                cursor.execute("DELETE FROM developer_authorizations WHERE app_id = %s", (app_id,))
+                cursor.execute("DELETE FROM developer_apps WHERE id = %s", (app_id,))
+                
+                if cursor.rowcount == 0:
+                    conn.rollback()
+                    cursor.close()
+                    conn.close()
+                    return jsonify({'success': False, 'message': '应用不存在'})
+                
+                conn.commit()
+                cursor.close()
+                conn.close()
+                
+                return jsonify({'success': True, 'message': '应用已拒绝并删除'})
+            except Exception as e:
+                conn.rollback()
+                raise e
+
+        if not name or not name.strip():
+            return jsonify({'success': False, 'message': '应用名称不能为空'})
+
+        if len(name) > 100:
+            return jsonify({'success': False, 'message': '应用名称不能超过100个字符'})
+
+        if website and not validate_url(website):
+            return jsonify({'success': False, 'message': '请输入有效的网址格式'})
+
+        if status not in ['pending', 'approved', 'rejected']:
+            return jsonify({'success': False, 'message': '无效的应用状态'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("SELECT id FROM developer_apps WHERE id = %s", (app_id,))
+        app = cursor.fetchone()
+
+        if not app:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': '应用不存在'})
+
+        cursor.execute("""
+            UPDATE developer_apps 
+            SET name = %s, description = %s, owner = %s, website = %s, status = %s
+            WHERE id = %s
+        """, (name.strip(), description, owner, website, status, app_id))
+
+        if status == 'approved':
+            cursor.execute("""
+                UPDATE developer_apps 
+                SET approved_at = %s
+                WHERE id = %s AND approved_at IS NULL
+            """, (get_network_time(), app_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '应用信息已更新'})
+
+    except Exception as e:
+        print(f"更新应用失败: {e}")
+        return jsonify({'success': False, 'message': '更新失败，请稍后重试'})
+
+
+@admin_bp.route('/api/admin/delete-app', methods=['DELETE'])
+@admin_required
+def admin_delete_app():
+    try:
+        data = request.json
+        app_id = data.get('app_id')
+
+        if not app_id:
+            return jsonify({'success': False, 'message': '应用ID不能为空'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'})
+
+        cursor = conn.cursor()
+
+        try:
+            conn.begin()
+
+            cursor.execute("DELETE FROM app_configurations WHERE app_id = %s", (app_id,))
+            cursor.execute("DELETE FROM developer_authorizations WHERE app_id = %s", (app_id,))
+            cursor.execute("DELETE FROM developer_apps WHERE id = %s", (app_id,))
+
+            if cursor.rowcount == 0:
+                conn.rollback()
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '应用不存在'})
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return jsonify({'success': True, 'message': '应用删除成功'})
+
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    except Exception as e:
+        print(f"删除应用失败: {e}")
+        return jsonify({'success': False, 'message': '删除失败，请稍后重试'})
+
+
+def validate_url(url):
+    import re
+    if not url:
+        return True
+    url_pattern = re.compile(
+        r'^https?://'
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'
+        r'localhost|'
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        r'(?::\d+)?'
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return url_pattern.match(url) is not None

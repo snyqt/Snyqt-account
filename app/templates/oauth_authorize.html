@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授权确认 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/theme-toggle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 35%, var(--bg-gradient-middle2) 70%, var(--bg-gradient-end) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+        
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .authorize-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--card-shadow);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .authorize-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px var(--primary-shadow);
+        }
+        
+        .authorize-header {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .authorize-header h2 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .authorize-header p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .authorize-body {
+            padding: 40px 30px;
+        }
+        
+        .app-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--danger-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+        
+        .app-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+        
+        .app-owner {
+            font-size: 14px;
+            color: var(--secondary-text);
+            margin-bottom: 5px;
+        }
+        
+        .app-website {
+            font-size: 14px;
+            color: var(--danger-color);
+        }
+        
+        .app-website a {
+            color: var(--danger-color);
+            text-decoration: none;
+        }
+        
+        .app-website a:hover {
+            text-decoration: underline;
+        }
+        
+        .permissions {
+            margin-bottom: 30px;
+        }
+        
+        .permissions h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .permissions h3 i {
+            color: var(--danger-color);
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--primary-shadow);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .permission-item:hover {
+            background: var(--card-border);
+        }
+        
+        .permission-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--danger-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+            color: var(--danger-color);
+        }
+        
+        .permission-text {
+            flex: 1;
+        }
+        
+        .permission-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .permission-desc {
+            font-size: 13px;
+            color: var(--secondary-text);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-confirm {
+            background: var(--danger-bg-hover);
+            color: white;
+        }
+        
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+        
+        .btn-cancel {
+            background: var(--card-border);
+            color: var(--text-color);
+        }
+        
+        .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--card-shadow);
+        }
+        
+        .warning {
+            background: var(--primary-shadow);
+            border-left: 4px solid var(--bg-gradient-start);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--secondary-text);
+        }
+        
+        .warning i {
+            color: var(--bg-gradient-start);
+            margin-right: 8px;
+        }
+        
+        .footer {
+            background: var(--card-bg);
+            color: var(--secondary-text);
+            padding: 20px;
+            text-align: center;
+            margin-top: auto;
+            border-top: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .footer p {
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .authorize-card {
+                margin: 0 10px;
+            }
+            
+            .authorize-body {
+                padding: 30px 20px;
+            }
+            
+            .header-title {
+                font-size: 18px;
+            }
+            
+            .logo {
+                height: 60px;
+                width: 60px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="authorize-card">
+            <div class="authorize-header">
+                <h2><i class="fas fa-shield-alt"></i> 授权确认</h2>
+                <p>请确认您要授权的应用</p>
+            </div>
+            
+            <div class="authorize-body">
+                <div class="app-info">
+                    <div class="app-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="app-name">{{ app_name }}</div>
+                    {% if app_owner %}
+                    <div class="app-owner">开发者: {{ app_owner }}</div>
+                    {% endif %}
+                    {% if app_website %}
+                    <div class="app-website">
+                        <a href="{{ app_website }}" target="_blank"><i class="fas fa-globe"></i> {{ app_website }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if app_description %}
+                <div class="warning">
+                    <i class="fas fa-info-circle"></i>
+                    {{ app_description }}
+                </div>
+                {% endif %}
+                
+                <div class="permissions">
+                    <h3><i class="fas fa-key"></i> 请求的权限</h3>
+                    
+                    <div class="permission-item">
+                        <div class="permission-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="permission-text">
+                            <div class="permission-name">用户名</div>
+                            <div class="permission-desc">获取您的用户名</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-item">
+                        <div class="permission-icon">
+                            <i class="fas fa-id-badge"></i>
+                        </div>
+                        <div class="permission-text">
+                            <div class="permission-name">用户ID</div>
+                            <div class="permission-desc">获取您的用户唯一标识</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-item">
+                        <div class="permission-icon">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="permission-text">
+                            <div class="permission-name">头像</div>
+                            <div class="permission-desc">获取您的头像信息</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="authorize-form" method="POST" action="/oauth/authorize/confirm">
+                    <input type="hidden" name="app_id" value="{{ app_id }}">
+                    <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+                    <input type="hidden" name="state" value="{{ state }}">
+                    
+                    <div class="actions">
+                        <button type="button" class="btn btn-cancel" onclick="cancelAuth()">取消</button>
+                        <button type="submit" class="btn btn-confirm">确认授权</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+    
+    <script>
+        function cancelAuth() {
+            const redirectUri = '{{ redirect_uri }}';
+            if (redirectUri) {
+                window.location.href = redirectUri;
+            } else {
+                window.location.href = '/';
+            }
+        }
+        
+        document.getElementById('authorize-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/oauth/authorize/confirm', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && !data.success) {
+                    alert('授权失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('授权请求失败:', error);
+                alert('授权失败，请稍后重试');
+            });
+        });
+    </script>
+</body>
+</html>

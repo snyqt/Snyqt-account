@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者文档 - {{ project_name }} v{{ project_version }}</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/theme-toggle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: var(--primary-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-container {
+            position: relative;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+        }
+
+        .avatar-container:hover {
+            background-color: var(--primary-shadow);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .logout-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--secondary-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .login-btn {
+            background: var(--danger-bg);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 10px 20px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--danger-shadow);
+            background: var(--danger-bg-hover);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            flex: 1;
+        }
+
+        .page-title {
+            color: var(--text-color);
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-title i {
+            color: var(--danger-color);
+        }
+
+        .version-badge {
+            font-size: 14px;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--primary-bg-hover) 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 15px;
+            box-shadow: var(--primary-shadow);
+        }
+
+        .page-description {
+            color: var(--secondary-text);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            border: 1px solid var(--card-border);
+        }
+
+        .section-title {
+            color: var(--text-color);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .section-title i {
+            color: var(--danger-color);
+            font-size: 28px;
+        }
+
+        .api-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .api-card:hover {
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            transform: translateY(-2px);
+        }
+
+        .api-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 12px;
+            text-transform: uppercase;
+        }
+
+        .method-post {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .method-get {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+            color: white;
+        }
+
+        .method-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .api-endpoint {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            color: var(--text-color);
+            margin: 12px 0;
+            padding: 12px;
+            background: var(--primary-shadow);
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        .api-description {
+            color: var(--secondary-text);
+            margin: 15px 0;
+            line-height: 1.7;
+        }
+
+        .param-table {
+            width: 100%;
+            margin: 15px 0;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .param-table th {
+            background: var(--primary-shadow);
+            color: var(--text-color);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .param-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .param-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .param-table tr:hover {
+            background: var(--primary-shadow);
+        }
+
+        .param-name {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--danger-color);
+        }
+
+        .param-required {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        [data-theme="dark"] .code-block {
+            background: #2d2d2d;
+        }
+
+        [data-theme="light"] .code-block {
+            background: #f6f8fa;
+        }
+
+        .code-block pre {
+            margin: 0;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        [data-theme="light"] .code-block pre {
+            color: #24292e;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] .code-header {
+            border-bottom-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .code-lang {
+            color: #f8f8f2;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        [data-theme="light"] .code-lang {
+            color: #24292e;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8f8f2;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="light"] .copy-btn {
+            background: rgba(0, 0, 0, 0.05);
+            color: #24292e;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] .copy-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-container {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .flow-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 55px;
+            width: 2px;
+            height: calc(100% - 35px);
+            background: linear-gradient(to bottom, var(--danger-color), var(--primary-shadow));
+        }
+
+        .flow-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-right: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .flow-content {
+            flex: 1;
+            padding-top: 5px;
+        }
+
+        .flow-title {
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .flow-desc {
+            color: var(--secondary-text);
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+
+        .flow-code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: var(--primary-shadow);
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: var(--text-color);
+        }
+
+        .callback-box {
+            background: linear-gradient(135deg, rgba(242, 101, 34, 0.1) 0%, rgba(255, 158, 100, 0.1) 100%);
+            border: 2px solid var(--danger-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .callback-title {
+            color: var(--danger-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .callback-url {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text-color);
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 6px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .note-box {
+            background: linear-gradient(135deg, rgba(129, 212, 250, 0.1) 0%, rgba(227, 242, 253, 0.1) 100%);
+            border-left: 4px solid var(--success-color);
+            border-radius: 0 8px 8px 0;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+
+        .note-title {
+            color: var(--success-color);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-content {
+            color: var(--secondary-text);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: rgba(255, 158, 125, 0.1);
+            border-left: 4px solid var(--danger-color);
+            border-radius: 0 8px 8px 0;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+
+        .warning-title {
+            color: var(--danger-color);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .warning-content {
+            color: var(--secondary-text);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--bg-gradient-start);
+            background: var(--primary-shadow);
+        }
+
+        .tab-btn.active {
+            background: var(--primary-bg);
+            color: white;
+            border-color: var(--bg-gradient-start);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            color: var(--secondary-text);
+            font-size: 14px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .api-card {
+                padding: 15px;
+            }
+
+            .param-table {
+                font-size: 13px;
+            }
+
+            .param-table th,
+            .param-table td {
+                padding: 10px;
+            }
+
+            .code-block pre {
+                font-size: 13px;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <a href="/login" class="login-btn" id="login-btn">登录</a>
+
+            <div class="user-profile" id="user-profile" style="display: none;">
+                <div class="avatar-container">
+                    <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item username-item" id="dropdown-username"></div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid"></div>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
+                </div>
+            </div>
+
+            <a href="/developer-app-management" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                返回应用管理
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="page-title">
+            <i class="fas fa-book"></i>
+            API 开发文档
+            <span class="version-badge">v{{ project_version }}</span>
+        </h2>
+        <p class="page-description">
+            欢迎使用少年友晴天统一账户认证系统 API。本文档提供了完整的接口说明、授权流程、回调机制以及示例代码，帮助开发者快速集成我们的认证服务。
+        </p>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-shield-alt"></i>
+                OAuth 2.0 授权流程
+            </h3>
+            
+            <div class="flow-container">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <div class="flow-title">用户发起授权请求</div>
+                        <div class="flow-desc">用户在第三方应用中点击"使用少年友晴天账号登录"按钮，第三方应用将用户重定向到授权页面。</div>
+                        <div class="flow-code">GET /oauth/authorize?app_id=YOUR_APP_ID&redirect_uri=YOUR_CALLBACK_URL</div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <div class="flow-title">用户登录并授权</div>
+                        <div class="flow-desc">用户在授权页面输入账号密码进行登录，确认授权第三方应用访问其基本信息。</div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <div class="flow-title">系统生成授权码</div>
+                        <div class="flow-desc">用户授权成功后，系统生成一个授权码（auth_code），并通过回调地址将授权码返回给第三方应用。</div>
+                        <div class="flow-code">YOUR_CALLBACK_URL?auth_code=AUTH_CODE_HERE</div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div class="flow-content">
+                        <div class="flow-title">第三方应用获取用户信息</div>
+                        <div class="flow-desc">第三方应用使用授权码，通过后端 API 获取用户信息。</div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div class="flow-content">
+                        <div class="flow-title">完成授权流程</div>
+                        <div class="flow-desc">第三方应用获取到用户信息后，可创建用户会话或绑定账号，授权流程完成。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    重要提示
+                </div>
+                <div class="warning-content">
+                    授权码有效期为10分钟，请在获取后尽快使用。每个授权码只能使用一次，使用后即失效。
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-sync"></i>
+                回调机制说明
+            </h3>
+            
+            <div class="callback-box">
+                <div class="callback-title">
+                    <i class="fas fa-sign-in-alt"></i>
+                    登录回调地址
+                </div>
+                <div class="flow-desc">
+                    当用户成功授权后，系统会将授权码通过此地址返回给第三方应用。您需要在应用配置中设置此地址。
+                </div>
+                <div class="callback-url">https://your-app.com/callback?auth_code={auth_code}</div>
+            </div>
+
+            <div class="callback-box">
+                <div class="callback-title">
+                    <i class="fas fa-key"></i>
+                    验证码回调地址
+                </div>
+                <div class="flow-desc">
+                    当用户请求发送验证码时，系统会通过此地址将验证码信息回调给您。您可以在此接收并处理验证码，用于自定义的验证流程。
+                </div>
+                <div class="callback-url">https://your-app.com/verification-callback?code={code}&user_id={user_id}&type={type}</div>
+                <div class="note-box">
+                    <div class="note-title">
+                        <i class="fas fa-info-circle"></i>
+                        回调参数说明
+                    </div>
+                    <div class="note-content">
+                        - code: 验证码内容<br>
+                        - user_id: 用户ID<br>
+                        - type: 验证码类型（email 或 phone）<br>
+                        - auth_code: 授权码（用于关联会话）
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    安全提示
+                </div>
+                <div class="warning-content">
+                    请确保您的回调地址使用 HTTPS 协议，并做好接口的安全验证，防止被恶意调用。
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-code"></i>
+                API 接口文档
+            </h3>
+
+            <div class="api-card">
+                <div>
+                    <span class="api-method method-post">POST</span>
+                    <strong>获取用户信息</strong>
+                </div>
+                <div class="api-endpoint">/api/oauth/userinfo</div>
+                <div class="api-description">
+                    通过授权码获取已授权用户的基本信息。
+                </div>
+
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>参数名</th>
+                            <th>类型</th>
+                            <th>必填</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="param-name">app_id</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>应用的唯一标识符（15位）</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">app_secret</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>应用密钥（64位）</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">auth_code</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>授权码（10分钟内有效）</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">delete_code</td>
+                            <td>boolean</td>
+                            <td>否</td>
+                            <td>是否在获取用户信息后删除授权记录</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="showTab('curl1', this)">cURL</button>
+                        <button class="tab-btn" onclick="showTab('python1', this)">Python</button>
+                        <button class="tab-btn" onclick="showTab('javascript1', this)">JavaScript</button>
+                    </div>
+
+                    <div id="curl1" class="tab-content active">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">cURL</span>
+                                <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            </div>
+                            <pre>curl -X POST {{ project_website }}/api/oauth/userinfo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app_id": "YOUR_APP_ID",
+    "app_secret": "YOUR_APP_SECRET",
+    "auth_code": "USER_AUTH_CODE"
+  }'</pre>
+                        </div>
+                    </div>
+
+                    <div id="python1" class="tab-content">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">Python</span>
+                                <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            </div>
+                            <pre>import requests
+import json
+
+url = "{{ project_website }}/api/oauth/userinfo"
+payload = {
+    "app_id": "YOUR_APP_ID",
+    "app_secret": "YOUR_APP_SECRET",
+    "auth_code": "USER_AUTH_CODE"
+}
+headers = {"Content-Type": "application/json"}
+
+response = requests.post(url, json=payload, headers=headers)
+data = response.json()
+
+if data.get("success"):
+    user = data["user"]
+    print(f"用户ID: {user['user_id']}")
+    print(f"用户名: {user['username']}")
+    print(f"头像: {user['avatar']}")</pre>
+                        </div>
+                    </div>
+
+                    <div id="javascript1" class="tab-content">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JavaScript</span>
+                                <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            </div>
+                            <pre>const response = await fetch('{{ project_website }}/api/oauth/userinfo', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    app_id: 'YOUR_APP_ID',
+    app_secret: 'YOUR_APP_SECRET',
+    auth_code: 'USER_AUTH_CODE'
+  })
+});
+
+const data = await response.json();
+
+if (data.success) {
+  const user = data.user;
+  console.log('用户ID:', user.user_id);
+  console.log('用户名:', user.username);
+  console.log('头像:', user.avatar);
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-box">
+                    <div class="note-title">
+                        <i class="fas fa-check-circle"></i>
+                        成功响应示例
+                    </div>
+                    <div class="note-content">
+                        <div class="code-block" style="margin: 10px 0;">
+                            <pre style="color: #f8f8f2;">{
+  "success": true,
+  "user": {
+    "user_id": "abc123456789",
+    "username": "张三",
+    "avatar": "{{ project_website }}/avatar.jpg"
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div>
+                    <span class="api-method method-post">POST</span>
+                    <strong>发送验证码</strong>
+                </div>
+                <div class="api-endpoint">/api/oauth/send-verification</div>
+                <div class="api-description">
+                    向已授权用户发送验证码，支持邮箱验证码和手机短信验证码两种方式。
+                </div>
+
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>参数名</th>
+                            <th>类型</th>
+                            <th>必填</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="param-name">app_id</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>应用的唯一标识符</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">app_secret</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>应用密钥</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">auth_code</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>有效的授权码</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">type</td>
+                            <td>string</td>
+                            <td class="param-required">是</td>
+                            <td>验证码类型：email（邮箱）或 phone（手机）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="showTab('curl2', this)">cURL</button>
+                        <button class="tab-btn" onclick="showTab('python2', this)">Python</button>
+                        <button class="tab-btn" onclick="showTab('javascript2', this)">JavaScript</button>
+                    </div>
+
+                    <div id="curl2" class="tab-content active">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">cURL</span>
+                                <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            </div>
+                            <pre>curl -X POST {{ project_website }}/api/oauth/send-verification \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app_id": "YOUR_APP_ID",
+    "app_secret": "YOUR_APP_SECRET",
+    "auth_code": "USER_AUTH_CODE",
+    "type": "email"
+  }'</pre>
+                        </div>
+                    </div>
+
+                    <div id="python2" class="tab-content">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">Python</span>
+                                <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            </div>
+                            <pre>import requests
+import json
+
+url = "{{ project_website }}/api/oauth/send-verification"
+payload = {
+    "app_id": "YOUR_APP_ID",
+    "app_secret": "YOUR_APP_SECRET",
+    "auth_code": "USER_AUTH_CODE",
+    "type": "email"
+}
+headers = {"Content-Type": "application/json"}
+
+response = requests.post(url, json=payload, headers=headers)
+data = response.json()
+
+if data.get("success"):
+    print("验证码发送成功")
+else:
+    print(f"发送失败: {data.get('message')}")</pre>
+                        </div>
+                    </div>
+
+                    <div id="javascript2" class="tab-content">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JavaScript</span>
+                                <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            </div>
+                            <pre>const response = await fetch('{{ project_website }}/api/oauth/send-verification', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    app_id: 'YOUR_APP_ID',
+    app_secret: 'YOUR_APP_SECRET',
+    auth_code: 'USER_AUTH_CODE',
+    type: 'email'
+  })
+});
+
+const data = await response.json();
+
+if (data.success) {
+  console.log('验证码发送成功');
+} else {
+  console.log('发送失败:', data.message);
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-box">
+                    <div class="note-title">
+                        <i class="fas fa-check-circle"></i>
+                        成功响应示例
+                    </div>
+                    <div class="note-content">
+                        <div class="code-block" style="margin: 10px 0;">
+                            <pre style="color: #f8f8f2;">{
+  "success": true,
+  "message": "验证码发送成功",
+  "verification_code": "123456"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-title">
+                        <i class="fas fa-clock"></i>
+                        频率限制
+                    </div>
+                    <div class="warning-content">
+                        每个应用对同一用户发送验证码的频率限制为每分钟1次，请合理控制发送频率。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-exclamation-circle"></i>
+                错误码说明
+            </h3>
+
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>错误码</th>
+                        <th>HTTP状态码</th>
+                        <th>说明</th>
+                        <th>解决方案</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="param-name">缺少必要参数</td>
+                        <td>400</td>
+                        <td>请求参数不完整</td>
+                        <td>检查并补充所有必填参数</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">app_secret验证失败</td>
+                        <td>401</td>
+                        <td>应用密钥错误</td>
+                        <td>检查 app_secret 是否正确</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">授权码无效</td>
+                        <td>404</td>
+                        <td>授权码不存在或已过期</td>
+                        <td>重新获取授权码</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">授权码已过期</td>
+                        <td>401</td>
+                        <td>授权码超过10分钟有效期</td>
+                        <td>重新进行授权流程</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">应用不存在或未通过审核</td>
+                        <td>404</td>
+                        <td>应用ID不存在或未审核通过</td>
+                        <td>检查应用状态或提交审核</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">发送频率限制</td>
+                        <td>429</td>
+                        <td>验证码发送过于频繁</td>
+                        <td>等待60秒后重试</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-rocket"></i>
+                快速开始
+            </h3>
+
+            <div class="api-card">
+                <div class="flow-title">步骤1：注册开发者账号</div>
+                <div class="flow-desc">
+                    访问开发者平台，注册并申请开发者权限。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">步骤2：创建应用</div>
+                <div class="flow-desc">
+                    在应用管理页面创建新应用，填写应用名称、描述、官网地址等信息。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">步骤3：等待审核</div>
+                <div class="flow-desc">
+                    提交应用后，管理员将在1-3个工作日内完成审核。审核通过后，您将获得 App ID 和 App Secret。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">步骤4：配置回调地址</div>
+                <div class="flow-desc">
+                    在应用管理页面配置登录回调地址和验证码回调地址。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">步骤5：开始开发</div>
+                <div class="flow-desc">
+                    参考本文档中的示例代码，开始集成认证功能到您的应用中。
+                </div>
+            </div>
+
+            <div class="note-box">
+                <div class="note-title">
+                    <i class="fas fa-question-circle"></i>
+                    需要帮助？
+                </div>
+                <div class="note-content">
+                    如果您在开发过程中遇到任何问题，请通过以下方式联系我们：<br>
+                    - 邮箱：<a href="mailto:{{ project_email }}">{{ project_email }}</a><br>
+                    - 技术支持群：QQ {{ project_qq_group }}（SNYQT-ACCOUNT交流群）<br>
+                    - 官方网站：<a href="https://{{ project_website }}" target="_blank">{{ project_website }}</a><br>
+                    <br>
+                    当前系统版本：v{{ project_version }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 {{ project_name }} | 以科技化的方式，无限进步！</p>
+        <p style="margin-top: 10px; font-size: 13px;">
+            联系我们：<a href="mailto:{{ project_email }}" style="color: var(--danger-color);">{{ project_email }}</a> | 
+            QQ群：{{ project_qq_group }} | 
+            <a href="https://{{ project_website }}" target="_blank" style="color: var(--danger-color);">{{ project_website }}</a>
+        </p>
+    </footer>
+
+    <script>
+        function showTab(tabId, btn) {
+            const parent = btn.closest('.tab-container');
+            parent.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            parent.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = '已复制';
+                btn.style.background = 'rgba(40, 167, 69, 0.3)';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('开发者文档页面加载完成');
+            checkUserLoginStatus();
+            setupAvatarDropdown();
+        });
+
+        function checkUserLoginStatus() {
+            const userInfo = localStorage.getItem('userInfo');
+            const loginBtn = document.getElementById('login-btn');
+            const userProfile = document.getElementById('user-profile');
+
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    document.getElementById('dropdown-username').textContent = user.username || '用户';
+                    document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
+
+                    if (user.avatar) {
+                        document.getElementById('user-avatar').src = user.avatar;
+                    } else {
+                        document.getElementById('user-avatar').src = '/static/img/default_avatar.svg';
+                    }
+
+                    loginBtn.style.display = 'none';
+                    userProfile.style.display = 'inline-block';
+                } catch (e) {
+                    console.error('解析用户信息失败:', e);
+                    loginBtn.style.display = 'inline-block';
+                    userProfile.style.display = 'none';
+                }
+            } else {
+                loginBtn.style.display = 'inline-block';
+                userProfile.style.display = 'none';
+            }
+        }
+
+        function setupAvatarDropdown() {
+            const avatarContainer = document.querySelector('.avatar-container');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (avatarContainer) {
+                avatarContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('active');
+                });
+            }
+
+            document.addEventListener('click', function(event) {
+                const userProfile = document.getElementById('user-profile');
+                if (userProfile && !userProfile.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('userInfo');
+                    dropdownMenu.classList.remove('active');
+                    checkUserLoginStatus();
+                });
+            }
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

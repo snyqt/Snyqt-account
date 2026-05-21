@@ -58,6 +58,13 @@ RISK_CONTROL = {
 # ==================== IP定位配置 ====================
 IP_LOCATION_API = 'http://ip-api.com/json/'
 
+# ==================== 项目信息配置 ====================
+PROJECT_NAME = '少年友晴天-统一账户认证系统'
+PROJECT_VERSION = '1.0.0'
+PROJECT_EMAIL = 'snyqt@qq.com'
+PROJECT_QQ_GROUP = '1106802055'
+PROJECT_WEBSITE = 'account.snyqt.top'
+
 # ==================== 记住我功能 ====================
 REMEMBER_ME_COOKIE_DURATION = 7
 SESSION_DURATION = 10

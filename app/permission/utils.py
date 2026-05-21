@@ -19,12 +19,28 @@ def is_admin(user_id):
         return False
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM user_permission WHERE user_id = %s AND type = '管理员'", (user_id,))
+            cursor.execute("SELECT * FROM user_permission WHERE user_id = %s AND (type = 'ROOT' OR type = '管理员')", (user_id,))
             return cursor.fetchone() is not None
     finally:
         conn.close()
 
 def can_approve_permission(operator_id, permission_type):
+    if is_admin(operator_id):
+        return True
+    return False
+
+def is_developer(user_id):
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM user_permission WHERE user_id = %s AND type = '开发者'", (user_id,))
+            return cursor.fetchone() is not None
+    finally:
+        conn.close()
+
+def can_approve_developer_permission(operator_id):
     if is_admin(operator_id):
         return True
     return False

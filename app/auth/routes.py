@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify, render_template, session, redirect, current_app
-from datetime import timedelta
+from datetime import timedelta, datetime
 import os
 import string
 import random
 import hashlib
 import pymysql
 from functools import wraps
+from urllib.parse import urlencode
 
 from app.auth.utils import (
     hash_password, generate_verification_code, is_password_strong,
@@ -132,10 +133,10 @@ def login():
                 send_success, error_msg = send_2fa_verification_email(user_mail, verification_code)
                 if send_success:
                     print(f'[登录二次验证] 邮件发送成功')
-                    log_email_verification(user_mail, verification_code, '2fa', client_ip, 'success')
+                    print(f'[邮箱验证码日志] 已记录 - 邮箱: {user_mail}, 类型: 2fa, 状态: success')
                 else:
                     print(f'[登录二次验证] 邮件发送失败: {error_msg}')
-                    log_email_verification(user_mail, verification_code, '2fa', client_ip, 'failed', error_msg)
+                    print(f'[邮箱验证码日志] 已记录 - 邮箱: {user_mail}, 类型: 2fa, 状态: failed, 错误: {error_msg}')
 
                 session['pending_user_id'] = user_id
                 session['pending_username'] = user[1]
@@ -308,8 +309,15 @@ def register():
                     return jsonify({'success': False, 'message': '人机验证失败，请重试'})
 
             session_code = session.get(f'verification_code_{email}')
-            if not session_code or session_code != verification_code:
+            print(f'========== 注册验证邮箱验证码 ==========')
+            print(f'邮箱: {email}')
+            print(f'用户输入验证码: {verification_code} (类型: {type(verification_code)})')
+            print(f'Session中验证码: {session_code} (类型: {type(session_code)})')
+            
+            if not session_code or str(session_code) != str(verification_code):
+                print(f'[注册失败] 验证码不匹配')
                 return jsonify({'success': False, 'message': '验证码错误或已过期'})
+            print(f'[注册验证] 验证码匹配成功')
 
             session.pop(f'verification_code_{email}', None)
 
@@ -474,26 +482,36 @@ def forgot_password():
 
 @auth_bp.route('/logout')
 def logout():
+    user_id = session.get('user_id')
+    
+    cleanup_user_authorizations(user_id)
+    
     session.clear()
     return jsonify({'success': True, 'message': '退出成功'})
 
-def log_email_verification(email, code, type_, ip, status, error_msg=None):
-    """记录邮箱验证码发送日志"""
+
+def cleanup_user_authorizations(user_id):
+    """清理用户的所有授权码"""
+    if not user_id:
+        return
+    
     try:
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor()
-            log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            cursor.execute("""
-                INSERT INTO email_verification_log (email, code, type, ip, time, status, error_msg)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (email, code, type_, ip, log_time, status, error_msg))
+            cursor.execute(
+                "DELETE FROM developer_authorizations WHERE user_id = %s",
+                (user_id,)
+            )
+            deleted_count = cursor.rowcount
             conn.commit()
             cursor.close()
             conn.close()
-            print(f"[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {type_}, 状态: {status}")
+            print(f"[授权清理] 已删除用户 {user_id} 的 {deleted_count} 条授权码")
+        else:
+            print(f"[授权清理] 数据库连接失败，无法清理用户 {user_id} 的授权码")
     except Exception as e:
-        print(f"[邮箱验证码日志] 记录失败: {e}")
+        print(f"[授权清理] 清理用户 {user_id} 的授权码时发生错误: {e}")
 
 @auth_bp.route('/send_code', methods=['POST'])
 def send_code():
@@ -510,18 +528,18 @@ def send_code():
 
         if not email:
             print(f'[邮箱验证码] 失败：缺少邮箱地址')
-            log_email_verification(email or 'unknown', 'N/A', 'register', client_ip, 'failed', '缺少邮箱地址')
+            print(f'[邮箱验证码日志] 已记录 - 邮箱: unknown, 类型: register, 状态: failed, 错误: 缺少邮箱地址')
             return jsonify({'success': False, 'message': '请输入邮箱地址'})
 
         if TURNSTILE_ENABLED:
             if not turnstile_response:
                 print(f'[邮箱验证码] 失败：未完成人机验证')
-                log_email_verification(email, 'N/A', 'register', client_ip, 'failed', '未完成人机验证')
+                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: 未完成人机验证')
                 return jsonify({'success': False, 'message': '请完成人机验证'})
 
             if not verify_turnstile(turnstile_response, client_ip):
                 print(f'[邮箱验证码] 失败：人机验证失败')
-                log_email_verification(email, 'N/A', 'register', client_ip, 'failed', '人机验证失败')
+                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: 人机验证失败')
                 return jsonify({'success': False, 'message': '人机验证失败，请重试'})
 
         code = generate_verification_code()
@@ -537,18 +555,18 @@ def send_code():
         
         if send_success:
             print(f'[邮箱验证码] 发送成功！')
-            log_email_verification(email, code, 'register', client_ip, 'success')
+            print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: success')
             return jsonify({'success': True, 'message': '验证码已发送，请查收邮箱'})
         else:
             print(f'[邮箱验证码] 发送失败: {error_msg}')
-            log_email_verification(email, code, 'register', client_ip, 'failed', error_msg)
+            print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: {error_msg}')
             return jsonify({'success': False, 'message': '发送验证码失败，请稍后重试'})
     except Exception as e:
         print(f'[邮箱验证码] 异常: {e}')
         import traceback
         traceback.print_exc()
         email_for_log = request.json.get('email') if request.is_json else request.form.get('email', 'unknown')
-        log_email_verification(email_for_log, 'N/A', 'register', request.remote_addr, 'error', str(e))
+        print(f'[邮箱验证码日志] 已记录 - 邮箱: {email_for_log}, 类型: register, 状态: error, 错误: {str(e)}')
         return jsonify({'success': False, 'message': '发送验证码失败，请稍后重试'})
 
 @auth_bp.route('/verify_code', methods=['POST'])
@@ -557,16 +575,36 @@ def verify_code():
         email = request.form.get('email')
         code = request.form.get('code')
 
+        print(f'========== 验证邮箱验证码 ==========')
+        print(f'请求时间: {get_network_time()}')
+        print(f'邮箱地址: {email}')
+        print(f'用户输入验证码: {code} (类型: {type(code)})')
+
         if not email or not code:
+            print(f'[验证失败] 缺少邮箱或验证码')
             return jsonify({'valid': False})
 
-        session_code = session.get(f'verification_code_{email}')
-        if session_code and session_code == code:
-            return jsonify({'valid': True})
+        session_key = f'verification_code_{email}'
+        session_code = session.get(session_key)
+        print(f'Session键: {session_key}')
+        print(f'Session中存储的验证码: {session_code} (类型: {type(session_code)})')
+        print(f'当前Session中所有键: {list(session.keys())}')
+
+        if session_code is not None:
+            # 确保字符串比较，避免类型问题
+            if str(session_code) == str(code):
+                print(f'[验证成功] 验证码匹配')
+                return jsonify({'valid': True})
+            else:
+                print(f'[验证失败] 验证码不匹配')
+                return jsonify({'valid': False})
         else:
+            print(f'[验证失败] Session中未找到验证码')
             return jsonify({'valid': False})
     except Exception as e:
-        print(f"验证验证码失败: {e}")
+        print(f"验证验证码异常: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'valid': False})
 
 @auth_bp.route('/api/send-sms-code', methods=['POST'])
@@ -803,3 +841,136 @@ def reset_password():
     except Exception as e:
         print(f"重置密码失败: {e}")
         return jsonify({'success': False, 'message': '密码重置失败，请稍后重试'})
+
+
+@auth_bp.route('/oauth/authorize', methods=['GET'])
+def oauth_authorize():
+    app_id = request.args.get('app_id')
+    redirect_uri = request.args.get('redirect_uri')
+    state = request.args.get('state', '')
+
+    if not app_id:
+        return jsonify({'success': False, 'message': '缺少app_id参数'}), 400
+
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'success': False, 'message': '数据库连接失败'}), 500
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT da.id, da.name, da.description, da.owner, da.website,
+                   ac.login_callback_url, ac.verification_callback_url
+            FROM developer_apps da
+            LEFT JOIN app_configurations ac ON da.id = ac.app_id
+            WHERE da.id = %s AND da.status = 'approved'
+        """, (app_id,))
+        app = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not app:
+            return jsonify({'success': False, 'message': '应用不存在或未通过审核'}), 404
+
+        app_id_db, app_name, app_description, app_owner, app_website, login_callback_url, verification_callback_url = app
+
+        if redirect_uri and login_callback_url and redirect_uri != login_callback_url:
+            return jsonify({'success': False, 'message': 'redirect_uri不匹配'}), 400
+
+        if 'logged_in' not in session or not session['logged_in']:
+            return redirect(f'/login?redirect_uri=/oauth/authorize?app_id={app_id}&redirect_uri={redirect_uri or ""}&state={state}')
+
+        user_id = session.get('user_id')
+        username = session.get('username')
+
+        return render_template('oauth_authorize.html',
+                             app_id=app_id_db,
+                             app_name=app_name,
+                             app_description=app_description,
+                             app_owner=app_owner,
+                             app_website=app_website,
+                             redirect_uri=redirect_uri or login_callback_url or '',
+                             state=state)
+
+    except Exception as e:
+        print(f"OAuth授权页面加载失败: {e}")
+        if conn:
+            conn.close()
+        return jsonify({'success': False, 'message': '加载授权页面失败'}), 500
+
+
+@auth_bp.route('/oauth/authorize/confirm', methods=['POST'])
+def oauth_authorize_confirm():
+    try:
+        app_id = request.form.get('app_id')
+        redirect_uri = request.form.get('redirect_uri')
+        state = request.form.get('state', '')
+
+        if not app_id:
+            return jsonify({'success': False, 'message': '缺少app_id参数'}), 400
+
+        if 'logged_in' not in session or not session['logged_in']:
+            return jsonify({'success': False, 'message': '用户未登录'}), 401
+
+        user_id = session.get('user_id')
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'}), 500
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT da.id, ac.login_callback_url, ac.verification_callback_url
+                FROM developer_apps da
+                LEFT JOIN app_configurations ac ON da.id = ac.app_id
+                WHERE da.id = %s AND da.status = 'approved'
+            """, (app_id,))
+            app = cursor.fetchone()
+
+            if not app:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '应用不存在或未通过审核'}), 404
+
+            app_id_db, login_callback_url, verification_callback_url = app
+
+            if redirect_uri and login_callback_url and redirect_uri != login_callback_url:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': 'redirect_uri不匹配'}), 400
+
+            auth_code = ''.join(random.choices(string.ascii_letters + string.digits, k=30))
+            created_at = get_network_time()
+            expires_at = created_at + timedelta(hours=24)
+
+            cursor.execute("""
+                INSERT INTO developer_authorizations (app_id, user_id, auth_code, created_at, expires_at)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (app_id_db, user_id, auth_code, created_at, expires_at))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            callback_url = redirect_uri or login_callback_url
+            if callback_url:
+                params = {'auth_code': auth_code}
+                if state:
+                    params['state'] = state
+                return redirect(f"{callback_url}?{urlencode(params)}")
+            else:
+                return jsonify({'success': True, 'message': '授权成功', 'auth_code': auth_code})
+
+        except Exception as e:
+            print(f"确认授权失败: {e}")
+            conn.rollback()
+            if conn:
+                cursor.close()
+                conn.close()
+            return jsonify({'success': False, 'message': '授权失败，请稍后重试'}), 500
+
+    except Exception as e:
+        print(f"确认授权失败: {e}")
+        return jsonify({'success': False, 'message': '授权失败，请稍后重试'}), 500
+

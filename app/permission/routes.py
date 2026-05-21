@@ -4,7 +4,7 @@ import os
 from app.models.db import get_db_connection
 from app.auth.utils import get_network_time
 from app.auth.routes import login_required
-from app.permission.utils import get_user_avatar_path, is_admin, can_approve_permission, avatar_extensions
+from app.permission.utils import get_user_avatar_path, is_admin, can_approve_permission, avatar_extensions, is_developer
 
 permission_bp = Blueprint('permission', __name__)
 
@@ -62,6 +62,21 @@ def check_admin_permission():
             return jsonify({'success': True, 'isAdmin': False})
     except Exception as e:
         print(f"检查管理员权限失败: {e}")
+        return jsonify({'success': False, 'message': '检查失败，请重试'})
+
+
+@permission_bp.route('/check-developer-permission', methods=['POST'])
+@login_required
+def check_developer_permission():
+    try:
+        user_id = session.get('user_id')
+
+        if is_developer(user_id):
+            return jsonify({'success': True, 'isDeveloper': True})
+        else:
+            return jsonify({'success': True, 'isDeveloper': False})
+    except Exception as e:
+        print(f"检查开发者权限失败: {e}")
         return jsonify({'success': False, 'message': '检查失败，请重试'})
 
 

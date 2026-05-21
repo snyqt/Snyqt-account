@@ -330,6 +330,30 @@
             opacity: 0.6;
         }
 
+        .batch-btn-developer {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .batch-btn-developer:hover:not(:disabled) {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .batch-btn-developer:disabled {
+            background: var(--card-border);
+            border-color: var(--card-border);
+            color: var(--secondary-text);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .batch-btn i {
+            margin-right: 8px;
+        }
+
         .table-container {
             overflow-x: auto;
             margin-bottom: 20px;
@@ -728,7 +752,12 @@
             <div id="message-container"></div>
 
             <div class="batch-buttons">
-                <button id="batch-admin" class="batch-btn">一键通过管理员申请</button>
+                <button id="batch-admin" class="batch-btn">
+                    <i class="fas fa-user-shield"></i> 一键通过管理员申请
+                </button>
+                <button id="batch-developer" class="batch-btn batch-btn-developer">
+                    <i class="fas fa-check-circle"></i> 一键通过开发者权限
+                </button>
             </div>
 
             <div class="search-container">
@@ -917,6 +946,16 @@
                 }
             });
 
+            document.getElementById('batch-developer').addEventListener('click', function() {
+                if (!currentPermission) {
+                    showMessage('请选择权限后再操作', 'error', 'main-message-container');
+                    return;
+                }
+                if (confirm('确定要一键通过所有开发者权限申请吗？')) {
+                    batchApprove('开发者');
+                }
+            });
+
             document.getElementById('modal-cancel').addEventListener('click', function() {
                 document.getElementById('admin-confirm-modal').classList.remove('active');
                 pendingAdminApplication = null;
@@ -1065,6 +1104,7 @@
                         } else {
                             let html = '';
                             let hasAdminApplications = false;
+                            let hasDeveloperApplications = false;
 
                             data.applications.forEach(app => {
                                 html += `
@@ -1089,11 +1129,18 @@
                                 if (app.permission_type === '管理员') {
                                     hasAdminApplications = true;
                                 }
+                                if (app.permission_type === '开发者') {
+                                    hasDeveloperApplications = true;
+                                }
                             });
 
                             applicationsList.innerHTML = html;
 
                             batchAdminBtn.disabled = !hasAdminApplications;
+                            const batchDeveloperBtn = document.getElementById('batch-developer');
+                            if (batchDeveloperBtn) {
+                                batchDeveloperBtn.disabled = !hasDeveloperApplications;
+                            }
 
                             bindActionButtons();
                         }

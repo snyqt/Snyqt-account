@@ -44,15 +44,32 @@ EXPECTED_TABLES = {
         ('type', 'varchar(50)', 'NO', '', None, ''),
         ('time', 'datetime', 'YES', '', None, '')
     ],
-    'email_verification_log': [
+    'developer_apps': [
+        ('id', 'varchar(15)', 'NO', 'PRI', None, ''),
+        ('developer_id', 'varchar(15)', 'NO', '', None, ''),
+        ('name', 'varchar(100)', 'NO', '', None, ''),
+        ('description', 'text', 'YES', '', None, ''),
+        ('owner', 'varchar(100)', 'YES', '', None, ''),
+        ('website', 'varchar(255)', 'YES', '', None, ''),
+        ('app_secret', 'varchar(255)', 'NO', '', None, ''),
+        ('status', 'enum', 'NO', '', None, ''),
+        ('created_at', 'datetime', 'YES', '', None, ''),
+        ('approved_at', 'datetime', 'YES', '', None, '')
+    ],
+    'developer_authorizations': [
         ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
-        ('email', 'varchar(100)', 'NO', '', None, ''),
-        ('code', 'varchar(6)', 'NO', '', None, ''),
-        ('type', 'varchar(20)', 'NO', '', None, ''),
-        ('ip', 'varchar(45)', 'YES', '', None, ''),
-        ('time', 'datetime(3)', 'YES', '', None, ''),
-        ('status', 'varchar(20)', 'NO', '', None, ''),
-        ('error_msg', 'varchar(255)', 'YES', '', None, '')
+        ('app_id', 'varchar(15)', 'NO', '', None, ''),
+        ('user_id', 'varchar(15)', 'NO', '', None, ''),
+        ('auth_code', 'varchar(30)', 'NO', '', None, ''),
+        ('created_at', 'datetime', 'YES', '', None, ''),
+        ('expires_at', 'datetime', 'YES', '', None, '')
+    ],
+    'app_configurations': [
+        ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
+        ('app_id', 'varchar(15)', 'NO', '', None, ''),
+        ('login_callback_url', 'varchar(255)', 'YES', '', None, ''),
+        ('verification_callback_url', 'varchar(255)', 'YES', '', None, ''),
+        ('updated_at', 'datetime', 'YES', '', None, '')
     ]
 }
 
@@ -95,16 +112,37 @@ CREATE_TABLE_SQLS = {
             time DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """,
-    'email_verification_log': """
-        CREATE TABLE email_verification_log (
+    'developer_apps': """
+        CREATE TABLE developer_apps (
+            id VARCHAR(15) PRIMARY KEY,
+            developer_id VARCHAR(15) NOT NULL,
+            name VARCHAR(100) NOT NULL,
+            description TEXT,
+            owner VARCHAR(100),
+            website VARCHAR(255),
+            app_secret VARCHAR(255) NOT NULL,
+            status ENUM('pending', 'approved', 'rejected') NOT NULL,
+            created_at DATETIME,
+            approved_at DATETIME
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
+    'developer_authorizations': """
+        CREATE TABLE developer_authorizations (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            email VARCHAR(100) NOT NULL,
-            code VARCHAR(6) NOT NULL,
-            type VARCHAR(20) NOT NULL,
-            ip VARCHAR(45),
-            time DATETIME(3),
-            status VARCHAR(20) NOT NULL,
-            error_msg VARCHAR(255)
+            app_id VARCHAR(15) NOT NULL,
+            user_id VARCHAR(15) NOT NULL,
+            auth_code VARCHAR(30) NOT NULL,
+            created_at DATETIME,
+            expires_at DATETIME
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
+    'app_configurations': """
+        CREATE TABLE app_configurations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            app_id VARCHAR(15) NOT NULL,
+            login_callback_url VARCHAR(255),
+            verification_callback_url VARCHAR(255),
+            updated_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """
 }

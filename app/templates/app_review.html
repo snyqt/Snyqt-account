@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用审核 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/theme-toggle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-container {
+            position: relative;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+        }
+
+        .avatar-container:hover {
+            background-color: var(--primary-shadow);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .logout-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--secondary-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .login-btn {
+            background: var(--danger-bg);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 10px 20px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--danger-shadow);
+            background: var(--danger-bg-hover);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            flex: 1;
+        }
+
+        .page-title {
+            color: var(--text-color);
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-title i {
+            color: var(--danger-color);
+        }
+
+        .content-section {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .apps-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .apps-table th,
+        .apps-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .apps-table th {
+            background: var(--primary-shadow);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .apps-table tr:hover {
+            background-color: var(--primary-shadow);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .approve-btn {
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border: 1px solid var(--bg-gradient-start);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .approve-btn:hover {
+            background: var(--primary-bg-hover);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .reject-btn {
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border: 1px solid var(--bg-gradient-middle2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reject-btn:hover {
+            background: var(--danger-bg);
+            box-shadow: 0 4px 12px rgba(255, 158, 125, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary-text);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: var(--secondary-text);
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .empty-state small {
+            color: var(--secondary-text);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 40px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px var(--primary-shadow);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--secondary-text);
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-body p {
+            margin-bottom: 15px;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .modal-body .info-item {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: var(--primary-shadow);
+            border-radius: 6px;
+        }
+
+        .modal-body .info-item strong {
+            color: var(--text-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .modal-body .info-item span {
+            color: var(--secondary-text);
+            word-break: break-all;
+        }
+
+        .app-secret-display {
+            background: var(--primary-shadow);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-family: monospace;
+            word-break: break-all;
+            color: var(--text-color);
+        }
+
+        .warning-text {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 158, 125, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid var(--danger-color);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 2px solid var(--card-border);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-cancel {
+            background: var(--card-border);
+            color: var(--text-color);
+        }
+
+        .btn-cancel:hover {
+            background: var(--secondary-text);
+            color: var(--card-bg);
+        }
+
+        .btn-primary {
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-start);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-bg-hover);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .btn-danger {
+            background: var(--danger-bg);
+            color: var(--text-color);
+            border-color: var(--bg-gradient-middle2);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-bg-hover);
+            box-shadow: 0 4px 12px rgba(255, 158, 125, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-text);
+        }
+
+        .loading i {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            color: var(--secondary-text);
+            font-size: 14px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .apps-table th,
+            .apps-table td {
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .approve-btn,
+            .reject-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <a href="/login" class="login-btn" id="login-btn">登录</a>
+
+            <div class="user-profile" id="user-profile" style="display: none;">
+                <div class="avatar-container">
+                    <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item username-item" id="dropdown-username"></div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid"></div>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="page-title">
+            <i class="fas fa-mobile-alt"></i>
+            待审核应用列表
+        </h2>
+
+        <div class="content-section">
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>正在加载...</p>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <p>暂无待审核应用</p>
+                <small>所有应用申请都已处理完毕</small>
+            </div>
+
+            <div id="apps-list" style="display: none;">
+                <div class="table-container">
+                    <table class="apps-table">
+                        <thead>
+                            <tr>
+                                <th>应用名称</th>
+                                <th>开发者</th>
+                                <th>应用描述</th>
+                                <th>应用官网</th>
+                                <th>申请时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apps-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="approve-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>审批通过</h3>
+                <button class="close-btn" onclick="closeApproveModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="approve-modal-body">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeApproveModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmApprove()">确认通过</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="secret-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>审批成功</h3>
+                <button class="close-btn" onclick="closeSecretModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>应用已审批通过！以下是应用凭证信息：</p>
+                <div class="info-item">
+                    <strong>App ID:</strong>
+                    <span id="display-app-id"></span>
+                </div>
+                <div class="info-item">
+                    <strong>App Secret:</strong>
+                    <div class="app-secret-display" id="display-app-secret"></div>
+                </div>
+                <div class="warning-text">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>重要提示：</strong>请立即复制并妥善保存 App Secret，此凭证仅显示一次，之后无法再次查看。如需重置，请联系管理员。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyCredentials()">
+                    <i class="fas fa-copy"></i> 复制凭证
+                </button>
+                <button class="btn btn-cancel" onclick="closeSecretModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="reject-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>拒绝申请</h3>
+                <button class="close-btn" onclick="closeRejectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>确定要拒绝该应用申请吗？</p>
+                <div class="info-item">
+                    <strong>应用名称：</strong>
+                    <span id="reject-app-name"></span>
+                </div>
+                <div class="warning-text">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    拒绝后，应用及其所有关联数据将被永久删除，此操作不可撤销。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeRejectModal()">取消</button>
+                <button class="btn btn-danger" onclick="confirmReject()">确认拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+
+    <script>
+        let pendingApps = [];
+        let currentApproveApp = null;
+        let currentRejectApp = null;
+        let currentAppId = null;
+        let currentAppSecret = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAdminPermission();
+            checkUserLoginStatus();
+            setupAvatarDropdown();
+        });
+
+        function checkUserLoginStatus() {
+            const userInfo = localStorage.getItem('userInfo');
+            const loginBtn = document.getElementById('login-btn');
+            const userProfile = document.getElementById('user-profile');
+
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    document.getElementById('dropdown-username').textContent = user.username || '用户';
+                    document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
+
+                    if (user.avatar) {
+                        document.getElementById('user-avatar').src = user.avatar;
+                    } else {
+                        document.getElementById('user-avatar').src = '/static/img/default_avatar.svg';
+                    }
+
+                    loginBtn.style.display = 'none';
+                    userProfile.style.display = 'inline-block';
+                } catch (e) {
+                    console.error('解析用户信息失败:', e);
+                    loginBtn.style.display = 'inline-block';
+                    userProfile.style.display = 'none';
+                }
+            } else {
+                loginBtn.style.display = 'inline-block';
+                userProfile.style.display = 'none';
+            }
+        }
+
+        function setupAvatarDropdown() {
+            const avatarContainer = document.querySelector('.avatar-container');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (avatarContainer) {
+                avatarContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('active');
+                });
+            }
+
+            document.addEventListener('click', function(event) {
+                const userProfile = document.getElementById('user-profile');
+                if (userProfile && !userProfile.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('userInfo');
+                    dropdownMenu.classList.remove('active');
+                    checkUserLoginStatus();
+                    window.location.href = '/';
+                });
+            }
+        }
+
+        function checkAdminPermission() {
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (!userInfo) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userInfo);
+                
+                fetch('/check-admin-permission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: user.id })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isAdmin) {
+                        document.getElementById('loading').style.display = 'block';
+                        loadPendingApps();
+                    } else {
+                        window.location.href = '/';
+                    }
+                })
+                .catch(error => {
+                    console.error('检查管理员权限失败:', error);
+                    window.location.href = '/';
+                });
+            } catch (e) {
+                console.error('解析用户信息失败:', e);
+                window.location.href = '/login';
+            }
+        }
+
+        function loadPendingApps() {
+            fetch('/api/admin/pending-apps', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success && data.apps && data.apps.length > 0) {
+                    pendingApps = data.apps;
+                    renderAppsTable(pendingApps);
+                    document.getElementById('apps-list').style.display = 'block';
+                } else {
+                    document.getElementById('empty-state').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('加载待审核应用失败:', error);
+                document.getElementById('loading').innerHTML = '<p style="color: var(--danger-color);">加载失败，请刷新页面重试</p>';
+            });
+        }
+
+        function renderAppsTable(apps) {
+            const tbody = document.getElementById('apps-table-body');
+            tbody.innerHTML = '';
+            
+            apps.forEach(app => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${escapeHtml(app.name)}</td>
+                    <td>${escapeHtml(app.developer_name || app.developer_id)}</td>
+                    <td>${escapeHtml(app.description || '无')}</td>
+                    <td>${app.website ? `<a href="${escapeHtml(app.website)}" target="_blank">${escapeHtml(app.website)}</a>` : '无'}</td>
+                    <td>${app.created_at ? formatDateTime(app.created_at) : '未知'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="approve-btn" onclick="showApproveModal('${app.id}', '${escapeHtml(app.name)}', '${escapeHtml(app.developer_name || '')}', '${escapeHtml(app.description || '')}', '${escapeHtml(app.website || '')}', '${escapeHtml(app.owner || '')}')">
+                                <i class="fas fa-check"></i> 通过
+                            </button>
+                            <button class="reject-btn" onclick="showRejectModal('${app.id}', '${escapeHtml(app.name)}')">
+                                <i class="fas fa-times"></i> 拒绝
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function showApproveModal(appId, appName, developerName, description, website, owner) {
+            currentApproveApp = { appId, appName, developerName, description, website, owner };
+            
+            const modalBody = document.getElementById('approve-modal-body');
+            modalBody.innerHTML = `
+                <div class="info-item">
+                    <strong>应用名称：</strong>
+                    <span>${appName}</span>
+                </div>
+                <div class="info-item">
+                    <strong>开发者：</strong>
+                    <span>${developerName || '未知'}</span>
+                </div>
+                ${description ? `
+                <div class="info-item">
+                    <strong>应用描述：</strong>
+                    <span>${description}</span>
+                </div>
+                ` : ''}
+                ${owner ? `
+                <div class="info-item">
+                    <strong>应用负责人：</strong>
+                    <span>${owner}</span>
+                </div>
+                ` : ''}
+                ${website ? `
+                <div class="info-item">
+                    <strong>应用官网：</strong>
+                    <span><a href="${website}" target="_blank">${website}</a></span>
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('approve-modal').classList.add('active');
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approve-modal').classList.remove('active');
+            currentApproveApp = null;
+        }
+
+        function confirmApprove() {
+            if (!currentApproveApp) return;
+            
+            fetch('/api/admin/approve-app', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ app_id: currentApproveApp.appId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeApproveModal();
+                
+                if (data.success) {
+                    currentAppId = data.app_id;
+                    currentAppSecret = data.app_secret;
+                    
+                    document.getElementById('display-app-id').textContent = currentAppId;
+                    document.getElementById('display-app-secret').textContent = currentAppSecret;
+                    document.getElementById('secret-modal').classList.add('active');
+                    
+                    loadPendingApps();
+                } else {
+                    alert('审批失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('审批失败:', error);
+                alert('审批失败，请重试');
+                closeApproveModal();
+            });
+        }
+
+        function closeSecretModal() {
+            document.getElementById('secret-modal').classList.remove('active');
+            currentAppId = null;
+            currentAppSecret = null;
+        }
+
+        function copyCredentials() {
+            if (!currentAppId || !currentAppSecret) return;
+            
+            const credentials = `App ID: ${currentAppId}\nApp Secret: ${currentAppSecret}`;
+            navigator.clipboard.writeText(credentials).then(() => {
+                alert('凭证已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            });
+        }
+
+        function showRejectModal(appId, appName) {
+            currentRejectApp = { appId, appName };
+            document.getElementById('reject-app-name').textContent = appName;
+            document.getElementById('reject-modal').classList.add('active');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('reject-modal').classList.remove('active');
+            currentRejectApp = null;
+        }
+
+        function confirmReject() {
+            if (!currentRejectApp) return;
+            
+            fetch('/api/admin/reject-app', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ app_id: currentRejectApp.appId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeRejectModal();
+                
+                if (data.success) {
+                    alert('应用已拒绝并删除');
+                    loadPendingApps();
+                } else {
+                    alert('拒绝失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('拒绝失败:', error);
+                alert('拒绝失败，请重试');
+                closeRejectModal();
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>
