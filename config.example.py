@@ -21,8 +21,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production'
 
 # ==================== 邮箱 SMTP 配置 ====================
 EMAIL_CONFIG = {
-    'smtp_server': os.getenv('SMTP_SERVER', 'smtp.example.com'),
-    'port': int(os.getenv('SMTP_PORT', 587)),
+    'smtp_server': os.getenv('SMTP_SERVER', 'smtp.exmail.qq.com'),
+    'port': int(os.getenv('SMTP_PORT', 465)),
     'sender': os.getenv('SMTP_SENDER', 'your-email@example.com'),
     'password': os.getenv('SMTP_PASSWORD', 'your-email-password')
 }

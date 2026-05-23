@@ -17,6 +17,9 @@ except ImportError:
 
 
 def create_app():
+    from app.env import print_environment_info
+    print_environment_info()
+    
     project_root = os.path.dirname(os.path.dirname(__file__))
     static_folder = os.path.join(project_root, 'static')
     app = Flask(__name__, static_folder=static_folder)

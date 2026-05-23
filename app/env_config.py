@@ -1,14 +1,21 @@
 from app.env import env
 
 def auto_configure():
+    from app.env import env
     is_production = env.is_production()
     environment = env.get_environment()
+    
+    port = 80 if is_production else 5495
+    
+    print(f"[配置信息] 运行环境: {env.get_run_mode()}")
+    print(f"[配置信息] 环境类型: {environment}")
+    print(f"[配置信息] 端口: {port}")
     
     result = {
         'environment': environment,
         'is_production': is_production,
         'debug': not is_production,
-        'port': 80 if is_production else 5495,
+        'port': port,
     }
     
     return result
@@ -16,12 +23,18 @@ def auto_configure():
 def configure_turnstile():
     from config import TURNSTILE_CONFIG
     
-    is_production = env.is_production()
+    turnstile_enabled = False
     
-    turnstile_enabled = True if is_production else False
-    
-    if os.getenv('TURNSTILE_ENABLED', '').lower() == 'true':
+    env_var = os.getenv('TURNSTILE_ENABLED', '').lower()
+    if env_var == 'true':
         turnstile_enabled = True
+    elif env_var == 'false':
+        turnstile_enabled = False
+    else:
+        is_production = env.is_production()
+        turnstile_enabled = True if is_production else False
+    
+    print(f"[配置信息] Cloudflare Turnstile: {'启用' if turnstile_enabled else '禁用'}")
     
     return {
         **TURNSTILE_CONFIG,

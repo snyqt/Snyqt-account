@@ -237,9 +237,17 @@ def send_verification_email(email, code):
         """
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-        print(f'[邮件发送] 正在连接SMTP服务器: {EMAIL_CONFIG["smtp_server"]}:{EMAIL_CONFIG["port"]}')
-        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['port'])
-        server.starttls()
+        smtp_server = EMAIL_CONFIG['smtp_server']
+        smtp_port = EMAIL_CONFIG['port']
+        
+        print(f'[邮件发送] 正在连接SMTP服务器: {smtp_server}:{smtp_port}')
+        
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            
         print(f'[邮件发送] SMTP连接成功，正在登录...')
         server.login(EMAIL_CONFIG['sender'], EMAIL_CONFIG['password'])
         text = msg.as_string()
@@ -288,9 +296,17 @@ def send_2fa_verification_email(email, code):
         """
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-        print(f'[二次验证邮件] 正在连接SMTP服务器: {EMAIL_CONFIG["smtp_server"]}:{EMAIL_CONFIG["port"]}')
-        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['port'])
-        server.starttls()
+        smtp_server = EMAIL_CONFIG['smtp_server']
+        smtp_port = EMAIL_CONFIG['port']
+        
+        print(f'[二次验证邮件] 正在连接SMTP服务器: {smtp_server}:{smtp_port}')
+        
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            
         print(f'[二次验证邮件] SMTP连接成功，正在登录...')
         server.login(EMAIL_CONFIG['sender'], EMAIL_CONFIG['password'])
         text = msg.as_string()

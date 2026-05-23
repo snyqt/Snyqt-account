@@ -519,24 +519,27 @@ def send_code():
         email = request.json.get('email') if request.is_json else request.form.get('email')
         turnstile_response = request.json.get('cf-turnstile-response') if request.is_json else request.form.get('cf-turnstile-response')
         client_ip = request.remote_addr
-
+        
+        is_logged_in = session.get('logged_in', False)
+        
         print(f'========== 发送邮箱验证码日志 ==========')
         print(f'请求时间: {get_network_time()}')
         print(f'邮箱地址: {email}')
         print(f'请求IP: {client_ip}')
+        print(f'已登录: {is_logged_in}')
         print(f'=======================================')
-
+        
         if not email:
             print(f'[邮箱验证码] 失败：缺少邮箱地址')
             print(f'[邮箱验证码日志] 已记录 - 邮箱: unknown, 类型: register, 状态: failed, 错误: 缺少邮箱地址')
             return jsonify({'success': False, 'message': '请输入邮箱地址'})
-
-        if TURNSTILE_ENABLED:
+        
+        if TURNSTILE_ENABLED and not is_logged_in:
             if not turnstile_response:
                 print(f'[邮箱验证码] 失败：未完成人机验证')
                 print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: 未完成人机验证')
                 return jsonify({'success': False, 'message': '请完成人机验证'})
-
+            
             if not verify_turnstile(turnstile_response, client_ip):
                 print(f'[邮箱验证码] 失败：人机验证失败')
                 print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: 人机验证失败')
