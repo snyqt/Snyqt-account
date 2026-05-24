@@ -5,6 +5,15 @@
 
 import os
 
+# ==================== 环境模式配置 ====================
+# 可选值: 'auto' (自动检测), 'production' (强制生产环境), 'development' (强制测试环境)
+# 在 Docker + uWSGI 真实生产环境下，此配置项不生效，始终使用生产环境模式
+ENVIRONMENT_MODE = os.getenv('ENVIRONMENT_MODE', 'auto')
+
+# ==================== 应用端口配置 ====================
+# 统一所有环境的端口号
+APP_PORT = int(os.getenv('APP_PORT', 5000))
+
 # ==================== 时区配置 ====================
 TIMEZONE = 'Asia/Shanghai'
 

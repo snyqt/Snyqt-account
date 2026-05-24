@@ -58,6 +58,11 @@ COPY . .
 # 环境变量配置
 # ============================================
 
+# 环境模式配置（可选）
+# 可选值: 'auto' (自动检测), 'production' (强制生产环境), 'development' (强制测试环境)
+# 在 Docker + uWSGI 真实生产环境下，此配置项不生效，始终使用生产环境模式
+ENV ENVIRONMENT_MODE=auto
+
 # 数据库配置
 ENV DB_HOST=localhost
 ENV DB_USER=snyqt_user
@@ -104,6 +109,9 @@ ENV UWSGI_MODE=true
 # 时区配置
 ENV TIMEZONE=Asia/Shanghai
 
+# 应用端口配置
+ENV APP_PORT=5000
+
 # 项目信息
 ENV PROJECT_NAME=少年友晴天-统一账户认证系统
 ENV PROJECT_VERSION=1.0.0
@@ -114,13 +122,13 @@ ENV PROJECT_WEBSITE=account.snyqt.top
 # ============================================
 # 暴露端口
 # ============================================
-EXPOSE 80
+EXPOSE 5000
 
 # ============================================
 # 健康检查
 # ============================================
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:80')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000')" || exit 1
 
 # ============================================
 # 启动命令
