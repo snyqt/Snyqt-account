@@ -1,19 +1,19 @@
 <div align="center">
   <img src="static/img/logo.png" alt="SNYQT Logo" width="120" height="120" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-  
-  # 少年友晴天 - 统一账户认证系统
-  
+
+# 少年友晴天 - 统一账户认证系统
+
   <p>
     <strong>一个功能完善的统一账户认证与OAuth授权平台</strong>
   </p>
-  
+
   <p>
     <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python">
     <img src="https://img.shields.io/badge/Flask-2.3.3-green.svg" alt="Flask">
     <img src="https://img.shields.io/badge/MySQL-5.7+-orange.svg" alt="MySQL">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
   </p>
-  
+
   <p>
     <a href="https://account.snyqt.top">在线演示</a> •
     <a href="#-快速开始">快速开始</a> •
@@ -22,7 +22,7 @@
   </p>
 </div>
 
----
+***
 
 ## 📋 目录
 
@@ -46,11 +46,12 @@
 - [更新日志](#-更新日志)
 - [开源协议](#-开源协议)
 
----
+***
 
 ## ✨ 功能特性
 
 ### 🔐 用户认证与安全
+
 - ✅ 用户注册 / 登录 / 忘记密码
 - ✅ 邮箱验证码 & 短信验证码（阿里云短信服务）
 - ✅ Cloudflare Turnstile 人机验证
@@ -62,6 +63,7 @@
 - ✅ 会话管理（10分钟自动过期）
 
 ### 👤 用户管理
+
 - ✅ 个人信息查看与编辑（用户名、邮箱、手机号、头像）
 - ✅ 密码修改（旧密码验证 + 新密码强度检查）
 - ✅ 头像上传与裁剪（PIL 图片处理）
@@ -69,6 +71,7 @@
 - ✅ 用户头像管理
 
 ### 🎨 用户界面
+
 - 🌙 深色/浅色主题切换（自动记住用户偏好）
 - 🎨 现代化渐变配色（基于Logo色彩的品牌设计）
 - 📱 响应式设计，支持移动设备
@@ -76,12 +79,14 @@
 - 🏠 首页功能卡片导航
 
 ### 🔑 权限管理
+
 - 👥 简化二级权限体系：管理员、普通用户、开发者
 - 📝 权限申请与审批流程
 - 📋 批量审批功能
 - 🛡️ 管理员拥有所有管理权限
 
 ### 🚀 开发者平台（OAuth 2.0）
+
 - 📱 OAuth 2.0 授权流程
 - 📦 第三方应用创建与管理
 - ✔️ 应用审核与审批（生成 App ID 和 App Secret）
@@ -92,35 +97,37 @@
 - 🔑 Scope 权限范围配置（基本信息/邮箱验证码/手机验证码）
 
 ### 📊 登录日志
+
 - 📜 用户个人登录记录查询
 - 🔍 管理员全局登录日志查询（支持按用户 / 时间 / IP 筛选）
 - 🌐 浏览器与设备信息记录
 - 📍 IP 地理位置记录
 
 ### 🛡️ 第三方安全管理
+
 - 📋 已授权应用列表查看（授权时间、权限范围）
 - 🚫 取消应用授权（拉黑机制）
 - 🔒 精细化权限控制（禁止发送邮件/手机验证码/访问个人信息）
 - 📝 授权操作日志（操作人、操作类型、详情、IP、时间）
 
----
+***
 
 ## 🛠 技术栈
 
-| 类别 | 技术 |
-|------|------|
-| **后端框架** | Flask 2.3.3 |
-| **数据库** | MySQL 5.7+ (PyMySQL 1.1.0) |
-| **图片处理** | Pillow 12.1.1 |
-| **短信服务** | 阿里云短信 (alibabacloud_dypnsapi20170525) |
-| **人机验证** | Cloudflare Turnstile |
-| **前端** | HTML5 / CSS3 / JavaScript (原生) |
-| **图标** | Font Awesome 6 |
-| **部署** | Docker + uWSGI / 直接运行 |
-| **OAuth** | OAuth 2.0 |
-| **Python** | 3.11+ |
+| 类别         | 技术                                     |
+| ---------- | -------------------------------------- |
+| **后端框架**   | Flask 2.3.3                            |
+| **数据库**    | MySQL 5.7+ (PyMySQL 1.1.0)             |
+| **图片处理**   | Pillow 12.1.1                          |
+| **短信服务**   | 阿里云短信 (alibabacloud\_dypnsapi20170525) |
+| **人机验证**   | Cloudflare Turnstile                   |
+| **前端**     | HTML5 / CSS3 / JavaScript (原生)         |
+| **图标**     | Font Awesome 6                         |
+| **部署**     | Docker + uWSGI / 直接运行                  |
+| **OAuth**  | OAuth 2.0                              |
+| **Python** | 3.11+                                  |
 
----
+***
 
 ## 📁 项目结构
 
@@ -215,18 +222,18 @@ Snyqt-account/
         └── theme-toggle.js         # 主题切换脚本
 ```
 
----
+***
 
 ## 🚀 快速开始
 
 ### 前置条件
 
-| 软件 | 版本要求 | 说明 |
-|------|---------|------|
-| Python | 3.11+ | 运行环境 |
-| MySQL | 5.7+ | 数据库 |
-| 阿里云短信 | 可选 | 短信验证码服务 |
-| Cloudflare Turnstile | 可选 | 人机验证 |
+| 软件                   | 版本要求  | 说明      |
+| -------------------- | ----- | ------- |
+| Python               | 3.11+ | 运行环境    |
+| MySQL                | 5.7+  | 数据库     |
+| 阿里云短信                | 可选    | 短信验证码服务 |
+| Cloudflare Turnstile | 可选    | 人机验证    |
 
 ### 本地开发
 
@@ -376,60 +383,60 @@ volumes:
 docker-compose up -d
 ```
 
----
+***
 
 ## 🔧 环境变量
 
-| 变量名 | 说明 | 必需 | 默认值 |
-|--------|------|------|--------|
-| `DB_HOST` | 数据库主机地址 | ✅ | `localhost` |
-| `DB_USER` | 数据库用户名 | ✅ | - |
-| `DB_PASSWORD` | 数据库密码 | ✅ | - |
-| `DB_NAME` | 数据库名称 | ✅ | `Snyqt-account` |
-| `SECRET_KEY` | Flask 密钥 | ✅ | - |
-| `SMTP_SERVER` | SMTP 服务器 | ✅ | `smtp.qq.com` |
-| `SMTP_PORT` | SMTP 端口 | ❌ | `587` |
-| `SMTP_SENDER` | 发件人邮箱 | ✅ | - |
-| `SMTP_PASSWORD` | 邮箱授权码 | ✅ | - |
-| `ALIYUN_ACCESS_KEY_ID` | 阿里云 AccessKey ID | ❌ | - |
-| `ALIYUN_ACCESS_KEY_SECRET` | 阿里云 AccessKey Secret | ❌ | - |
-| `ALIYUN_SIGN_NAME` | 短信签名 | ❌ | - |
-| `ALIYUN_TEMPLATE_CODE` | 短信模板 CODE | ❌ | - |
-| `TURNSTILE_SECRET_KEY` | Turnstile 密钥 | ❌ | - |
-| `TURNSTILE_SITEKEY` | Turnstile 站点密钥 | ❌ | - |
-| `TURNSTILE_ENABLED` | 是否启用全局 Turnstile 验证（留空则生产环境自动启用） | ❌ | `自动` |
-| `ENABLE_2FA` | 是否启用二次验证 | ❌ | `False` |
-| `RISK_CONTROL_ENABLED` | 是否启用风控 | ❌ | `True` |
-| `VERIFICATION_CODE_EXPIRE` | 验证码有效期（秒） | ❌ | `300` |
-| `REMEMBER_ME_COOKIE_DURATION` | 记住我天数 | ❌ | `7` |
-| `SESSION_DURATION` | 会话时长（分钟） | ❌ | `10` |
+| 变量名                           | 说明                               | 必需 | 默认值             |
+| ----------------------------- | -------------------------------- | -- | --------------- |
+| `DB_HOST`                     | 数据库主机地址                          | ✅  | `localhost`     |
+| `DB_USER`                     | 数据库用户名                           | ✅  | -               |
+| `DB_PASSWORD`                 | 数据库密码                            | ✅  | -               |
+| `DB_NAME`                     | 数据库名称                            | ✅  | `Snyqt-account` |
+| `SECRET_KEY`                  | Flask 密钥                         | ✅  | -               |
+| `SMTP_SERVER`                 | SMTP 服务器                         | ✅  | `smtp.qq.com`   |
+| `SMTP_PORT`                   | SMTP 端口                          | ❌  | `587`           |
+| `SMTP_SENDER`                 | 发件人邮箱                            | ✅  | -               |
+| `SMTP_PASSWORD`               | 邮箱授权码                            | ✅  | -               |
+| `ALIYUN_ACCESS_KEY_ID`        | 阿里云 AccessKey ID                 | ❌  | -               |
+| `ALIYUN_ACCESS_KEY_SECRET`    | 阿里云 AccessKey Secret             | ❌  | -               |
+| `ALIYUN_SIGN_NAME`            | 短信签名                             | ❌  | -               |
+| `ALIYUN_TEMPLATE_CODE`        | 短信模板 CODE                        | ❌  | -               |
+| `TURNSTILE_SECRET_KEY`        | Turnstile 密钥                     | ❌  | -               |
+| `TURNSTILE_SITEKEY`           | Turnstile 站点密钥                   | ❌  | -               |
+| `TURNSTILE_ENABLED`           | 是否启用全局 Turnstile 验证（留空则生产环境自动启用） | ❌  | `自动`            |
+| `ENABLE_2FA`                  | 是否启用二次验证                         | ❌  | `False`         |
+| `RISK_CONTROL_ENABLED`        | 是否启用风控                           | ❌  | `True`          |
+| `VERIFICATION_CODE_EXPIRE`    | 验证码有效期（秒）                        | ❌  | `300`           |
+| `REMEMBER_ME_COOKIE_DURATION` | 记住我天数                            | ❌  | `7`             |
+| `SESSION_DURATION`            | 会话时长（分钟）                         | ❌  | `10`            |
 
----
+***
 
 ## 📖 API文档
 
 ### 认证相关API
 
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| POST | `/login` | 用户登录 |
-| POST | `/register` | 用户注册 |
-| POST | `/logout` | 用户登出 |
-| POST | `/send_code` | 发送邮箱验证码 |
-| POST | `/verify_code` | 验证邮箱验证码 |
-| POST | `/forgot_password` | 忘记密码 |
-| GET | `/forgot_password` | 获取忘记密码页面 |
-| POST | `/api/send-sms-code` | 发送短信验证码 |
-| POST | `/api/verify-sms-code` | 验证短信验证码 |
+| 方法   | 端点                     | 说明       |
+| ---- | ---------------------- | -------- |
+| POST | `/login`               | 用户登录     |
+| POST | `/register`            | 用户注册     |
+| POST | `/logout`              | 用户登出     |
+| POST | `/send_code`           | 发送邮箱验证码  |
+| POST | `/verify_code`         | 验证邮箱验证码  |
+| POST | `/forgot_password`     | 忘记密码     |
+| GET  | `/forgot_password`     | 获取忘记密码页面 |
+| POST | `/api/send-sms-code`   | 发送短信验证码  |
+| POST | `/api/verify-sms-code` | 验证短信验证码  |
 
 ### OAuth授权API
 
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/oauth/authorize` | OAuth 授权入口 |
-| POST | `/oauth/authorize/confirm` | 确认授权 |
-| POST | `/api/oauth/userinfo` | 获取用户信息 |
-| POST | `/api/oauth/send-verification` | 发送验证码 |
+| 方法   | 端点                             | 说明         |
+| ---- | ------------------------------ | ---------- |
+| GET  | `/oauth/authorize`             | OAuth 授权入口 |
+| POST | `/oauth/authorize/confirm`     | 确认授权       |
+| POST | `/api/oauth/userinfo`          | 获取用户信息     |
+| POST | `/api/oauth/send-verification` | 发送验证码      |
 
 ### OAuth授权流程
 
@@ -459,6 +466,7 @@ docker-compose up -d
 ### 第三方安全管理API
 
 #### 获取已授权应用列表
+
 - **URL**: `/api/third-party-security`
 - **Method**: `GET`
 - **Headers**: `Cookie: session=xxx`（需登录）
@@ -466,6 +474,7 @@ docker-compose up -d
 - **Success Response**: `{ "success": true, "authorizations": [...] }`
 
 #### 取消应用授权（不拉黑）
+
 - **URL**: `/api/third-party/cancel-auth`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
@@ -473,6 +482,7 @@ docker-compose up -d
 - **Success Response**: `{ "success": true, "message": "已取消授权" }`
 
 #### 拉黑应用
+
 - **URL**: `/api/third-party/blacklist-app`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
@@ -480,6 +490,7 @@ docker-compose up -d
 - **Success Response**: `{ "success": true, "message": "已将应用加入黑名单" }`
 
 #### 解除黑名单
+
 - **URL**: `/api/third-party/restore-auth`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
@@ -487,6 +498,7 @@ docker-compose up -d
 - **Success Response**: `{ "success": true, "message": "已解除黑名单" }`
 
 #### 设置权限限制
+
 - **URL**: `/api/third-party/restrict-permission`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
@@ -494,6 +506,7 @@ docker-compose up -d
 - **Success Response**: `{ "success": true }`
 
 #### 获取授权日志
+
 - **URL**: `/api/authorization-log`
 - **Method**: `GET`
 - **Query Params**: `search`（可选，搜索应用名称或操作类型）
@@ -501,39 +514,40 @@ docker-compose up -d
 
 ### 用户管理API
 
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/profile` | 获取个人信息页 |
-| POST | `/api/update-profile` | 更新个人信息 |
-| POST | `/api/update-avatar` | 更新头像 |
-| POST | `/api/change-password` | 修改密码 |
-| GET | `/api/user-info` | 获取用户信息 |
-| GET | `/api/get-user-permissions` | 获取用户权限 |
+| 方法   | 端点                          | 说明      |
+| ---- | --------------------------- | ------- |
+| GET  | `/profile`                  | 获取个人信息页 |
+| POST | `/api/update-profile`       | 更新个人信息  |
+| POST | `/api/update-avatar`        | 更新头像    |
+| POST | `/api/change-password`      | 修改密码    |
+| GET  | `/api/user-info`            | 获取用户信息  |
+| GET  | `/api/get-user-permissions` | 获取用户权限  |
 
 ### 开发者API
 
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/developer-docs` | 开发者文档页 |
-| GET | `/developer-app-management` | 开发者应用管理页 |
-| POST | `/api/developer/create-app` | 创建应用 |
-| GET | `/api/developer/apps` | 获取应用列表 |
-| DELETE | `/api/developer/delete-app` | 删除应用 |
-| POST | `/api/developer/configure-callback` | 配置回调地址和 Scope |
-| GET | `/api/developer/app-secret/<app_id>` | 获取 App Secret |
-| GET | `/api/developer/app-config/<app_id>` | 获取应用配置 |
+| 方法     | 端点                                   | 说明            |
+| ------ | ------------------------------------ | ------------- |
+| GET    | `/developer-docs`                    | 开发者文档页        |
+| GET    | `/developer-app-management`          | 开发者应用管理页      |
+| POST   | `/api/developer/create-app`          | 创建应用          |
+| GET    | `/api/developer/apps`                | 获取应用列表        |
+| DELETE | `/api/developer/delete-app`          | 删除应用          |
+| POST   | `/api/developer/configure-callback`  | 配置回调地址和 Scope |
+| GET    | `/api/developer/app-secret/<app_id>` | 获取 App Secret |
+| GET    | `/api/developer/app-config/<app_id>` | 获取应用配置        |
 
 #### Scope 权限范围
 
 应用配置时可设置 scope 权限范围，支持以下选项：
 
-| scope 值 | 说明 |
-|---------|------|
-| `userinfo` | 获取用户基本信息（用户ID、用户名、头像），默认必选 |
-| `email_code` | 允许向用户邮箱发送验证码 |
-| `phone_code` | 允许向用户手机发送验证码 |
+| scope 值      | 说明                         |
+| ------------ | -------------------------- |
+| `userinfo`   | 获取用户基本信息（用户ID、用户名、头像），默认必选 |
+| `email_code` | 允许向用户邮箱发送验证码               |
+| `phone_code` | 允许向用户手机发送验证码               |
 
 配置回调时 scope 格式为数组，例如：
+
 ```json
 {
   "scope": ["userinfo", "email_code"]
@@ -542,34 +556,34 @@ docker-compose up -d
 
 ### 管理员API
 
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/admin/users` | 用户信息管理页 |
-| GET | `/admin/login-log` | 管理员登录日志页 |
-| GET | `/admin/user-login-log` | 用户登录日志页 |
-| GET | `/admin/app-review` | 应用审核页 |
-| GET | `/admin/app-management` | 应用管理页 |
-| GET | `/api/admin/users` | 获取用户列表 |
-| POST | `/api/admin/update-user` | 更新用户信息 |
-| POST | `/api/admin/delete-user` | 删除用户 |
-| GET | `/api/admin/pending-apps` | 获取待审核应用 |
-| POST | `/api/admin/approve-app` | 审批通过应用 |
-| POST | `/api/admin/reject-app` | 拒绝应用 |
-| GET | `/api/admin/all-apps` | 获取所有应用 |
-| POST | `/api/admin/update-app` | 更新应用信息 |
-| DELETE | `/api/admin/delete-app` | 删除应用 |
+| 方法     | 端点                        | 说明       |
+| ------ | ------------------------- | -------- |
+| GET    | `/admin/users`            | 用户信息管理页  |
+| GET    | `/admin/login-log`        | 管理员登录日志页 |
+| GET    | `/admin/user-login-log`   | 用户登录日志页  |
+| GET    | `/admin/app-review`       | 应用审核页    |
+| GET    | `/admin/app-management`   | 应用管理页    |
+| GET    | `/api/admin/users`        | 获取用户列表   |
+| POST   | `/api/admin/update-user`  | 更新用户信息   |
+| POST   | `/api/admin/delete-user`  | 删除用户     |
+| GET    | `/api/admin/pending-apps` | 获取待审核应用  |
+| POST   | `/api/admin/approve-app`  | 审批通过应用   |
+| POST   | `/api/admin/reject-app`   | 拒绝应用     |
+| GET    | `/api/admin/all-apps`     | 获取所有应用   |
+| POST   | `/api/admin/update-app`   | 更新应用信息   |
+| DELETE | `/api/admin/delete-app`   | 删除应用     |
 
 ### 权限管理API
 
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/permission` | 权限申请页 |
-| POST | `/api/permission-apply` | 申请权限 |
-| GET | `/api/user-permissions` | 获取用户权限列表 |
-| POST | `/api/delete-permission` | 删除用户权限 |
-| POST | `/api/batch-approve-permission` | 批量审批权限 |
+| 方法   | 端点                              | 说明       |
+| ---- | ------------------------------- | -------- |
+| GET  | `/permission`                   | 权限申请页    |
+| POST | `/api/permission-apply`         | 申请权限     |
+| GET  | `/api/user-permissions`         | 获取用户权限列表 |
+| POST | `/api/delete-permission`        | 删除用户权限   |
+| POST | `/api/batch-approve-permission` | 批量审批权限   |
 
----
+***
 
 ## 💾 数据库设计
 
@@ -577,21 +591,21 @@ docker-compose up -d
 
 ### 用户相关表
 
-| 表名 | 说明 |
-|------|------|
-| `user_info` | 用户信息（ID、用户名、密码哈希、邮箱、手机号、头像） |
-| `login_log` | 登录日志（用户ID、IP、时间、浏览器、地理位置、风险标记） |
-| `user_permission` | 用户权限（用户ID、权限类型） |
-| `user_permission_application` | 权限申请记录（用户ID、权限类型、申请时间） |
+| 表名                            | 说明                             |
+| ----------------------------- | ------------------------------ |
+| `user_info`                   | 用户信息（ID、用户名、密码哈希、邮箱、手机号、头像）    |
+| `login_log`                   | 登录日志（用户ID、IP、时间、浏览器、地理位置、风险标记） |
+| `user_permission`             | 用户权限（用户ID、权限类型）                |
+| `user_permission_application` | 权限申请记录（用户ID、权限类型、申请时间）         |
 
 ### 开发者相关表
 
-| 表名 | 说明 |
-|------|------|
-| `developer_apps` | 开发者应用（应用ID、开发者ID、名称、App Secret哈希、状态） |
-| `developer_authorizations` | 用户授权码（应用ID、用户ID、授权码、有效期、状态、权限限制） |
-| `app_configurations` | 应用配置（回调地址、更新时间） |
-| `authorization_log` | 授权操作日志（user_id、app_id、action、detail、ip、created_at） |
+| 表名                         | 说明                                                    |
+| -------------------------- | ----------------------------------------------------- |
+| `developer_apps`           | 开发者应用（应用ID、开发者ID、名称、App Secret哈希、状态）                  |
+| `developer_authorizations` | 用户授权码（应用ID、用户ID、授权码、有效期、状态、权限限制）                      |
+| `app_configurations`       | 应用配置（回调地址、更新时间）                                       |
+| `authorization_log`        | 授权操作日志（user\_id、app\_id、action、detail、ip、created\_at） |
 
 ### 表结构详情
 
@@ -684,7 +698,7 @@ CREATE TABLE authorization_log (
 );
 ```
 
----
+***
 
 ## 🔐 权限体系
 
@@ -712,17 +726,17 @@ CREATE TABLE authorization_log (
   └── OAuth授权（授权第三方应用访问）
 ```
 
----
+***
 
 ## 📬 联系方式
 
-| 方式 | 信息 |
-|------|------|
-| 🌐 网站 | [account.snyqt.top](https://account.snyqt.top) |
-| 📧 邮箱 | snyqt@qq.com |
-| 💬 QQ群 | 1106802055（SNYQT-ACCOUNT交流群） |
+| 方式     | 信息                                             |
+| ------ | ---------------------------------------------- |
+| 🌐 网站  | [account.snyqt.top](https://account.snyqt.top) |
+| 📧 邮箱  | <snyqt@qq.com>                                 |
+| 💬 QQ群 | 1106802055（SNYQT-ACCOUNT交流群）                   |
 
----
+***
 
 ## 🤝 贡献指南
 
@@ -742,7 +756,7 @@ CREATE TABLE authorization_log (
 - 遵循 PEP 8 Python 代码规范
 - 提交前运行测试
 
----
+***
 
 ## 📄 开源协议
 
@@ -770,7 +784,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
----
+***
 
 <div align="center">
   <p>Made with by <a href="https://github.com/snyqt">SNYQT</a></p>
