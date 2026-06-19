@@ -10,6 +10,7 @@ try:
     )
     from app.env_config import configure_turnstile, configure_risk_control, auto_configure
     from app.permission.utils import is_developer as check_is_developer
+    from app.middleware.turnstile_middleware import register_global_turnstile_middleware
 except ImportError:
     print("错误：请复制 config.example.py 为 config.py 并配置相关参数！")
     import sys
@@ -39,12 +40,19 @@ def create_app():
     from app.admin import admin_bp
     from app.permission import permission_bp
     from app.developer import developer_bp
+    from app.security import security_bp
+    from app.turnstile import turnstile_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(permission_bp)
     app.register_blueprint(developer_bp)
+    app.register_blueprint(security_bp)
+    app.register_blueprint(turnstile_bp)
+
+    # 注册全局 Turnstile 验证中间件（生产环境有效）
+    register_global_turnstile_middleware(app)
 
     from app.models.db import check_and_create_tables
     check_and_create_tables()

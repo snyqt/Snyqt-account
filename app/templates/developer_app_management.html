@@ -32,7 +32,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--bg-gradient-end) 100%);
             opacity: var(--bg-gradient-opacity);
             z-index: -1;
         }
@@ -260,7 +260,7 @@
 
         .btn-secondary {
             background: var(--card-bg);
-            color: var(--text-color);
+            color: white;
             border-color: var(--card-border);
         }
 
@@ -498,7 +498,7 @@
 
         .action-btn.danger {
             background: var(--danger-bg-hover);
-            color: var(--text-color);
+            color: white;
             border-color: var(--bg-gradient-middle2);
         }
 
@@ -662,7 +662,7 @@
 
         .btn-cancel {
             background: transparent;
-            color: var(--text-color);
+            color: white;
             border: 1px solid var(--card-border);
         }
 
@@ -1164,6 +1164,37 @@
                     </small>
                 </div>
 
+                <div class="form-group">
+                    <label>权限范围（scope）</label>
+                    <small style="color: var(--secondary-text); font-size: 13px; display: block; margin-bottom: 10px;">
+                        选择应用在用户授权时申请的权限范围，用户将在授权页面看到这些权限说明
+                    </small>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; font-size: 14px;">
+                            <input type="checkbox" id="scope-userinfo" value="userinfo" checked style="width: 18px; height: 18px; accent-color: var(--bg-gradient-start);">
+                            <div>
+                                <div style="font-weight: 500;">基本信息（userinfo）</div>
+                                <div style="color: var(--secondary-text); font-size: 13px;">用户名、用户ID、头像</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; font-size: 14px;">
+                            <input type="checkbox" id="scope-email_code" value="email_code" style="width: 18px; height: 18px; accent-color: var(--bg-gradient-start);">
+                            <div>
+                                <div style="font-weight: 500;">邮件验证码（email_code）</div>
+                                <div style="color: var(--secondary-text); font-size: 13px;">允许向用户邮箱发送验证码</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; font-size: 14px;">
+                            <input type="checkbox" id="scope-phone_code" value="phone_code" style="width: 18px; height: 18px; accent-color: var(--bg-gradient-start);">
+                            <div>
+                                <div style="font-weight: 500;">手机验证码（phone_code）</div>
+                                <div style="color: var(--secondary-text); font-size: 13px;">允许向用户手机发送验证码</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="error-message" id="scope-error"></div>
+                </div>
+
                 <div class="btn-group">
                     <button type="button" class="btn btn-cancel" onclick="closeCallbackModal()">取消</button>
                     <button type="submit" class="btn btn-submit">保存配置</button>
@@ -1602,6 +1633,15 @@
                 if (data.success) {
                     document.getElementById('login-callback-url').value = data.config.login_callback_url || '';
                     document.getElementById('verification-callback-url').value = data.config.verification_callback_url || '';
+                    var scopeList = [];
+                    try {
+                        scopeList = JSON.parse(data.config.scope || '["userinfo"]');
+                    } catch (e) {
+                        scopeList = ['userinfo'];
+                    }
+                    document.getElementById('scope-userinfo').checked = scopeList.includes('userinfo');
+                    document.getElementById('scope-email_code').checked = scopeList.includes('email_code');
+                    document.getElementById('scope-phone_code').checked = scopeList.includes('phone_code');
                 }
             })
             .catch(error => {
@@ -1621,6 +1661,11 @@
             const appId = document.getElementById('callback-app-id').value;
             const loginCallbackUrl = document.getElementById('login-callback-url').value.trim();
             const verificationCallbackUrl = document.getElementById('verification-callback-url').value.trim();
+            const scope = [];
+            if (document.getElementById('scope-userinfo').checked) scope.push('userinfo');
+            if (document.getElementById('scope-email_code').checked) scope.push('email_code');
+            if (document.getElementById('scope-phone_code').checked) scope.push('phone_code');
+            if (scope.length === 0) scope.push('userinfo');
 
             let hasError = false;
 
@@ -1646,7 +1691,8 @@
                 body: JSON.stringify({
                     app_id: appId,
                     login_callback_url: loginCallbackUrl,
-                    verification_callback_url: verificationCallbackUrl
+                    verification_callback_url: verificationCallbackUrl,
+                    scope: scope
                 })
             })
             .then(response => response.json())

@@ -33,7 +33,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--bg-gradient-end) 100%);
             opacity: var(--bg-gradient-opacity);
             z-index: -1;
         }
@@ -409,22 +409,22 @@
 
         .action-btn {
             padding: 8px 12px;
-            border: 1px solid #eeeeee;
+            border: 1px solid var(--card-border);
             border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            color: var(--text-color);
+            color: white;
             background-color: var(--card-border);
         }
 
         .approve-btn {
             background: var(--primary-bg);
-            color: var(--text-color);
+            color: white;
             border-color: var(--bg-gradient-start);
             padding: 8px 12px;
-            border: 1px solid #eeeeee;
+            border: 1px solid var(--card-border);
             border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
@@ -439,10 +439,10 @@
 
         .reject-btn {
             background: var(--danger-bg-hover);
-            color: var(--text-color);
+            color: white;
             border-color: var(--bg-gradient-middle2);
             padding: 8px 12px;
-            border: 1px solid #eeeeee;
+            border: 1px solid var(--card-border);
             border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
@@ -457,7 +457,7 @@
 
         .delete-btn {
             padding: 8px 12px;
-            border: 1px solid #eeeeee;
+            border: 1px solid var(--card-border);
             border-radius: 6px;
             font-size: 14px;
             cursor: pointer;

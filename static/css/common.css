@@ -42,16 +42,16 @@ body::before {
     background: var(--card-bg);
     border-radius: 12px;
     border: 1px solid var(--card-border);
-    box-shadow: 0 4px 20px var(--card-shadow);
+    box-shadow: var(--card-shadow);
     backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover,
 .auth-container:hover,
 .profile-card:hover,
 .permission-card:hover {
-    box-shadow: 0 8px 30px var(--card-shadow);
+    box-shadow: var(--card-shadow-hover);
     transform: translateY(-2px);
 }
 
@@ -128,8 +128,8 @@ body::before {
 .form-select:focus,
 .form-textarea:focus {
     outline: none;
-    border-color: var(--bg-gradient-start);
-    box-shadow: 0 0 0 4px var(--primary-shadow);
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
 }
 
 .form-input::placeholder,

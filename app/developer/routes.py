@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify, session, render_template
 from functools import wraps
 from datetime import datetime
+from werkzeug.security import check_password_hash
 import hashlib
+import json
 import string
 import random
 import re
@@ -64,6 +66,31 @@ def is_developer(f):
 def generate_app_id():
     chars = string.ascii_letters + string.digits
     return ''.join(random.choice(chars) for _ in range(15))
+
+
+def _verify_app_secret(stored_secret: str, provided_secret: str) -> bool:
+    """
+    验证 app_secret
+    兼容历史数据：数据库中可能存的是明文，也可能是 bcrypt 哈希
+    - bcrypt 哈希格式：以 $2a$ / $2b$ / $2y$ 开头
+    - 否则按明文比对
+    """
+    if stored_secret is None or provided_secret is None:
+        return False
+    if not stored_secret:
+        return False
+    if stored_secret.startswith(('$2a$', '$2b$', '$2y$', 'pbkdf2:')):
+        try:
+            return check_password_hash(stored_secret, provided_secret)
+        except Exception:
+            return False
+    # 明文比对（恒定时间比较以防时序攻击）
+    if len(stored_secret) != len(provided_secret):
+        return False
+    result = 0
+    for a, b in zip(stored_secret, provided_secret):
+        result |= ord(a) ^ ord(b)
+    return result == 0
 
 
 def generate_app_secret():
@@ -250,6 +277,7 @@ def configure_callback():
         app_id = data.get('app_id')
         login_callback_url = data.get('login_callback_url')
         verification_callback_url = data.get('verification_callback_url')
+        scope = data.get('scope')
 
         if not app_id:
             return jsonify({'success': False, 'message': '应用ID不能为空'})
@@ -279,13 +307,14 @@ def configure_callback():
         updated_at = get_network_time()
 
         cursor.execute("""
-            INSERT INTO app_configurations (app_id, login_callback_url, verification_callback_url, updated_at)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO app_configurations (app_id, login_callback_url, verification_callback_url, scope, updated_at)
+            VALUES (%s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                 login_callback_url = VALUES(login_callback_url),
                 verification_callback_url = VALUES(verification_callback_url),
+                scope = VALUES(scope),
                 updated_at = VALUES(updated_at)
-        """, (app_id, login_callback_url, verification_callback_url, updated_at))
+        """, (app_id, login_callback_url, verification_callback_url, json.dumps(scope) if scope else '["userinfo"]', updated_at))
 
         conn.commit()
         cursor.close()
@@ -334,14 +363,21 @@ def oauth_userinfo():
                 conn.close()
                 return jsonify({'success': False, 'message': '应用不存在或未通过审核'}), 404
 
-            if not check_password_hash(app[1], app_secret):
+            if not _verify_app_secret(app[1], app_secret):
                 cursor.close()
                 conn.close()
                 return jsonify({'success': False, 'message': 'app_secret验证失败'}), 401
 
-            current_time = get_network_time()
+            # 优先使用本地时间，避免在线时间 API 不可达时阻塞请求
+            from datetime import datetime as _dt_local
+            try:
+                current_time = get_network_time()
+            except Exception:
+                current_time = _dt_local.now()
+            # 数据库存的是 naive datetime，统一去掉时区信息
+            current_time = current_time.replace(tzinfo=None) if current_time.tzinfo else current_time
             cursor.execute("""
-                SELECT id, user_id, expires_at FROM developer_authorizations
+                SELECT id, user_id, expires_at, status, permission_restrictions FROM developer_authorizations
                 WHERE app_id = %s AND auth_code = %s
             """, (app_id, auth_code))
             auth_record = cursor.fetchone()
@@ -351,12 +387,29 @@ def oauth_userinfo():
                 conn.close()
                 return jsonify({'success': False, 'message': '授权码无效'}), 404
 
-            auth_id, user_id, expires_at = auth_record
+            auth_id, user_id, expires_at, status, permission_restrictions_raw = auth_record
 
             if expires_at < current_time:
                 cursor.close()
                 conn.close()
                 return jsonify({'success': False, 'message': '授权码已过期'}), 401
+
+            if status == 'blacklisted' or status == 'cancelled':
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '该应用已被用户取消授权'}), 403
+
+            permission_restrictions = {}
+            if permission_restrictions_raw:
+                try:
+                    permission_restrictions = json.loads(permission_restrictions_raw)
+                except (json.JSONDecodeError, TypeError):
+                    permission_restrictions = {}
+
+            if permission_restrictions.get('no_userinfo'):
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '用户已禁止该应用访问个人信息'}), 403
 
             cursor.execute("""
                 SELECT id, Name, avatar FROM user_info
@@ -369,9 +422,17 @@ def oauth_userinfo():
                 conn.close()
                 return jsonify({'success': False, 'message': '用户不存在'}), 404
 
+            # 先写日志，再删 auth_code——避免日志写入失败时 auth_code 已被删除导致重试失败
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+            cursor.execute("""
+                INSERT INTO authorization_log (user_id, app_id, action, detail, ip, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_id, app_id, 'access_userinfo', '应用访问了用户信息', ip_address, current_time))
+
             if delete_code:
                 cursor.execute("DELETE FROM developer_authorizations WHERE id = %s", (auth_id,))
-                conn.commit()
+
+            conn.commit()
 
             cursor.close()
             conn.close()
@@ -434,14 +495,21 @@ def oauth_send_verification():
 
             app_secret_hash, verification_callback_url = app
 
-            if not check_password_hash(app_secret_hash, app_secret):
+            if not _verify_app_secret(app_secret_hash, app_secret):
                 cursor.close()
                 conn.close()
                 return jsonify({'success': False, 'message': 'app_secret验证失败'}), 401
 
-            current_time = get_network_time()
+            # 优先使用本地时间，避免在线时间 API 不可达时阻塞请求
+            from datetime import datetime as _dt_local
+            try:
+                current_time = get_network_time()
+            except Exception:
+                current_time = _dt_local.now()
+            # 数据库存的是 naive datetime，统一去掉时区信息
+            current_time = current_time.replace(tzinfo=None) if current_time.tzinfo else current_time
             cursor.execute("""
-                SELECT id, user_id, expires_at FROM developer_authorizations
+                SELECT id, user_id, expires_at, status, permission_restrictions FROM developer_authorizations
                 WHERE app_id = %s AND auth_code = %s
             """, (app_id, auth_code))
             auth_record = cursor.fetchone()
@@ -451,12 +519,34 @@ def oauth_send_verification():
                 conn.close()
                 return jsonify({'success': False, 'message': '授权码无效'}), 404
 
-            auth_id, user_id, expires_at = auth_record
+            auth_id, user_id, expires_at, status, permission_restrictions_raw = auth_record
 
             if expires_at < current_time:
                 cursor.close()
                 conn.close()
                 return jsonify({'success': False, 'message': '授权码已过期'}), 401
+
+            if status == 'blacklisted' or status == 'cancelled':
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '该应用已被用户取消授权'}), 403
+
+            permission_restrictions = {}
+            if permission_restrictions_raw:
+                try:
+                    permission_restrictions = json.loads(permission_restrictions_raw)
+                except (json.JSONDecodeError, TypeError):
+                    permission_restrictions = {}
+
+            if verification_type == 'email' and permission_restrictions.get('no_email'):
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '用户已禁止该应用访问邮箱'}), 403
+
+            if verification_type == 'phone' and permission_restrictions.get('no_phone'):
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '用户已禁止该应用访问手机'}), 403
 
             cursor.execute("""
                 SELECT mail, phone FROM user_info
@@ -512,6 +602,14 @@ def oauth_send_verification():
                     return jsonify({'success': False, 'message': f'发送验证码失败: {error_msg}'}), 500
 
             verification_send_times[rate_limit_key] = current_timestamp
+
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+            log_action = 'access_email' if verification_type == 'email' else 'access_phone'
+            log_detail = '应用访问了邮箱' if verification_type == 'email' else '应用访问了手机'
+            cursor.execute("""
+                INSERT INTO authorization_log (user_id, app_id, action, detail, ip, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_id, app_id, log_action, log_detail, ip_address, current_time))
 
             if verification_callback_url:
                 try:
@@ -611,7 +709,7 @@ def get_app_config(app_id):
             return jsonify({'success': False, 'message': '应用不存在或无权访问'}), 404
 
         cursor.execute("""
-            SELECT login_callback_url, verification_callback_url, updated_at
+            SELECT login_callback_url, verification_callback_url, scope, updated_at
             FROM app_configurations
             WHERE app_id = %s
         """, (app_id,))
@@ -624,18 +722,22 @@ def get_app_config(app_id):
             return jsonify({
                 'success': True,
                 'config': {
-                    'login_callback_url': '',
-                    'verification_callback_url': '',
+                    'login_callback_url': None,
+                    'verification_callback_url': None,
+                    'scope': '["userinfo"]',
                     'updated_at': None
                 }
             })
 
-        if config['updated_at']:
-            config['updated_at'] = config['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
-
+        import json as _json
         return jsonify({
             'success': True,
-            'config': config
+            'config': {
+                'login_callback_url': config.get('login_callback_url'),
+                'verification_callback_url': config.get('verification_callback_url'),
+                'scope': config.get('scope') or '["userinfo"]',
+                'updated_at': config.get('updated_at').strftime('%Y-%m-%d %H:%M:%S') if config.get('updated_at') else None
+            }
         })
 
     except Exception as e:

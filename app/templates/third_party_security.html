@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三方安全管理 - 少年友晴天-统一账户认证系统</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/theme-toggle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--bg-gradient-end) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-profile {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 1px solid var(--card-border);
+            object-fit: cover;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .logout-btn {
+            color: var(--secondary-text) !important;
+            width: calc(100% - 10px);
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            color: var(--danger-color);
+            background-color: rgba(255, 158, 125, 0.1);
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 10px;
+            width: 100%;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px var(--primary-shadow);
+            background: var(--card-bg);
+        }
+
+        .card-title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-color);
+            border-left: 4px solid var(--bg-gradient-start);
+            padding-left: 15px;
+        }
+
+        .card-title-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view-log-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 2px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .view-log-btn:hover {
+            border-color: var(--bg-gradient-start);
+            color: var(--bg-gradient-start);
+            background: var(--primary-shadow);
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            color: var(--secondary-text);
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 6px 6px 0 0;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-color);
+            background: var(--primary-shadow);
+        }
+
+        .tab-btn.active {
+            color: var(--bg-gradient-start);
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--bg-gradient-start);
+            margin-bottom: -2px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--input-text);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 4px var(--primary-shadow);
+        }
+
+        .search-box input::placeholder {
+            color: var(--input-placeholder);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-text);
+            font-size: 16px;
+        }
+
+        .logs-table-container {
+            overflow-x: auto;
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+
+        .logs-table th,
+        .logs-table td {
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logs-table th {
+            background-color: var(--primary-shadow);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .logs-table td {
+            font-size: 14px;
+            color: var(--tag-text);
+        }
+
+        .logs-table tbody tr:hover {
+            background-color: rgba(184, 196, 255, 0.05);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--card-border);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--danger-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--secondary-text);
+        }
+
+        .cancel-auth-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--danger-color);
+            background: transparent;
+            color: var(--danger-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .cancel-auth-btn:hover {
+            background: rgba(242, 101, 34, 0.1);
+        }
+
+        .blacklist-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--danger-color);
+            background: transparent;
+            color: var(--danger-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .blacklist-btn:hover {
+            background: rgba(242, 101, 34, 0.1);
+        }
+
+        .restore-auth-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--success-color);
+            background: transparent;
+            color: var(--success-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .restore-auth-btn:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .loading-message {
+            text-align: center;
+            color: var(--secondary-text);
+            padding: 40px 20px;
+            font-size: 16px;
+        }
+
+        .no-logs {
+            text-align: center;
+            color: var(--secondary-text);
+            padding: 60px 20px;
+            font-size: 16px;
+        }
+
+        .no-logs i {
+            font-size: 48px;
+            color: var(--bg-gradient-start);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            font-size: 14px;
+            box-shadow: 0 -2px 10px var(--primary-shadow);
+            border-top: 1px solid var(--card-border);
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-title {
+                font-size: 20px;
+            }
+
+            .user-avatar {
+                width: 60px;
+                height: 60px;
+            }
+
+            .container {
+                padding: 0 15px;
+                margin: 20px auto;
+            }
+
+            .content-card {
+                padding: 20px;
+            }
+
+            .card-title {
+                font-size: 20px;
+            }
+
+            .card-title-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .logs-table th,
+            .logs-table td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            .toggle-group {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .tab-bar {
+                width: 100%;
+            }
+
+            .tab-btn {
+                flex: 1;
+                text-align: center;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <div class="user-profile" id="user-profile">
+                <div class="avatar-container" id="avatar-container">
+                    <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item username-item" id="dropdown-username"></div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid"></div>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content-card">
+            <div class="card-title-bar">
+                <h2 class="card-title">第三方安全</h2>
+                <div class="card-title-actions">
+                    <a href="/authorization-log" class="view-log-btn">
+                        <i class="fas fa-history"></i>
+                        查看日志
+                    </a>
+                </div>
+            </div>
+
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="active" onclick="switchTab('active')">
+                    <i class="fas fa-check-circle"></i> 已授权应用
+                </button>
+                <button class="tab-btn" data-tab="blacklisted" onclick="switchTab('blacklisted')">
+                    <i class="fas fa-ban"></i> 黑名单
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="搜索应用名称...">
+            </div>
+
+            <div id="logs-container" class="logs-table-container">
+                <div class="loading-message">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 少年友晴天-统一账户认证系统 | 以科技化的方式，无限进步！</p>
+    </footer>
+
+    <script>
+        let currentTab = 'active';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            function getUserInfo() {
+                fetch('/get_user_info')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const user = data.user;
+                            document.getElementById('user-avatar').src = user.avatar || '/static/img/default_avatar.png';
+                            document.getElementById('dropdown-username').textContent = user.username || '用户';
+                            document.getElementById('dropdown-userid').textContent = 'ID: ' + (user.id || 'N/A');
+                        } else {
+                            window.location.href = '/login';
+                        }
+                    });
+            }
+
+            getUserInfo();
+
+            var avatarContainer = document.getElementById('avatar-container');
+            var dropdownMenu = document.getElementById('dropdown-menu');
+
+            avatarContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+            });
+
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('active');
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/logout')
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            localStorage.removeItem('userInfo');
+                            window.location.href = '/';
+                        }
+                    });
+            });
+
+            document.getElementById('search-input').addEventListener('input', function() {
+                filterTable(this.value);
+            });
+
+            loadAuthorizations();
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+            });
+            loadAuthorizations();
+        }
+
+        function loadAuthorizations() {
+            var logsContainer = document.getElementById('logs-container');
+            logsContainer.innerHTML = '<div class="loading-message">加载中...</div>';
+
+            fetch('/api/third-party-security?status=' + currentTab)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('网络响应错误');
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success && data.authorizations && data.authorizations.length > 0) {
+                        renderAuthorizations(data.authorizations);
+                    } else {
+                        var emptyMsg = currentTab === 'active' ? '暂无已授权应用' : '暂无黑名单记录';
+                        var emptyIcon = currentTab === 'active' ? 'fa-shield-alt' : 'fa-ban';
+                        logsContainer.innerHTML =
+                            '<div class="no-logs"><i class="fas ' + emptyIcon + '"></i><p>' + emptyMsg + '</p></div>';
+                    }
+                })
+                .catch(function(error) {
+                    console.error('获取已授权应用失败:', error);
+                    logsContainer.innerHTML =
+                        '<div class="no-logs"><i class="fas fa-exclamation-circle"></i><p>获取失败，请刷新页面重试</p></div>';
+                });
+        }
+
+        function renderAuthorizations(authorizations) {
+            var logsContainer = document.getElementById('logs-container');
+
+            if (currentTab === 'active') {
+                var tableHTML =
+                    '<table class="logs-table">' +
+                    '<thead><tr>' +
+                    '<th>应用名称</th><th>拥有者</th><th>授权时间</th><th>权限状态</th><th>操作</th>' +
+                    '</tr></thead><tbody>';
+
+                authorizations.forEach(function(auth) {
+                    var restrictions = auth.permission_restrictions || {};
+                    var denyEmail = restrictions.deny_email || false;
+                    var denyPhone = restrictions.deny_phone || false;
+                    var denyUserinfo = restrictions.deny_userinfo || false;
+
+                    tableHTML +=
+                        '<tr data-app-id="' + (auth.app_id || '') + '" data-app-name="' + ((auth.app_name || '').toLowerCase()) + '">' +
+                        '<td>' + (auth.app_name || '--') + '</td>' +
+                        '<td>' + (auth.app_owner || '--') + '</td>' +
+                        '<td>' + (auth.created_at || '--') + '</td>' +
+                        '<td>' +
+                        '<div class="toggle-group">' +
+                        '<label class="toggle-item"><span class="toggle-switch">' +
+                        '<input type="checkbox" class="restriction-toggle" data-app-id="' + auth.app_id + '" data-auth-id="' + auth.auth_id + '" data-field="deny_email"' + (denyEmail ? ' checked' : '') + '>' +
+                        '<span class="toggle-slider"></span></span>禁止发送邮件</label>' +
+                        '<label class="toggle-item"><span class="toggle-switch">' +
+                        '<input type="checkbox" class="restriction-toggle" data-app-id="' + auth.app_id + '" data-auth-id="' + auth.auth_id + '" data-field="deny_phone"' + (denyPhone ? ' checked' : '') + '>' +
+                        '<span class="toggle-slider"></span></span>禁止手机验证</label>' +
+                        '<label class="toggle-item"><span class="toggle-switch">' +
+                        '<input type="checkbox" class="restriction-toggle" data-app-id="' + auth.app_id + '" data-auth-id="' + auth.auth_id + '" data-field="deny_userinfo"' + (denyUserinfo ? ' checked' : '') + '>' +
+                        '<span class="toggle-slider"></span></span>禁止获取信息</label>' +
+                        '</div></td>' +
+                        '<td><button class="cancel-auth-btn" data-app-id="' + auth.app_id + '" data-auth-id="' + auth.auth_id + '" data-app-name="' + (auth.app_name || '') + '">取消授权</button> ' +
+                        '<button class="blacklist-btn" data-app-id="' + auth.app_id + '" data-auth-id="' + auth.auth_id + '" data-app-name="' + (auth.app_name || '') + '">拉黑</button></td>' +
+                        '</tr>';
+                });
+
+                tableHTML += '</tbody></table>';
+                logsContainer.innerHTML = tableHTML;
+
+            } else {
+                var tableHTML =
+                    '<table class="logs-table">' +
+                    '<thead><tr>' +
+                    '<th>应用名称</th><th>拥有者</th><th>拉黑时间</th><th>操作</th>' +
+                    '</tr></thead><tbody>';
+
+                authorizations.forEach(function(auth) {
+                    tableHTML +=
+                        '<tr data-app-id="' + (auth.app_id || '') + '" data-app-name="' + ((auth.app_name || '').toLowerCase()) + '">' +
+                        '<td>' + (auth.app_name || '--') + '</td>' +
+                        '<td>' + (auth.app_owner || '--') + '</td>' +
+                        '<td>' + (auth.created_at || '--') + '</td>' +
+                        '<td><button class="restore-auth-btn" data-app-id="' + auth.app_id + '" data-auth-id="' + auth.auth_id + '" data-app-name="' + (auth.app_name || '') + '">解除黑名单</button></td>' +
+                        '</tr>';
+                });
+
+                tableHTML += '</tbody></table>';
+                logsContainer.innerHTML = tableHTML;
+            }
+
+            attachToggleEvents();
+            handleAuthActions();
+            attachRestoreEvents();
+        }
+
+        function filterTable(query) {
+            query = query.toLowerCase().trim();
+            var rows = document.querySelectorAll('.logs-table tbody tr');
+            rows.forEach(function(row) {
+                var appName = row.getAttribute('data-app-name') || '';
+                row.style.display = appName.includes(query) ? '' : 'none';
+            });
+        }
+
+        function attachToggleEvents() {
+            var FIELD_MAP = {
+                'deny_email': 'no_email',
+                'deny_phone': 'no_phone',
+                'deny_userinfo': 'no_userinfo'
+            };
+
+            document.querySelectorAll('.restriction-toggle').forEach(function(toggle) {
+                toggle.addEventListener('change', function() {
+                    var appId = this.getAttribute('data-app-id');
+                    var authId = this.getAttribute('data-auth-id');
+                    var field = this.getAttribute('data-field');
+                    var checked = this.checked;
+                    var permissionType = FIELD_MAP[field] || field;
+
+                    fetch('/api/third-party/restrict-permission', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            app_id: appId,
+                            auth_id: authId,
+                            permission_type: permissionType,
+                            enabled: checked
+                        })
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (!data.success) {
+                            this.checked = !checked;
+                            alert('权限变更失败：' + (data.message || '未知错误'));
+                        }
+                    }.bind(this))
+                    .catch(function() {
+                        this.checked = !checked;
+                        alert('权限变更失败：网络错误，请重试');
+                    }.bind(this));
+                });
+            });
+        }
+
+        function handleAuthActions() {
+            document.querySelectorAll('.cancel-auth-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var appId = this.getAttribute('data-app-id');
+                    var authId = this.getAttribute('data-auth-id');
+                    var appName = this.getAttribute('data-app-name');
+
+                    if (!confirm('确定要取消"' + appName + '"的授权吗？取消后可重新授权。')) {
+                        return;
+                    }
+
+                    fetch('/api/third-party/cancel-auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            app_id: appId,
+                            auth_id: authId
+                        })
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            loadAuthorizations();
+                        } else {
+                            alert('取消授权失败：' + (data.message || '未知错误'));
+                        }
+                    })
+                    .catch(function() {
+                        alert('取消授权失败：网络错误，请重试');
+                    });
+                });
+            });
+
+            document.querySelectorAll('.blacklist-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var appId = this.getAttribute('data-app-id');
+                    var authId = this.getAttribute('data-auth-id');
+                    var appName = this.getAttribute('data-app-name');
+
+                    if (!confirm('确定要将"' + appName + '"拉入黑名单吗？拉黑后将禁止该应用访问你的任何信息，且需要手动解除黑名单后才能重新授权。')) {
+                        return;
+                    }
+
+                    fetch('/api/third-party/blacklist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            app_id: appId,
+                            auth_id: authId
+                        })
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            loadAuthorizations();
+                        } else {
+                            alert('拉黑失败：' + (data.message || '未知错误'));
+                        }
+                    })
+                    .catch(function() {
+                        alert('拉黑失败：网络错误，请重试');
+                    });
+                });
+            });
+        }
+
+        function attachRestoreEvents() {
+            document.querySelectorAll('.restore-auth-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var appId = this.getAttribute('data-app-id');
+                    var authId = this.getAttribute('data-auth-id');
+                    var appName = this.getAttribute('data-app-name');
+
+                    if (!confirm('确定要解除"' + appName + '"的黑名单吗？解除后可重新授权。')) {
+                        return;
+                    }
+
+                    fetch('/api/third-party/restore-auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            app_id: appId,
+                            auth_id: authId
+                        })
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            loadAuthorizations();
+                        } else {
+                            alert('解除黑名单失败：' + (data.message || '未知错误'));
+                        }
+                    })
+                    .catch(function() {
+                        alert('解除黑名单失败：网络错误，请重试');
+                    });
+                });
+            });
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

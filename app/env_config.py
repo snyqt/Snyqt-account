@@ -21,21 +21,23 @@ def auto_configure():
     return result
 
 def configure_turnstile():
-    from config import TURNSTILE_CONFIG
-    
+    from config import TURNSTILE_CONFIG, TURNSTILE_ENABLED
+
     turnstile_enabled = False
-    
-    env_var = os.getenv('TURNSTILE_ENABLED', '').lower()
+
+    # 优先使用环境变量配置
+    env_var = os.getenv('TURNSTILE_ENABLED', TURNSTILE_ENABLED or '').lower()
     if env_var == 'true':
         turnstile_enabled = True
     elif env_var == 'false':
         turnstile_enabled = False
     else:
+        # 未设置时，根据环境自动决定
         is_production = env.should_use_production()
         turnstile_enabled = True if is_production else False
-    
-    print(f"[配置信息] Cloudflare Turnstile: {'启用' if turnstile_enabled else '禁用'}")
-    
+
+    print(f"[配置信息] Cloudflare Turnstile 全局验证: {'启用' if turnstile_enabled else '禁用'}")
+
     return {
         **TURNSTILE_CONFIG,
         'enabled': turnstile_enabled

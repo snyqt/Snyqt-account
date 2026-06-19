@@ -45,6 +45,12 @@ ALIYUN_SMS_CONFIG = {
 }
 
 # ==================== Cloudflare Turnstile 配置 ====================
+# TURNSTILE_ENABLED: 是否启用全局人机验证
+# - 设置为 'true' 强制启用
+# - 设置为 'false' 强制禁用
+# - 不设置或留空则在生产环境自动启用，开发环境禁用
+TURNSTILE_ENABLED = os.getenv('TURNSTILE_ENABLED', '')
+
 TURNSTILE_CONFIG = {
     'secret_key': os.getenv('TURNSTILE_SECRET_KEY', 'your-turnstile-secret-key'),
     'site_key': os.getenv('TURNSTILE_SITEKEY', 'your-turnstile-site-key'),

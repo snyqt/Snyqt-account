@@ -193,7 +193,7 @@ def check_login_risk(user_id, current_ip, current_place, conn):
 
         cursor.execute("""
             SELECT ip, place FROM login_log
-            WHERE `user-id` = %s
+            WHERE `user_id` = %s
             ORDER BY time DESC
             LIMIT 5
         """, (user_id,))

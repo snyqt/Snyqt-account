@@ -162,7 +162,7 @@ def login():
 
             log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
             cursor.execute("""
-                INSERT INTO login_log (`user-id`, ip, time, is_danger, browser, is_cookie, place)
+                INSERT INTO login_log (`user_id`, ip, time, is_danger, browser, is_cookie, place)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (user_id, client_ip, log_time, 0, browser_info, is_cookie, place))
             conn.commit()
@@ -212,7 +212,7 @@ def verify_2fa():
             log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
             is_cookie = session.get('pending_is_cookie', 0)
             cursor.execute("""
-                INSERT INTO login_log (`user-id`, ip, time, is_danger, browser, is_cookie, place)
+                INSERT INTO login_log (`user_id`, ip, time, is_danger, browser, is_cookie, place)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (user_id, client_ip, log_time, 1, browser_info, is_cookie, place))
             conn.commit()
@@ -860,10 +860,10 @@ def oauth_authorize():
         return jsonify({'success': False, 'message': '数据库连接失败'}), 500
 
     try:
-        cursor = conn.cursor()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         cursor.execute("""
             SELECT da.id, da.name, da.description, da.owner, da.website,
-                   ac.login_callback_url, ac.verification_callback_url
+                   ac.login_callback_url, ac.verification_callback_url, ac.scope
             FROM developer_apps da
             LEFT JOIN app_configurations ac ON da.id = ac.app_id
             WHERE da.id = %s AND da.status = 'approved'
@@ -875,7 +875,20 @@ def oauth_authorize():
         if not app:
             return jsonify({'success': False, 'message': '应用不存在或未通过审核'}), 404
 
-        app_id_db, app_name, app_description, app_owner, app_website, login_callback_url, verification_callback_url = app
+        app_id_db = app['id']
+        app_name = app['name']
+        app_description = app['description']
+        app_owner = app['owner']
+        app_website = app['website']
+        login_callback_url = app['login_callback_url']
+        verification_callback_url = app['verification_callback_url']
+        scope_json = app['scope']
+
+        import json
+        try:
+            permissions = json.loads(scope_json) if scope_json else ['userinfo']
+        except:
+            permissions = ['userinfo']
 
         if redirect_uri and login_callback_url and redirect_uri != login_callback_url:
             return jsonify({'success': False, 'message': 'redirect_uri不匹配'}), 400
@@ -892,6 +905,7 @@ def oauth_authorize():
                              app_description=app_description,
                              app_owner=app_owner,
                              app_website=app_website,
+                             permissions=permissions,
                              redirect_uri=redirect_uri or login_callback_url or '',
                              state=state)
 
@@ -922,9 +936,9 @@ def oauth_authorize_confirm():
             return jsonify({'success': False, 'message': '数据库连接失败'}), 500
 
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
             cursor.execute("""
-                SELECT da.id, ac.login_callback_url, ac.verification_callback_url
+                SELECT da.id, da.name, ac.login_callback_url, ac.verification_callback_url
                 FROM developer_apps da
                 LEFT JOIN app_configurations ac ON da.id = ac.app_id
                 WHERE da.id = %s AND da.status = 'approved'
@@ -936,34 +950,74 @@ def oauth_authorize_confirm():
                 conn.close()
                 return jsonify({'success': False, 'message': '应用不存在或未通过审核'}), 404
 
-            app_id_db, login_callback_url, verification_callback_url = app
+            app_id_db = app['id']
+            app_name = app['name']
+            login_callback_url = app['login_callback_url']
+            verification_callback_url = app['verification_callback_url']
 
             if redirect_uri and login_callback_url and redirect_uri != login_callback_url:
                 cursor.close()
                 conn.close()
                 return jsonify({'success': False, 'message': 'redirect_uri不匹配'}), 400
 
+            cursor.execute("""
+                SELECT id FROM developer_authorizations
+                WHERE app_id = %s AND user_id = %s AND status = 'blacklisted'
+            """, (app_id_db, user_id))
+            if cursor.fetchone():
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '你已取消该应用的授权，无法重新授权。如需恢复，请先在第三方安全管理中解除黑名单。'}), 403
+
+            cursor.execute("""
+                SELECT id, auth_code FROM developer_authorizations
+                WHERE app_id = %s AND user_id = %s AND status = 'active' AND expires_at > %s
+            """, (app_id_db, user_id, (lambda t: t.replace(tzinfo=None) if t.tzinfo else t)(get_network_time())))
+            existing_auth = cursor.fetchone()
+
+            if existing_auth:
+                cursor.close()
+                conn.close()
+                callback_url = redirect_uri or login_callback_url
+                result = {
+                    'success': True,
+                    'message': '已存在有效授权',
+                    'auth_code': existing_auth['auth_code']
+                }
+                if callback_url:
+                    params = {'auth_code': existing_auth['auth_code']}
+                    if state:
+                        params['state'] = state
+                    result['redirect_url'] = f"{callback_url}?{urlencode(params)}"
+                return jsonify(result)
+
             auth_code = ''.join(random.choices(string.ascii_letters + string.digits, k=30))
-            created_at = get_network_time()
-            expires_at = created_at + timedelta(hours=24)
+            created_at = (lambda t: t.replace(tzinfo=None) if t.tzinfo else t)(get_network_time())
+            expires_at = created_at + timedelta(days=5)
 
             cursor.execute("""
                 INSERT INTO developer_authorizations (app_id, user_id, auth_code, created_at, expires_at)
                 VALUES (%s, %s, %s, %s, %s)
             """, (app_id_db, user_id, auth_code, created_at, expires_at))
 
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+            cursor.execute("""
+                INSERT INTO authorization_log (user_id, app_id, action, detail, ip, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_id, app_id_db, 'authorize', f'授权了应用 {app_name}', ip_address, created_at))
+
             conn.commit()
             cursor.close()
             conn.close()
 
             callback_url = redirect_uri or login_callback_url
+            result = {'success': True, 'message': '授权成功', 'auth_code': auth_code}
             if callback_url:
                 params = {'auth_code': auth_code}
                 if state:
                     params['state'] = state
-                return redirect(f"{callback_url}?{urlencode(params)}")
-            else:
-                return jsonify({'success': True, 'message': '授权成功', 'auth_code': auth_code})
+                result['redirect_url'] = f"{callback_url}?{urlencode(params)}"
+            return jsonify(result)
 
         except Exception as e:
             print(f"确认授权失败: {e}")

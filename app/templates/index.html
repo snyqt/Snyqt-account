@@ -60,7 +60,7 @@
 
         .login-btn {
             background: var(--primary-bg);
-            color: var(--text-color);
+            color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 8px;
@@ -385,7 +385,7 @@
         .login-btn {
             padding: 10px 20px;
             background: var(--danger-bg);
-            color: var(--text-color);
+            color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
@@ -538,6 +538,16 @@
                 <h3 class="feature-title">登录日志</h3>
                 <p>查看您的登录历史记录</p>
             </div>
+            <div class="feature-card" id="third-party-security-card" style="display: none;">
+                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3 class="feature-title">第三方安全</h3>
+                <p>管理已授权应用和权限控制</p>
+            </div>
+            <div class="feature-card" id="authorization-log-card" style="display: none;">
+                <div class="feature-icon"><i class="fas fa-clipboard-list"></i></div>
+                <h3 class="feature-title">授权日志</h3>
+                <p>查看应用授权和访问记录</p>
+            </div>
             {% if is_developer() %}
             <div class="feature-card" id="app-management-card" onclick="window.location.href='/developer-app-management'">
                 <div class="feature-icon"><i class="fas fa-code"></i></div>
@@ -626,6 +636,16 @@
                         document.getElementById('user-login-log-card').addEventListener('click', function() {
                             window.location.href = '/user-login-logs';
                         });
+
+                        document.getElementById('third-party-security-card').style.display = 'block';
+                        document.getElementById('third-party-security-card').addEventListener('click', function() {
+                            window.location.href = '/third-party-security';
+                        });
+
+                        document.getElementById('authorization-log-card').style.display = 'block';
+                        document.getElementById('authorization-log-card').addEventListener('click', function() {
+                            window.location.href = '/authorization-log';
+                        });
                     } catch (e) {
                         console.error('解析用户信息失败:', e);
                         loginBtn.style.display = 'inline-block';
@@ -666,6 +686,8 @@
                     document.getElementById('developer-dashboard-card').style.display = 'none';
                     document.getElementById('app-management-card').style.display = 'none';
                     document.getElementById('admin-app-management-card').style.display = 'none';
+                    document.getElementById('third-party-security-card').style.display = 'none';
+                    document.getElementById('authorization-log-card').style.display = 'none';
                 });
             }
 

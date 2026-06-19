@@ -32,7 +32,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--danger-color) 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--bg-gradient-end) 100%);
             opacity: var(--bg-gradient-opacity);
             z-index: -1;
         }
@@ -226,7 +226,7 @@
 
         .login-btn {
             background: var(--danger-bg);
-            color: var(--text-color);
+            color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
@@ -899,6 +899,59 @@
                 </div>
                 <div class="warning-content">
                     请确保您的回调地址使用 HTTPS 协议，并做好接口的安全验证，防止被恶意调用。
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">
+                    <i class="fas fa-key"></i>
+                    权限范围（scope）配置
+                </h3>
+                <div class="info-box">
+                    <div class="info-title">
+                        <i class="fas fa-info-circle"></i>
+                        什么是 scope？
+                    </div>
+                    <div class="info-content">
+                        scope 用于声明应用在用户授权时申请的权限范围。用户在授权确认页面将看到这些权限说明。配置路径：开发者后台 → 我的应用 → 点击应用"回调配置"按钮 → 在弹窗中勾选所需权限。
+                    </div>
+                </div>
+
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>scope 值</th>
+                            <th>权限名称</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="param-name">userinfo</td>
+                            <td>基本信息</td>
+                            <td>获取用户名、用户ID、头像（<strong>默认必选</strong>）</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">email_code</td>
+                            <td>邮件验证码</td>
+                            <td>允许应用通过 /api/oauth/send-verification 接口向用户邮箱发送验证码</td>
+                        </tr>
+                        <tr>
+                            <td class="param-name">phone_code</td>
+                            <td>手机验证码</td>
+                            <td>允许应用通过 /api/oauth/send-verification 接口向用户手机发送验证码</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="tip-box">
+                    <div class="tip-title">
+                        <i class="fas fa-lightbulb"></i>
+                        建议
+                    </div>
+                    <div class="tip-content">
+                        仅申请应用实际需要的权限。如果应用不需要发送验证码，请勿勾选 email_code 或 phone_code，这有助于提高用户信任度。
+                    </div>
                 </div>
             </div>
         </div>

@@ -54,6 +54,7 @@
 - ✅ 用户注册 / 登录 / 忘记密码
 - ✅ 邮箱验证码 & 短信验证码（阿里云短信服务）
 - ✅ Cloudflare Turnstile 人机验证
+- ✅ Cloudflare Turnstile 全局验证中间件（生产环境自动启用，除 /developer-docs）
 - ✅ 登录风控检测（异地登录、新设备检测、失败次数阈值）
 - ✅ 二次验证（2FA）：风险登录触发邮箱 + 手机双重验证
 - ✅ 记住我功能（7天免登录）
@@ -88,12 +89,19 @@
 - ✉️ 验证码 API（支持邮箱/手机验证码发送）
 - 🔄 登录回调与验证码回调机制
 - ⚙️ 应用配置管理（回调地址设置）
+- 🔑 Scope 权限范围配置（基本信息/邮箱验证码/手机验证码）
 
 ### 📊 登录日志
 - 📜 用户个人登录记录查询
 - 🔍 管理员全局登录日志查询（支持按用户 / 时间 / IP 筛选）
 - 🌐 浏览器与设备信息记录
 - 📍 IP 地理位置记录
+
+### 🛡️ 第三方安全管理
+- 📋 已授权应用列表查看（授权时间、权限范围）
+- 🚫 取消应用授权（拉黑机制）
+- 🔒 精细化权限控制（禁止发送邮件/手机验证码/访问个人信息）
+- 📝 授权操作日志（操作人、操作类型、详情、IP、时间）
 
 ---
 
@@ -162,6 +170,10 @@ Snyqt-account/
 │   │   ├── __init__.py
 │   │   └── routes.py               # 开发者路由（应用管理/OAuth API）
 │   │
+│   ├── security/                   # 第三方安全管理模块
+│   │   ├── __init__.py             # 安全蓝图定义
+│   │   └── routes.py               # 第三方安全管理路由
+│   │
 │   └── templates/                  # HTML 模板
 │       ├── index.html               # 首页
 │       ├── login.html               # 登录/注册页
@@ -173,6 +185,7 @@ Snyqt-account/
 │       ├── developer_app_management.html  # 开发者应用管理
 │       ├── developer_docs.html       # 开发者文档
 │       ├── oauth_authorize.html     # OAuth 授权确认页
+│       ├── third_party_security.html # 第三方安全管理页
 │       ├── user_info_management.html # 用户信息管理（管理员）
 │       ├── user_permission_management.html  # 权限管理（管理员）
 │       ├── user_login_log.html      # 用户登录日志
@@ -294,7 +307,7 @@ CREATE DATABASE `Snyqt-account` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 python run.py
 ```
 
-应用将在 `http://localhost:80` 启动。按 `Ctrl+C` 停止服务。
+应用将在 `http://localhost:5000` 启动。按 `Ctrl+C` 停止服务。
 
 ### Docker 部署
 
@@ -309,7 +322,7 @@ docker build -t snyqt-account .
 ```bash
 docker run -d \
   --name snyqt-account \
-  -p 80:80 \
+  -p 5000:5000 \
   -e DB_HOST=your_db_host \
   -e DB_USER=your_db_user \
   -e DB_PASSWORD=your_db_password \
@@ -333,7 +346,7 @@ services:
   web:
     build: .
     ports:
-      - "80:80"
+      - "5000:5000"
     environment:
       - DB_HOST=db
       - DB_USER=your_db_user
@@ -384,7 +397,7 @@ docker-compose up -d
 | `ALIYUN_TEMPLATE_CODE` | 短信模板 CODE | ❌ | - |
 | `TURNSTILE_SECRET_KEY` | Turnstile 密钥 | ❌ | - |
 | `TURNSTILE_SITEKEY` | Turnstile 站点密钥 | ❌ | - |
-| `TURNSTILE_ENABLED` | 是否启用 Turnstile | ❌ | `False` |
+| `TURNSTILE_ENABLED` | 是否启用全局 Turnstile 验证（留空则生产环境自动启用） | ❌ | `自动` |
 | `ENABLE_2FA` | 是否启用二次验证 | ❌ | `False` |
 | `RISK_CONTROL_ENABLED` | 是否启用风控 | ❌ | `True` |
 | `VERIFICATION_CODE_EXPIRE` | 验证码有效期（秒） | ❌ | `300` |
@@ -443,6 +456,49 @@ docker-compose up -d
    }
 ```
 
+### 第三方安全管理API
+
+#### 获取已授权应用列表
+- **URL**: `/api/third-party-security`
+- **Method**: `GET`
+- **Headers**: `Cookie: session=xxx`（需登录）
+- **Query Params**: `status`（可选，`active`/`blacklisted`）
+- **Success Response**: `{ "success": true, "authorizations": [...] }`
+
+#### 取消应用授权（不拉黑）
+- **URL**: `/api/third-party/cancel-auth`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+- **Body**: `{ "app_id": "xxx", "auth_id": 1 }`
+- **Success Response**: `{ "success": true, "message": "已取消授权" }`
+
+#### 拉黑应用
+- **URL**: `/api/third-party/blacklist-app`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+- **Body**: `{ "app_id": "xxx", "auth_id": 1 }`
+- **Success Response**: `{ "success": true, "message": "已将应用加入黑名单" }`
+
+#### 解除黑名单
+- **URL**: `/api/third-party/restore-auth`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+- **Body**: `{ "app_id": "xxx", "auth_id": 1 }`
+- **Success Response**: `{ "success": true, "message": "已解除黑名单" }`
+
+#### 设置权限限制
+- **URL**: `/api/third-party/restrict-permission`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+- **Body**: `{ "app_id": "xxx", "auth_id": 1, "permission_type": "no_email", "enabled": true }`
+- **Success Response**: `{ "success": true }`
+
+#### 获取授权日志
+- **URL**: `/api/authorization-log`
+- **Method**: `GET`
+- **Query Params**: `search`（可选，搜索应用名称或操作类型）
+- **Success Response**: `{ "success": true, "logs": [...] }`
+
 ### 用户管理API
 
 | 方法 | 端点 | 说明 |
@@ -463,9 +519,26 @@ docker-compose up -d
 | POST | `/api/developer/create-app` | 创建应用 |
 | GET | `/api/developer/apps` | 获取应用列表 |
 | DELETE | `/api/developer/delete-app` | 删除应用 |
-| POST | `/api/developer/configure-callback` | 配置回调地址 |
+| POST | `/api/developer/configure-callback` | 配置回调地址和 Scope |
 | GET | `/api/developer/app-secret/<app_id>` | 获取 App Secret |
 | GET | `/api/developer/app-config/<app_id>` | 获取应用配置 |
+
+#### Scope 权限范围
+
+应用配置时可设置 scope 权限范围，支持以下选项：
+
+| scope 值 | 说明 |
+|---------|------|
+| `userinfo` | 获取用户基本信息（用户ID、用户名、头像），默认必选 |
+| `email_code` | 允许向用户邮箱发送验证码 |
+| `phone_code` | 允许向用户手机发送验证码 |
+
+配置回调时 scope 格式为数组，例如：
+```json
+{
+  "scope": ["userinfo", "email_code"]
+}
+```
 
 ### 管理员API
 
@@ -516,8 +589,9 @@ docker-compose up -d
 | 表名 | 说明 |
 |------|------|
 | `developer_apps` | 开发者应用（应用ID、开发者ID、名称、App Secret哈希、状态） |
-| `developer_authorizations` | 用户授权码（应用ID、用户ID、授权码、有效期） |
+| `developer_authorizations` | 用户授权码（应用ID、用户ID、授权码、有效期、状态、权限限制） |
 | `app_configurations` | 应用配置（回调地址、更新时间） |
+| `authorization_log` | 授权操作日志（user_id、app_id、action、detail、ip、created_at） |
 
 ### 表结构详情
 
@@ -538,7 +612,7 @@ CREATE TABLE user_info (
 -- 登录日志表
 CREATE TABLE login_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    `user-id` VARCHAR(15) NOT NULL,
+    user_id VARCHAR(15) NOT NULL,
     ip VARCHAR(45),
     time DATETIME(3),
     is_danger TINYINT DEFAULT 0,
@@ -583,16 +657,30 @@ CREATE TABLE developer_authorizations (
     user_id VARCHAR(15) NOT NULL,
     auth_code VARCHAR(30) NOT NULL,
     created_at DATETIME,
-    expires_at DATETIME
+    expires_at DATETIME,
+    status ENUM('active', 'cancelled', 'blacklisted') DEFAULT 'active',
+    permission_restrictions JSON
 );
 
 -- 应用配置表
 CREATE TABLE app_configurations (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    app_id VARCHAR(15) NOT NULL,
+    app_id VARCHAR(15) NOT NULL UNIQUE,
     login_callback_url VARCHAR(255),
     verification_callback_url VARCHAR(255),
+    scope VARCHAR(255),
     updated_at DATETIME
+);
+
+-- 授权操作日志表
+CREATE TABLE authorization_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(15) NOT NULL,
+    app_id VARCHAR(15),
+    action VARCHAR(50) NOT NULL,
+    detail TEXT,
+    ip VARCHAR(45),
+    created_at DATETIME
 );
 ```
 

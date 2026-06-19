@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人登录日志 - 少年友晴天-统一账户认证系统</title>
+    <title>授权日志 - 少年友晴天-统一账户认证系统</title>
     <link rel="icon" href="/static/img/logo.png" type="image/png">
     <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
     <link rel="stylesheet" href="/static/css/theme-toggle.css">
     <link rel="stylesheet" href="/static/css/common.css">
-    <!-- 立即加载主题切换脚本，防止白闪 -->
     <script src="/static/js/theme-toggle.js"></script>
     <style>
         * {
@@ -228,6 +227,43 @@
             padding-left: 15px;
         }
 
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--input-text);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--bg-gradient-start);
+            box-shadow: 0 0 0 4px var(--primary-shadow);
+        }
+
+        .search-box input::placeholder {
+            color: var(--input-placeholder);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-text);
+            font-size: 16px;
+        }
+
         .logs-table-container {
             overflow-x: auto;
         }
@@ -261,7 +297,7 @@
             background-color: rgba(184, 196, 255, 0.05);
         }
 
-        .danger-badge {
+        .action-badge {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 4px;
@@ -269,12 +305,34 @@
             font-weight: 600;
         }
 
-        .danger-badge.danger {
+        .action-badge.authorize {
+            background-color: rgba(129, 212, 250, 0.2);
+            color: var(--success-color);
+        }
+
+        .action-badge.cancel {
             background-color: rgba(255, 158, 125, 0.2);
             color: var(--danger-color);
         }
 
-        .danger-badge.normal {
+        .action-badge.blacklist {
+            background-color: rgba(255, 158, 125, 0.3);
+            color: var(--danger-color);
+        }
+
+        .action-badge.unblacklist {
+            background-color: rgba(129, 212, 250, 0.2);
+            color: var(--success-color);
+        }
+
+        .action-badge.restrict {
+            background-color: rgba(255, 158, 125, 0.15);
+            color: var(--bg-gradient-start);
+        }
+
+        .action-badge.access_userinfo,
+        .action-badge.access_email,
+        .action-badge.access_phone {
             background-color: rgba(184, 196, 255, 0.2);
             color: var(--bg-gradient-middle1);
         }
@@ -387,7 +445,11 @@
 
     <div class="container">
         <div class="content-card">
-            <h2 class="card-title">我的登录日志</h2>
+            <h2 class="card-title">授权日志</h2>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="搜索应用名称...">
+            </div>
             <div id="logs-container" class="logs-table-container">
                 <div class="loading-message">加载中...</div>
             </div>
@@ -400,6 +462,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const ACTION_LABELS = {
+                'authorize': '授权应用',
+                'cancel': '取消授权',
+                'blacklist': '拉黑应用',
+                'unblacklist': '解除黑名单',
+                'restrict': '权限变更',
+                'access_userinfo': '访问用户信息',
+                'access_email': '发送邮件验证码',
+                'access_phone': '发送手机验证码'
+            };
+
+            function getActionLabel(action) {
+                return ACTION_LABELS[action] || action || '--';
+            }
+
             function getUserInfo() {
                 fetch('/get_user_info')
                     .then(response => response.json())
@@ -407,8 +484,6 @@
                         if (data.success) {
                             const user = data.user;
                             document.getElementById('user-avatar').src = user.avatar || '/static/img/default_avatar.png';
-                            
-                            // 更新下拉菜单中的用户信息
                             document.getElementById('dropdown-username').textContent = user.username || '用户';
                             document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
                         } else {
@@ -442,11 +517,11 @@
                     });
             });
 
-            function loadLoginLogs() {
+            function loadAuthorizationLogs() {
                 const logsContainer = document.getElementById('logs-container');
                 logsContainer.innerHTML = '<div class="loading-message">加载中...</div>';
 
-                fetch('/api/user-login-logs')
+                fetch('/api/authorization-log')
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('网络响应错误');
@@ -460,17 +535,17 @@
                             logsContainer.innerHTML = `
                                 <div class="no-logs">
                                     <i class="fas fa-history"></i>
-                                    <p>暂无登录日志记录</p>
+                                    <p>暂无授权日志记录</p>
                                 </div>
                             `;
                         }
                     })
                     .catch(error => {
-                        console.error('获取登录日志失败:', error);
+                        console.error('获取授权日志失败:', error);
                         logsContainer.innerHTML = `
                             <div class="no-logs">
                                 <i class="fas fa-exclamation-circle"></i>
-                                <p>获取登录日志失败，请刷新页面重试</p>
+                                <p>获取授权日志失败，请刷新页面重试</p>
                             </div>
                         `;
                     });
@@ -482,35 +557,31 @@
                     <table class="logs-table">
                         <thead>
                             <tr>
-                                <th>登录时间</th>
+                                <th>操作类型</th>
+                                <th>应用名称</th>
+                                <th>详情</th>
                                 <th>IP地址</th>
-                                <th>地理位置</th>
-                                <th>浏览器</th>
-                                <th>登录状态</th>
-                                <th>风险状态</th>
+                                <th>操作时间</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
                 logs.forEach(log => {
-                    const isDanger = log.is_danger === 1;
-                    const loginStatus = log.is_cookie === 1 ? '长期保持' : '临时登录';
-                    const dangerClass = isDanger ? 'danger' : 'normal';
-                    const dangerText = isDanger ? '风险登录' : '正常登录';
+                    const action = log.action || '';
+                    const actionLabel = getActionLabel(action);
 
                     tableHTML += `
-                        <tr>
-                            <td>${log.time || '--'}</td>
-                            <td>${log.ip || '--'}</td>
-                            <td>${log.place || '--'}</td>
-                            <td>${log.browser || '--'}</td>
-                            <td>${loginStatus}</td>
+                        <tr data-app-name="${(log.app_name || '').toLowerCase()}">
                             <td>
-                                <span class="danger-badge ${dangerClass}">
-                                    ${dangerText}
+                                <span class="action-badge ${action}">
+                                    ${actionLabel}
                                 </span>
                             </td>
+                            <td>${log.app_name || '--'}</td>
+                            <td>${log.detail || '--'}</td>
+                            <td>${log.ip || '--'}</td>
+                            <td>${log.created_at || '--'}</td>
                         </tr>
                     `;
                 });
@@ -523,7 +594,21 @@
                 logsContainer.innerHTML = tableHTML;
             }
 
-            loadLoginLogs();
+            document.getElementById('search-input').addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('.logs-table tbody tr');
+
+                rows.forEach(row => {
+                    const appName = row.getAttribute('data-app-name') || '';
+                    if (appName.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            loadAuthorizationLogs();
         });
     </script>
     <script src="/static/js/theme-toggle.js"></script>

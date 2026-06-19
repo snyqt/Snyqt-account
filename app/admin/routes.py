@@ -109,11 +109,11 @@ def get_admin_login_logs():
 
         cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-        query = "SELECT l.*, u.Name as username FROM login_log l LEFT JOIN user_info u ON l.`user-id` = u.id WHERE 1=1"
+        query = "SELECT l.*, u.Name as username FROM login_log l LEFT JOIN user_info u ON l.`user_id` = u.id WHERE 1=1"
         params = []
 
         if user_id:
-            query += " AND l.`user-id` = %s"
+            query += " AND l.`user_id` = %s"
             params.append(user_id)
 
         if start_time:
@@ -157,7 +157,7 @@ def get_user_login_logs():
 
         cursor.execute("""
             SELECT * FROM login_log
-            WHERE `user-id` = %s
+            WHERE `user_id` = %s
             ORDER BY time DESC
             LIMIT 50
         """, (user_id,))
@@ -540,7 +540,7 @@ def admin_delete_user():
             conn.begin()
             
             # 删除用户的登录日志
-            cursor.execute("DELETE FROM login_log WHERE `user-id` = %s", (user_id,))
+            cursor.execute("DELETE FROM login_log WHERE `user_id` = %s", (user_id,))
             
             # 删除用户的权限
             cursor.execute("DELETE FROM user_permission WHERE user_id = %s", (user_id,))

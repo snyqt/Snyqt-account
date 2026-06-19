@@ -25,7 +25,7 @@ EXPECTED_TABLES = {
     ],
     'login_log': [
         ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
-        ('user-id', 'varchar(15)', 'NO', '', None, ''),
+        ('user_id', 'varchar(15)', 'NO', '', None, ''),
         ('ip', 'varchar(45)', 'YES', '', None, ''),
         ('time', 'datetime(3)', 'YES', '', None, ''),
         ('is_danger', 'tinyint', 'YES', '', '0', ''),
@@ -61,15 +61,27 @@ EXPECTED_TABLES = {
         ('app_id', 'varchar(15)', 'NO', '', None, ''),
         ('user_id', 'varchar(15)', 'NO', '', None, ''),
         ('auth_code', 'varchar(30)', 'NO', '', None, ''),
+        ('status', 'varchar(20)', 'NO', '', 'active', ''),
+        ('permission_restrictions', 'text', 'YES', '', None, ''),
         ('created_at', 'datetime', 'YES', '', None, ''),
         ('expires_at', 'datetime', 'YES', '', None, '')
     ],
     'app_configurations': [
         ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
-        ('app_id', 'varchar(15)', 'NO', '', None, ''),
+        ('app_id', 'varchar(15)', 'NO', 'UNI', None, ''),
         ('login_callback_url', 'varchar(255)', 'YES', '', None, ''),
         ('verification_callback_url', 'varchar(255)', 'YES', '', None, ''),
-        ('updated_at', 'datetime', 'YES', '', None, '')
+        ('updated_at', 'datetime', 'YES', '', None, ''),
+        ('scope', 'varchar(255)', 'YES', '', None, '')
+    ],
+    'authorization_log': [
+        ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
+        ('user_id', 'varchar(15)', 'NO', '', None, ''),
+        ('app_id', 'varchar(15)', 'NO', '', None, ''),
+        ('action', 'varchar(50)', 'NO', '', None, ''),
+        ('detail', 'text', 'YES', '', None, ''),
+        ('ip', 'varchar(45)', 'YES', '', None, ''),
+        ('created_at', 'datetime', 'YES', '', None, '')
     ]
 }
 
@@ -88,7 +100,7 @@ CREATE_TABLE_SQLS = {
     'login_log': """
         CREATE TABLE login_log (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            `user-id` VARCHAR(15) NOT NULL,
+            `user_id` VARCHAR(15) NOT NULL,
             ip VARCHAR(45),
             time DATETIME(3),
             is_danger TINYINT DEFAULT 0,
@@ -132,6 +144,8 @@ CREATE_TABLE_SQLS = {
             app_id VARCHAR(15) NOT NULL,
             user_id VARCHAR(15) NOT NULL,
             auth_code VARCHAR(30) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'active',
+            permission_restrictions TEXT,
             created_at DATETIME,
             expires_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -139,10 +153,22 @@ CREATE_TABLE_SQLS = {
     'app_configurations': """
         CREATE TABLE app_configurations (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            app_id VARCHAR(15) NOT NULL,
+            app_id VARCHAR(15) NOT NULL UNIQUE,
             login_callback_url VARCHAR(255),
             verification_callback_url VARCHAR(255),
-            updated_at DATETIME
+            updated_at DATETIME,
+            scope VARCHAR(255)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
+    'authorization_log': """
+        CREATE TABLE authorization_log (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(15) NOT NULL,
+            app_id VARCHAR(15) NOT NULL,
+            action VARCHAR(50) NOT NULL,
+            detail TEXT,
+            ip VARCHAR(45),
+            created_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """
 }
@@ -204,6 +230,58 @@ def check_and_create_tables():
                     print(f"表 '{table_name}' 结构不匹配！")
                     print(f"期望结构: {expected_structure}")
                     print(f"实际结构: {actual_structure}")
+                    
+                    # 迁移逻辑：为 login_log 表将 user-id 重命名为 user_id
+                    if table_name == 'login_log':
+                        existing_columns = [col[0] for col in actual_structure]
+                        if 'user-id' in existing_columns and 'user_id' not in existing_columns:
+                            print(f"为表 '{table_name}' 将 user-id 重命名为 user_id...")
+                            cursor.execute("ALTER TABLE login_log CHANGE COLUMN `user-id` `user_id` VARCHAR(15) NOT NULL")
+                            print(f"user_id 字段重命名成功")
+
+                    # 迁移逻辑：为 developer_authorizations 表补充缺失字段
+                    if table_name == 'developer_authorizations':
+                        existing_columns = [col[0] for col in actual_structure]
+                        expected_columns = [col[0] for col in expected_structure]
+                        
+                        if 'status' not in existing_columns:
+                            print(f"为表 '{table_name}' 添加 status 字段...")
+                            cursor.execute(
+                                "ALTER TABLE developer_authorizations "
+                                "ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'"
+                            )
+                            print(f"status 字段添加成功")
+                        
+                        if 'permission_restrictions' not in existing_columns:
+                            print(f"为表 '{table_name}' 添加 permission_restrictions 字段...")
+                            cursor.execute(
+                                "ALTER TABLE developer_authorizations "
+                                "ADD COLUMN permission_restrictions TEXT"
+                            )
+                            print(f"permission_restrictions 字段添加成功")
+
+                    # 迁移逻辑：为 app_configurations 表补充缺失的 scope 字段
+                    if table_name == 'app_configurations':
+                        existing_columns = [col[0] for col in actual_structure]
+                        if 'scope' not in existing_columns:
+                            print(f"为表 '{table_name}' 添加 scope 字段...")
+                            cursor.execute("ALTER TABLE app_configurations ADD COLUMN scope VARCHAR(255)")
+                            print(f"scope 字段添加成功")
+
+                        existing_keys = [col[3] for col in actual_structure]
+                        if 'UNI' not in existing_keys:
+                            print(f"检测到 app_configurations.app_id 缺少 UNIQUE 约束，正在处理重复数据...")
+                            cursor.execute("""
+                                DELETE t1 FROM app_configurations t1
+                                INNER JOIN app_configurations t2
+                                WHERE t1.id < t2.id AND t1.app_id = t2.app_id
+                            """)
+                            deleted = cursor.rowcount
+                            print(f"已删除 {deleted} 条重复记录")
+                            cursor.execute(
+                                "ALTER TABLE app_configurations ADD UNIQUE INDEX idx_app_id (app_id)"
+                            )
+                            print(f"app_configurations.app_id UNIQUE 约束添加成功")
                 else:
                     print(f"表 '{table_name}' 结构正确")
         
