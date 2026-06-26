@@ -74,6 +74,9 @@ instance/
 config.py
 config.pyc
 
+# Dockerfile with sensitive credentials
+Dockerfile
+
 # PyCharm
 .idea/
 

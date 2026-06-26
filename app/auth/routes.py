@@ -8,6 +8,8 @@ import pymysql
 from functools import wraps
 from urllib.parse import urlencode
 
+import pyotp
+
 from app.auth.utils import (
     hash_password, generate_verification_code, is_password_strong,
     verify_turnstile, parse_user_agent, get_ip_location, check_login_risk,
@@ -106,13 +108,54 @@ def login():
 
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id, Name, password, mail, phone FROM user_info WHERE Name = %s", (username,))
+        cursor.execute("SELECT id, Name, password, mail, phone, totp_secret, totp_enabled FROM user_info WHERE Name = %s", (username,))
         user = cursor.fetchone()
 
         if user and hash_password(password) == user[2]:
             user_id = user[0]
             user_mail = user[3]
             user_phone = user[4]
+            user_totp_secret = user[5]
+            user_totp_enabled = bool(user[6])
+
+            # ── MFA 多因子认证检查 ──
+            mfa_required = False
+            mfa_types = []
+
+            if user_totp_enabled and user_totp_secret:
+                mfa_required = True
+                mfa_types.append('totp')
+
+            # 检查 WebAuthn 安全密钥
+            cursor_sk = conn.cursor()
+            cursor_sk.execute(
+                "SELECT COUNT(*) FROM security_keys WHERE user_id = %s",
+                (user_id,)
+            )
+            has_webauthn = cursor_sk.fetchone()[0] > 0
+            cursor_sk.close()
+            if has_webauthn:
+                mfa_required = True
+                mfa_types.append('webauthn')
+
+            if mfa_required:
+                session['pending_user_id'] = user_id
+                session['pending_username'] = user[1]
+                session['pending_is_cookie'] = is_cookie
+                session['pending_user_phone'] = user_phone
+                session['pending_user_mail'] = user_mail
+                session.permanent = True
+                current_app.permanent_session_lifetime = timedelta(minutes=5)
+
+                cursor.close()
+                conn.close()
+
+                return jsonify({
+                    'success': True,
+                    'message': '需要多因子认证',
+                    'requires_mfa': True,
+                    'mfa_types': mfa_types
+                })
 
             client_ip = request.remote_addr
             user_agent = request.user_agent.string
@@ -243,6 +286,99 @@ def verify_2fa():
     except Exception as e:
         print(f"二次验证失败: {e}")
         return jsonify({'success': False, 'message': '验证失败，请稍后重试'})
+
+@auth_bp.route('/verify-mfa-totp', methods=['POST'])
+def verify_mfa_totp():
+    """登录时验证 TOTP 验证码"""
+    try:
+        if 'pending_user_id' not in session:
+            return jsonify({'success': False, 'message': '验证会话已过期，请重新登录'})
+
+        user_id = session['pending_user_id']
+        code = request.form.get('totp_code') or (request.get_json() or {}).get('code', '')
+
+        if not code or len(code) != 6:
+            return jsonify({'success': False, 'message': '请输入6位验证码'})
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'}), 500
+
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT totp_secret FROM user_info WHERE id = %s AND totp_enabled = 1",
+            (user_id,)
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not row or not row[0]:
+            return jsonify({'success': False, 'message': '未绑定 Authenticator'}), 400
+
+        totp = pyotp.TOTP(row[0])
+        if not totp.verify(code, valid_window=1):
+            return jsonify({'success': False, 'message': '验证码错误，请重试'})
+
+        return _complete_mfa_login()
+
+    except Exception as e:
+        print(f"TOTP验证失败: {e}")
+        return jsonify({'success': False, 'message': '验证失败，请稍后重试'})
+
+
+@auth_bp.route('/verify-mfa-webauthn', methods=['POST'])
+def verify_mfa_webauthn():
+    """WebAuthn 验证完成后调用此接口完成登录"""
+    try:
+        if 'pending_user_id' not in session:
+            return jsonify({'success': False, 'message': '验证会话已过期，请重新登录'})
+        return _complete_mfa_login()
+    except Exception as e:
+        print(f"WebAuthn登录完成失败: {e}")
+        return jsonify({'success': False, 'message': '登录完成失败，请稍后重试'})
+
+
+def _complete_mfa_login():
+    """完成 MFA 登录流程"""
+    user_id = session['pending_user_id']
+
+    client_ip = request.remote_addr
+    user_agent = request.user_agent.string
+    browser_info = parse_user_agent(user_agent)
+    place = get_ip_location(client_ip)
+
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        is_cookie = session.get('pending_is_cookie', 0)
+        cursor.execute("""
+            INSERT INTO login_log (`user_id`, ip, time, is_danger, browser, is_cookie, place)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, client_ip, log_time, 0, browser_info, is_cookie, place))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+    session['logged_in'] = True
+    session['user_id'] = user_id
+    session['username'] = session.get('pending_username')
+
+    is_cookie = session.get('pending_is_cookie', 0)
+    session.permanent = True
+    if is_cookie == 1:
+        current_app.permanent_session_lifetime = timedelta(days=7)
+    else:
+        current_app.permanent_session_lifetime = timedelta(minutes=10)
+
+    session.pop('pending_user_id', None)
+    session.pop('pending_username', None)
+    session.pop('pending_is_cookie', None)
+    session.pop('pending_user_phone', None)
+    session.pop('pending_user_mail', None)
+
+    return jsonify({'success': True, 'message': '登录成功'})
 
 @auth_bp.route('/check-2fa-phone', methods=['GET'])
 def check_2fa_phone():

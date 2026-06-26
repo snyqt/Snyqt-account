@@ -638,7 +638,50 @@
                     </div>
                 </form>
             </div>
-            
+
+            <!-- MFA 多因子认证表单 -->
+            <div class="auth-content" id="mfa-tab">
+                <form id="mfa-form">
+                    <div class="two-factor-container">
+                        <div class="two-factor-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <h2 class="two-factor-title">多因子身份验证</h2>
+                        <p class="two-factor-description" id="mfa-description">
+                            请选择一种验证方式完成登录
+                        </p>
+
+                        <!-- MFA 方式选择 -->
+                        <div id="mfa-options" style="display:flex;gap:12px;margin-bottom:16px;justify-content:center;"></div>
+
+                        <!-- TOTP 验证码输入 -->
+                        <div class="form-group" id="mfa-totp-group" style="display:none;">
+                            <label for="mfa-totp-code">Authenticator 验证码</label>
+                            <input type="text" id="mfa-totp-code" class="form-input"
+                                   placeholder="请输入6位验证码" maxlength="6"
+                                   style="text-align: center; font-size: 24px; letter-spacing: 8px;">
+                            <span class="error-message" id="mfa-totp-error"></span>
+                        </div>
+
+                        <!-- WebAuthn 按钮 -->
+                        <div class="form-group" id="mfa-webauthn-group" style="display:none;">
+                            <button type="button" class="submit-btn" id="mfa-webauthn-btn"
+                                    onclick="startWebauthnAuth()">
+                                <i class="fas fa-key"></i> 使用安全密钥验证
+                            </button>
+                            <span class="error-message" id="mfa-webauthn-error"></span>
+                        </div>
+
+                        <button type="button" class="submit-btn" id="mfa-submit-btn"
+                                onclick="submitMfaTotp()" style="display:none;margin-top:8px;">
+                            验证
+                        </button>
+                        <div class="login-success" id="mfa-login-success"></div>
+                        <div class="login-error" id="mfa-login-error"></div>
+                    </div>
+                </form>
+            </div>
+
             <!-- 注册表单 -->
             <div class="auth-content" id="register-tab">
                 <form id="register-form" enctype="multipart/form-data">
@@ -889,6 +932,9 @@
                             if (data.requires_2fa) {
                                 // 需要二次验证，显示验证界面
                                 showTwoFactorAuth();
+                            } else if (data.requires_mfa) {
+                                // 需要多因子认证
+                                showMfaAuth(data.mfa_types);
                             } else {
                                 document.getElementById('login-success').textContent = data.message;
                                 // 登录成功后保存用户信息到localStorage
@@ -1659,6 +1705,226 @@
                     });
                 });
             }
+
+            // ══════════════════════════════════════════════
+            //  MFA 多因子认证 JavaScript
+            // ══════════════════════════════════════════════
+
+            let currentMfaType = null;
+
+            function showMfaAuth(mfaTypes) {
+                // 隐藏登录表单和二次验证，显示 MFA 验证
+                document.getElementById('login-tab').style.display = 'none';
+                document.getElementById('two-factor-tab').style.display = 'none';
+                document.getElementById('mfa-tab').style.display = 'block';
+
+                // 清除之前的消息
+                document.getElementById('mfa-totp-error').textContent = '';
+                document.getElementById('mfa-webauthn-error').textContent = '';
+                document.getElementById('mfa-login-error').textContent = '';
+                document.getElementById('mfa-login-success').textContent = '';
+
+                currentMfaType = null;
+                document.getElementById('mfa-totp-group').style.display = 'none';
+                document.getElementById('mfa-webauthn-group').style.display = 'none';
+                document.getElementById('mfa-submit-btn').style.display = 'none';
+
+                // 渲染 MFA 选项按钮
+                const optionsContainer = document.getElementById('mfa-options');
+                optionsContainer.innerHTML = '';
+
+                const optionLabels = {
+                    'totp': { icon: '📱', label: 'Authenticator 验证码' },
+                    'webauthn': { icon: '🔑', label: '安全密钥' }
+                };
+
+                mfaTypes.forEach(type => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'mfa-option-btn';
+                    btn.innerHTML = `${optionLabels[type]?.icon || '🔒'} ${optionLabels[type]?.label || type}`;
+                    btn.onclick = function() { selectMfaOption(type); };
+                    optionsContainer.appendChild(btn);
+                });
+
+                // 如果只有一种方式，自动选择
+                if (mfaTypes.length === 1) {
+                    selectMfaOption(mfaTypes[0]);
+                }
+            }
+
+            function selectMfaOption(type) {
+                currentMfaType = type;
+
+                // 更新选项按钮样式
+                document.querySelectorAll('.mfa-option-btn').forEach(btn => btn.classList.remove('selected'));
+                document.querySelectorAll('.mfa-option-btn').forEach(btn => {
+                    if (btn.textContent.includes(type === 'totp' ? 'Authenticator' : '安全密钥')) {
+                        btn.classList.add('selected');
+                    }
+                });
+
+                // 显示对应的输入区域
+                document.getElementById('mfa-totp-group').style.display = (type === 'totp') ? 'block' : 'none';
+                document.getElementById('mfa-webauthn-group').style.display = (type === 'webauthn') ? 'block' : 'none';
+                document.getElementById('mfa-submit-btn').style.display = (type === 'totp') ? 'block' : 'none';
+
+                // 清除错误消息
+                document.getElementById('mfa-totp-error').textContent = '';
+                document.getElementById('mfa-webauthn-error').textContent = '';
+                document.getElementById('mfa-login-error').textContent = '';
+
+                if (type === 'totp') {
+                    document.getElementById('mfa-totp-code').value = '';
+                    document.getElementById('mfa-totp-code').focus();
+                }
+            }
+
+            function submitMfaTotp() {
+                const code = document.getElementById('mfa-totp-code').value.trim();
+                const errorEl = document.getElementById('mfa-totp-error');
+
+                if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+                    errorEl.textContent = '请输入6位数字验证码';
+                    return;
+                }
+                errorEl.textContent = '';
+
+                const formData = new FormData();
+                formData.append('totp_code', code);
+
+                fetch('/verify-mfa-totp', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('mfa-login-success').textContent = data.message;
+                        fetch('/get_user_info')
+                            .then(response => response.json())
+                            .then(userData => {
+                                if (userData.success) {
+                                    localStorage.setItem('userInfo', JSON.stringify(userData.user));
+                                }
+                                setTimeout(() => { window.location.href = '/'; }, 1000);
+                            })
+                            .catch(() => {
+                                setTimeout(() => { window.location.href = '/'; }, 1000);
+                            });
+                    } else {
+                        errorEl.textContent = data.message;
+                    }
+                })
+                .catch(error => {
+                    errorEl.textContent = '验证失败，请稍后重试';
+                    console.error('MFA TOTP 验证失败:', error);
+                });
+            }
+
+            async function startWebauthnAuth() {
+                const errorEl = document.getElementById('mfa-webauthn-error');
+                const btn = document.getElementById('mfa-webauthn-btn');
+                errorEl.textContent = '';
+                btn.disabled = true;
+                btn.textContent = '正在准备...';
+
+                try {
+                    // Step 1: 获取认证选项
+                    const beginResp = await fetch('/mfa/webauthn/auth/begin', { method: 'POST' });
+                    const beginData = await beginResp.json();
+                    if (!beginData.success) {
+                        errorEl.textContent = beginData.message;
+                        btn.disabled = false;
+                        btn.textContent = '使用安全密钥验证';
+                        return;
+                    }
+
+                    // Step 2: 调用浏览器 WebAuthn API
+                    const options = beginData.options;
+                    options.challenge = base64ToArrayBuffer(options.challenge);
+                    if (options.allowCredentials) {
+                        options.allowCredentials = options.allowCredentials.map(c => ({
+                            ...c,
+                            id: base64ToArrayBuffer(c.id)
+                        }));
+                    }
+
+                    const credential = await navigator.credentials.get({ publicKey: options });
+
+                    // Step 3: 发送验证结果到服务器
+                    const completeResp = await fetch('/mfa/webauthn/auth/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: credential.id,
+                            rawId: arrayBufferToBase64(credential.rawId),
+                            response: {
+                                authenticatorData: arrayBufferToBase64(credential.response.authenticatorData),
+                                clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+                                signature: arrayBufferToBase64(credential.response.signature),
+                                userHandle: credential.response.userHandle ? arrayBufferToBase64(credential.response.userHandle) : null,
+                            },
+                            type: credential.type,
+                        })
+                    });
+                    const completeData = await completeResp.json();
+                    if (!completeData.success) {
+                        errorEl.textContent = completeData.message;
+                        btn.disabled = false;
+                        btn.textContent = '使用安全密钥验证';
+                        return;
+                    }
+
+                    // Step 4: 完成登录
+                    const loginResp = await fetch('/verify-mfa-webauthn', { method: 'POST' });
+                    const loginData = await loginResp.json();
+                    if (loginData.success) {
+                        document.getElementById('mfa-login-success').textContent = loginData.message;
+                        fetch('/get_user_info')
+                            .then(response => response.json())
+                            .then(userData => {
+                                if (userData.success) {
+                                    localStorage.setItem('userInfo', JSON.stringify(userData.user));
+                                }
+                                setTimeout(() => { window.location.href = '/'; }, 1000);
+                            })
+                            .catch(() => {
+                                setTimeout(() => { window.location.href = '/'; }, 1000);
+                            });
+                    } else {
+                        errorEl.textContent = loginData.message;
+                    }
+                } catch (e) {
+                    errorEl.textContent = '安全密钥验证失败: ' + e.message;
+                    console.error('WebAuthn 认证失败:', e);
+                }
+                btn.disabled = false;
+                btn.textContent = '使用安全密钥验证';
+            }
+
+            // Base64 编解码工具（WebAuthn 需要）
+            function base64ToArrayBuffer(b64) {
+                const binary = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                return bytes.buffer;
+            }
+
+            function arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            }
+
+            // 回车键提交 TOTP
+            document.getElementById('mfa-totp-code').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitMfaTotp();
+                }
+            });
         });
     </script>
     
@@ -1666,6 +1932,60 @@
     <style>
         #two-factor-tab {
             display: none;
+        }
+        #mfa-tab {
+            display: none;
+        }
+        .form-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--danger-bg-hover);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .form-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--danger-shadow);
+            background: var(--danger-bg);
+        }
+        .mfa-option-btn {
+            flex: 1;
+            padding: 14px 10px;
+            background: var(--primary-bg);
+            color: var(--text-color);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .mfa-option-btn:hover {
+            border-color: var(--bg-gradient-start);
+            background: var(--primary-bg-hover);
+            transform: translateY(-1px);
+        }
+        .mfa-option-btn.selected {
+            border-color: var(--bg-gradient-start);
+            background: var(--primary-shadow);
+            box-shadow: 0 0 0 2px var(--primary-shadow);
+        }
+        .login-error {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .login-success {
+            color: var(--bg-gradient-start);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
         }
         
         .two-factor-container {

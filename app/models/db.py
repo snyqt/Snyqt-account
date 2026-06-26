@@ -21,7 +21,9 @@ EXPECTED_TABLES = {
         ('password', 'varchar(64)', 'NO', '', None, ''),
         ('mail', 'varchar(100)', 'YES', '', None, ''),
         ('phone', 'varchar(20)', 'YES', '', None, ''),
-        ('avatar', 'varchar(255)', 'YES', '', '/static/img/default_avatar.png', '')
+        ('avatar', 'varchar(255)', 'YES', '', '/static/img/default_avatar.png', ''),
+        ('totp_secret', 'varchar(64)', 'YES', '', None, ''),
+        ('totp_enabled', 'tinyint', 'YES', '', '0', '')
     ],
     'login_log': [
         ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
@@ -82,6 +84,15 @@ EXPECTED_TABLES = {
         ('detail', 'text', 'YES', '', None, ''),
         ('ip', 'varchar(45)', 'YES', '', None, ''),
         ('created_at', 'datetime', 'YES', '', None, '')
+    ],
+    'security_keys': [
+        ('id', 'int', 'NO', 'PRI', None, 'auto_increment'),
+        ('user_id', 'varchar(15)', 'NO', '', None, ''),
+        ('credential_id', 'varchar(255)', 'NO', 'UNI', None, ''),
+        ('public_key', 'text', 'NO', '', None, ''),
+        ('name', 'varchar(100)', 'YES', '', None, ''),
+        ('sign_count', 'int', 'YES', '', '0', ''),
+        ('created_at', 'datetime', 'YES', '', None, '')
     ]
 }
 
@@ -94,7 +105,9 @@ CREATE_TABLE_SQLS = {
             password VARCHAR(64) NOT NULL,
             mail VARCHAR(100),
             phone VARCHAR(20),
-            avatar VARCHAR(255) DEFAULT '/static/img/default_avatar.png'
+            avatar VARCHAR(255) DEFAULT '/static/img/default_avatar.png',
+            totp_secret VARCHAR(64),
+            totp_enabled TINYINT DEFAULT 0
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """,
     'login_log': """
@@ -168,6 +181,17 @@ CREATE_TABLE_SQLS = {
             action VARCHAR(50) NOT NULL,
             detail TEXT,
             ip VARCHAR(45),
+            created_at DATETIME
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
+    'security_keys': """
+        CREATE TABLE security_keys (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(15) NOT NULL,
+            credential_id VARCHAR(255) NOT NULL UNIQUE,
+            public_key TEXT NOT NULL,
+            name VARCHAR(100),
+            sign_count INT DEFAULT 0,
             created_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """
@@ -282,6 +306,18 @@ def check_and_create_tables():
                                 "ALTER TABLE app_configurations ADD UNIQUE INDEX idx_app_id (app_id)"
                             )
                             print(f"app_configurations.app_id UNIQUE 约束添加成功")
+
+                    # 迁移逻辑：为 user_info 表补充 MFA 字段
+                    if table_name == 'user_info':
+                        existing_columns = [col[0] for col in actual_structure]
+                        if 'totp_secret' not in existing_columns:
+                            print(f"为表 '{table_name}' 添加 totp_secret 字段...")
+                            cursor.execute("ALTER TABLE user_info ADD COLUMN totp_secret VARCHAR(64)")
+                            print(f"totp_secret 字段添加成功")
+                        if 'totp_enabled' not in existing_columns:
+                            print(f"为表 '{table_name}' 添加 totp_enabled 字段...")
+                            cursor.execute("ALTER TABLE user_info ADD COLUMN totp_enabled TINYINT DEFAULT 0")
+                            print(f"totp_enabled 字段添加成功")
                 else:
                     print(f"表 '{table_name}' 结构正确")
         

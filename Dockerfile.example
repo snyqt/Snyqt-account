@@ -1,4 +1,4 @@
-﻿# ============================================
+# ============================================
 # SNYQT Account - Docker 镜像 (uWSGI)
 # ============================================
 #
@@ -6,13 +6,13 @@
 #   docker build -t snyqt-account .
 #
 # 运行命令：
-#   docker run -d --name snyqt-account -p 5000:5000 `
-#     -e DB_HOST=your_db_host `
-#     -e DB_USER=your_db_user `
-#     -e DB_PASSWORD=your_db_password `
-#     -e DB_NAME=Snyqt-account `
-#     -e SECRET_KEY=your-secret-key `
-#     -e FLASK_ENV=production `
+#   docker run -d --name snyqt-account -p 5000:5000 \
+#     -e DB_HOST=your_db_host \
+#     -e DB_USER=your_db_user \
+#     -e DB_PASSWORD=your_db_password \
+#     -e DB_NAME=Snyqt-account \
+#     -e SECRET_KEY=your-secret-key \
+#     -e FLASK_ENV=production \
 #     snyqt-account
 
 # 使用 Python 3.11 slim 版本
@@ -28,7 +28,7 @@ WORKDIR /app
 # 切换为国内镜像源（避免官方源 502/403）
 RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null \
     || sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list
-    
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc6-dev \
@@ -44,6 +44,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ============================================
 COPY requirements.txt .
 
+# 安装 Python 依赖（使用阿里云镜像源加速）
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ --upgrade pip && \
+    pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
 # ============================================
 # 第三阶段：复制应用代码
@@ -54,7 +57,7 @@ COPY . .
 RUN mkdir -p /app/logs
 
 # ============================================
-# 环境变量配置
+# 环境变量配置（示例值，请替换为真实配置）
 # ============================================
 ENV FLASK_ENV=production
 ENV UWSGI_MODE=true
@@ -64,7 +67,7 @@ ENV SECRET_KEY=change-this-to-a-random-secret-key-in-production
 
 ENV DB_HOST=localhost
 ENV DB_PORT=3306
-ENV DB_USER=snyqt_user
+ENV DB_USER=your_db_user
 ENV DB_PASSWORD=change_password_in_production
 ENV DB_NAME=Snyqt-account
 
@@ -75,7 +78,7 @@ ENV SMTP_PASSWORD=your-email-password
 
 ENV ALIYUN_ACCESS_KEY_ID=your-access-key-id
 ENV ALIYUN_ACCESS_KEY_SECRET=your-access-key-secret
-ENV ALIYUN_SIGN_NAME=您的短信签名
+ENV ALIYUN_SIGN_NAME=your-sms-sign-name
 ENV ALIYUN_TEMPLATE_CODE=SMS_XXXXXXX
 
 ENV TURNSTILE_ENABLED=

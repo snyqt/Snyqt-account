@@ -42,6 +42,7 @@ def create_app():
     from app.developer import developer_bp
     from app.security import security_bp
     from app.turnstile import turnstile_bp
+    from app.mfa import mfa_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
@@ -50,6 +51,7 @@ def create_app():
     app.register_blueprint(developer_bp)
     app.register_blueprint(security_bp)
     app.register_blueprint(turnstile_bp)
+    app.register_blueprint(mfa_bp)
 
     # 注册全局 Turnstile 验证中间件（生产环境有效）
     register_global_turnstile_middleware(app)
