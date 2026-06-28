@@ -8,20 +8,56 @@ MFA 多因子认证模块
 import json
 import base64
 import io
+import dataclasses
 import pyotp
 import qrcode
 import pymysql
 from datetime import datetime
 from flask import request, jsonify, session, render_template, current_app
-from werkzeug.security import check_password_hash
 
 from app.mfa import mfa_bp
 from app.models.db import get_db_connection
+from app.auth.utils import hash_password
+
+
+def _webauthn_serialize(obj):
+    """递归将 webauthn dataclass 转为浏览器可用的 JSON 对象
+    - bytes → base64url 字符串
+    - snake_case key → camelCase key
+    - Enum → 字符串值
+    """
+    if isinstance(obj, bytes):
+        return base64.urlsafe_b64encode(obj).decode('utf-8').rstrip('=')
+    elif dataclasses.is_dataclass(obj):
+        return _webauthn_serialize(dataclasses.asdict(obj))
+    elif isinstance(obj, dict):
+        result = {}
+        for k, v in obj.items():
+            camel_key = ''.join(
+                word.capitalize() if i > 0 else word
+                for i, word in enumerate(k.split('_'))
+            )
+            result[camel_key] = _webauthn_serialize(v)
+        return result
+    elif isinstance(obj, (list, tuple)):
+        return [_webauthn_serialize(v) for v in obj]
+    elif hasattr(obj, 'value'):
+        return obj.value
+    return obj
 
 # ── WebAuthn 配置 ──
-RP_ID = 'account.snyqt.top'
 RP_NAME = '少年友晴天-统一账户认证系统'
-ORIGIN = 'https://account.snyqt.top'
+
+def _get_webauthn_config():
+    """根据请求 host 动态返回 WebAuthn 配置（本地测试用 localhost，生产用域名）"""
+    host = request.host.split(':')[0] if request else 'account.snyqt.top'
+    if host in ('127.0.0.1', 'localhost'):
+        rp_id = 'localhost'
+        origin = f'http://{request.host}' if request else 'http://localhost:5000'
+    else:
+        rp_id = 'account.snyqt.top'
+        origin = 'https://account.snyqt.top'
+    return rp_id, origin
 
 # ── 认证登录装饰器 ──
 def login_required(f):
@@ -71,6 +107,7 @@ def totp_status():
 @login_required
 def totp_setup():
     """生成 TOTP 密钥和二维码（绑定前需要验证密码）"""
+    print(f'[TOTP-SETUP] 收到请求，user_id={session.get("user_id")}', flush=True)
     user_id = session['user_id']
     data = request.get_json()
     password = data.get('password', '')
@@ -97,7 +134,11 @@ def totp_setup():
 
         # 验证密码
         pw_hash = user['password']
-        if not check_password_hash(pw_hash, password):
+        print(f'[TOTP-SETUP] user_id={user_id}, pw_hash_len={len(pw_hash) if pw_hash else 0}, pw_hash_prefix={pw_hash[:10] if pw_hash else "None"}...', flush=True)
+        password_ok = (hash_password(password) == pw_hash)
+        print(f'[TOTP-SETUP] password_ok={password_ok}, password_input_len={len(password)}', flush=True)
+        if not password_ok:
+            print(f'[TOTP-SETUP] 密码验证失败，返回403', flush=True)
             cursor.close()
             conn.close()
             return jsonify({'success': False, 'message': '密码错误'}), 403
@@ -213,7 +254,7 @@ def totp_disable():
             conn.close()
             return jsonify({'success': False, 'message': '用户不存在'}), 404
 
-        if not check_password_hash(user['password'], password):
+        if not hash_password(password) == user['password']:
             cursor.close()
             conn.close()
             return jsonify({'success': False, 'message': '密码错误'}), 403
@@ -291,6 +332,9 @@ def webauthn_register_begin():
             UserVerificationRequirement,
         )
 
+        rp_id, origin = _get_webauthn_config()
+        print(f'[WEBAUTHN-REG] rp_id={rp_id}, origin={origin}, user_id={user_id}', flush=True)
+
         conn = get_db_connection()
         if not conn:
             return jsonify({'success': False, 'message': '数据库连接失败'}), 500
@@ -309,7 +353,7 @@ def webauthn_register_begin():
         conn.close()
 
         options = generate_registration_options(
-            rp_id=RP_ID,
+            rp_id=rp_id,
             rp_name=RP_NAME,
             user_id=user_id.encode('utf-8'),
             user_name=username,
@@ -326,7 +370,7 @@ def webauthn_register_begin():
 
         return jsonify({
             'success': True,
-            'options': json.loads(options.json())
+            'options': _webauthn_serialize(options)
         })
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
@@ -347,13 +391,15 @@ def webauthn_register_complete():
     try:
         from webauthn.registration.verify_registration_response import verify_registration_response
 
+        rp_id, origin = _get_webauthn_config()
+
         data = request.get_json()
 
         verification = verify_registration_response(
             credential=data,
             expected_challenge=challenge,
-            expected_origin=ORIGIN,
-            expected_rp_id=RP_ID,
+            expected_origin=origin,
+            expected_rp_id=rp_id,
         )
 
         credential_id_hex = verification.credential_id.hex()
@@ -401,6 +447,8 @@ def webauthn_auth_begin():
         from webauthn.authentication.generate_authentication_options import generate_authentication_options
         from webauthn.helpers.structs import PublicKeyCredentialDescriptor
 
+        rp_id, origin = _get_webauthn_config()
+
         conn = get_db_connection()
         if not conn:
             return jsonify({'success': False, 'message': '数据库连接失败'}), 500
@@ -434,7 +482,7 @@ def webauthn_auth_begin():
         ]
 
         options = generate_authentication_options(
-            rp_id=RP_ID,
+            rp_id=rp_id,
             allow_credentials=allow_credentials,
         )
 
@@ -443,7 +491,7 @@ def webauthn_auth_begin():
 
         return jsonify({
             'success': True,
-            'options': json.loads(options.json())
+            'options': _webauthn_serialize(options)
         })
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
@@ -461,6 +509,8 @@ def webauthn_auth_complete():
 
     try:
         from webauthn.authentication.verify_authentication_response import verify_authentication_response
+
+        rp_id, origin = _get_webauthn_config()
 
         data = request.get_json()
         raw_id_b64 = data.get('rawId', '')
@@ -485,8 +535,8 @@ def webauthn_auth_complete():
         verification = verify_authentication_response(
             credential=data,
             expected_challenge=challenge,
-            expected_origin=ORIGIN,
-            expected_rp_id=RP_ID,
+            expected_origin=origin,
+            expected_rp_id=rp_id,
             credential_public_key=base64.b64decode(key['public_key']),
             credential_current_sign_count=key['sign_count'],
         )
@@ -501,6 +551,7 @@ def webauthn_auth_complete():
         conn.close()
 
         session.pop('mfa_webauthn_challenge', None)
+        session['mfa_webauthn_verified'] = True
         return jsonify({'success': True, 'message': '安全密钥认证成功'})
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
@@ -530,7 +581,7 @@ def webauthn_delete_key(key_id):
             (user_id,)
         )
         user = cursor.fetchone()
-        if not user or not check_password_hash(user['password'], password):
+        if not user or not hash_password(password) == user['password']:
             cursor.close()
             conn.close()
             return jsonify({'success': False, 'message': '密码错误'}), 403

@@ -87,18 +87,20 @@ def login_page():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
-        username = request.form.get('username')
-        password = request.form.get('password')
+        login_method = request.form.get('login_method', 'password')
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        email = request.form.get('email', '')
+        email_code = request.form.get('email_code', '')
+        phone = request.form.get('phone', '')
+        phone_code = request.form.get('phone_code', '')
         is_cookie = int(request.form.get('is_cookie', 0))
         turnstile_response = request.form.get('cf-turnstile-response')
 
-        if not username or not password:
-            return jsonify({'success': False, 'message': '请输入用户名和密码'})
-
+        # ── 人机验证 ──
         if TURNSTILE_ENABLED:
             if not turnstile_response:
                 return jsonify({'success': False, 'message': '请完成人机验证'})
-
             if not verify_turnstile(turnstile_response, request.remote_addr):
                 return jsonify({'success': False, 'message': '人机验证失败，请重试'})
 
@@ -107,117 +109,193 @@ def login():
             return jsonify({'success': False, 'message': '数据库连接失败，请稍后重试'})
 
         cursor = conn.cursor()
+        user = None
 
-        cursor.execute("SELECT id, Name, password, mail, phone, totp_secret, totp_enabled FROM user_info WHERE Name = %s", (username,))
-        user = cursor.fetchone()
-
-        if user and hash_password(password) == user[2]:
-            user_id = user[0]
-            user_mail = user[3]
-            user_phone = user[4]
-            user_totp_secret = user[5]
-            user_totp_enabled = bool(user[6])
-
-            # ── MFA 多因子认证检查 ──
-            mfa_required = False
-            mfa_types = []
-
-            if user_totp_enabled and user_totp_secret:
-                mfa_required = True
-                mfa_types.append('totp')
-
-            # 检查 WebAuthn 安全密钥
-            cursor_sk = conn.cursor()
-            cursor_sk.execute(
-                "SELECT COUNT(*) FROM security_keys WHERE user_id = %s",
-                (user_id,)
-            )
-            has_webauthn = cursor_sk.fetchone()[0] > 0
-            cursor_sk.close()
-            if has_webauthn:
-                mfa_required = True
-                mfa_types.append('webauthn')
-
-            if mfa_required:
-                session['pending_user_id'] = user_id
-                session['pending_username'] = user[1]
-                session['pending_is_cookie'] = is_cookie
-                session['pending_user_phone'] = user_phone
-                session['pending_user_mail'] = user_mail
-                session.permanent = True
-                current_app.permanent_session_lifetime = timedelta(minutes=5)
-
+        # ── 方式1：用户名 + 密码 ──
+        if login_method == 'password':
+            if not username or not password:
                 cursor.close()
                 conn.close()
+                return jsonify({'success': False, 'message': '请输入用户名和密码'})
 
-                return jsonify({
-                    'success': True,
-                    'message': '需要多因子认证',
-                    'requires_mfa': True,
-                    'mfa_types': mfa_types
-                })
+            cursor.execute(
+                "SELECT id, Name, password, mail, phone, totp_secret, totp_enabled FROM user_info WHERE Name = %s",
+                (username,)
+            )
+            user = cursor.fetchone()
+            if not user or hash_password(password) != user[2]:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '用户名或密码错误'})
 
-            client_ip = request.remote_addr
-            user_agent = request.user_agent.string
+        # ── 方式2：邮箱 + 验证码 ──
+        elif login_method == 'email':
+            if not email or not email_code:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '请输入邮箱和验证码'})
 
-            browser_info = parse_user_agent(user_agent)
+            # 验证邮箱验证码
+            session_code = session.get(f'verification_code_{email}')
+            if not session_code or str(session_code) != str(email_code):
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '邮箱验证码错误或已过期'})
+            session.pop(f'verification_code_{email}', None)
 
-            place = get_ip_location(client_ip)
+            cursor.execute(
+                "SELECT id, Name, password, mail, phone, totp_secret, totp_enabled FROM user_info WHERE mail = %s",
+                (email,)
+            )
+            user = cursor.fetchone()
+            if not user:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '该邮箱未注册'})
 
-            is_danger = check_login_risk(user_id, client_ip, place, conn)
+        # ── 方式3：手机号 + 验证码 ──
+        elif login_method == 'phone':
+            if not phone or not phone_code:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '请输入手机号和验证码'})
 
-            if is_danger == 1:
-                verification_code = generate_verification_code()
-                session[f'2fa_code_{user_id}'] = verification_code
-                session.permanent = True
-                current_app.permanent_session_lifetime = timedelta(minutes=5)
+            # 验证短信验证码
+            pure_phone = ''.join(c for c in phone if c.isdigit() or c == '+')
+            if pure_phone not in sms_verification_codes:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '请先获取手机验证码'})
 
-                print(f'[登录二次验证] 开始发送二次验证邮件')
-                send_success, error_msg = send_2fa_verification_email(user_mail, verification_code)
-                if send_success:
-                    print(f'[登录二次验证] 邮件发送成功')
-                    print(f'[邮箱验证码日志] 已记录 - 邮箱: {user_mail}, 类型: 2fa, 状态: success')
-                else:
-                    print(f'[登录二次验证] 邮件发送失败: {error_msg}')
-                    print(f'[邮箱验证码日志] 已记录 - 邮箱: {user_mail}, 类型: 2fa, 状态: failed, 错误: {error_msg}')
+            stored = sms_verification_codes[pure_phone]
+            if get_network_timestamp() - stored['timestamp'] > VERIFICATION_CODE_EXPIRE:
+                del sms_verification_codes[pure_phone]
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '手机验证码已过期，请重新获取'})
 
-                session['pending_user_id'] = user_id
-                session['pending_username'] = user[1]
-                session['pending_is_cookie'] = is_cookie
-                session['pending_user_phone'] = user_phone
-                session['pending_user_mail'] = user_mail
+            if stored['code'] != phone_code:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '手机验证码错误'})
+            del sms_verification_codes[pure_phone]
 
-                return jsonify({
-                    'success': True,
-                    'message': '需要二次验证',
-                    'requires_2fa': True
-                })
+            cursor.execute(
+                "SELECT id, Name, password, mail, phone, totp_secret, totp_enabled FROM user_info WHERE phone = %s",
+                (phone,)
+            )
+            user = cursor.fetchone()
+            if not user:
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': '该手机号未注册'})
 
-            session['logged_in'] = True
-            session['user_id'] = user_id
-            session['username'] = user[1]
-
-            session.permanent = True
-            if is_cookie == 1:
-                current_app.permanent_session_lifetime = timedelta(days=7)
-            else:
-                current_app.permanent_session_lifetime = timedelta(minutes=10)
-
-            log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            cursor.execute("""
-                INSERT INTO login_log (`user_id`, ip, time, is_danger, browser, is_cookie, place)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (user_id, client_ip, log_time, 0, browser_info, is_cookie, place))
-            conn.commit()
-
-            cursor.close()
-            conn.close()
-
-            return jsonify({'success': True, 'message': '登录成功'})
         else:
             cursor.close()
             conn.close()
-            return jsonify({'success': False, 'message': '用户名或密码错误'})
+            return jsonify({'success': False, 'message': '未知的登录方式'})
+
+        # ── 用户已验证，获取用户信息 ──
+        user_id = user[0]
+        user_name = user[1]
+        user_mail = user[3]
+        user_phone = user[4]
+        user_totp_secret = user[5]
+        user_totp_enabled = bool(user[6])
+
+        # ── MFA 多因子认证检查 ──
+        mfa_required = False
+        mfa_types = []
+
+        if user_totp_enabled and user_totp_secret:
+            mfa_required = True
+            mfa_types.append('totp')
+
+        # 检查 WebAuthn 安全密钥
+        cursor_sk = conn.cursor()
+        cursor_sk.execute(
+            "SELECT COUNT(*) FROM security_keys WHERE user_id = %s",
+            (user_id,)
+        )
+        has_webauthn = cursor_sk.fetchone()[0] > 0
+        cursor_sk.close()
+        if has_webauthn:
+            mfa_required = True
+            mfa_types.append('webauthn')
+
+        if mfa_required:
+            session['pending_user_id'] = user_id
+            session['pending_username'] = user_name
+            session['pending_is_cookie'] = is_cookie
+            session['pending_user_phone'] = user_phone
+            session['pending_user_mail'] = user_mail
+            session.permanent = True
+            current_app.permanent_session_lifetime = timedelta(minutes=5)
+
+            cursor.close()
+            conn.close()
+
+            return jsonify({
+                'success': True,
+                'message': '需要多因子认证',
+                'requires_mfa': True,
+                'mfa_types': mfa_types
+            })
+
+        # ── 二次验证风险检查 ──
+        client_ip = request.remote_addr
+        user_agent = request.user_agent.string
+        browser_info = parse_user_agent(user_agent)
+        place = get_ip_location(client_ip)
+        is_danger = check_login_risk(user_id, client_ip, place, conn)
+
+        if is_danger == 1:
+            verification_code = generate_verification_code()
+            session[f'2fa_code_{user_id}'] = verification_code
+            session.permanent = True
+            current_app.permanent_session_lifetime = timedelta(minutes=5)
+
+            print(f'[登录二次验证] 开始发送二次验证邮件')
+            send_success, error_msg = send_2fa_verification_email(user_mail, verification_code)
+            if send_success:
+                print(f'[登录二次验证] 邮件发送成功')
+            else:
+                print(f'[登录二次验证] 邮件发送失败: {error_msg}')
+
+            session['pending_user_id'] = user_id
+            session['pending_username'] = user_name
+            session['pending_is_cookie'] = is_cookie
+            session['pending_user_phone'] = user_phone
+            session['pending_user_mail'] = user_mail
+
+            return jsonify({
+                'success': True,
+                'message': '需要二次验证',
+                'requires_2fa': True
+            })
+
+        # ── 直接登录 ──
+        session['logged_in'] = True
+        session['user_id'] = user_id
+        session['username'] = user_name
+
+        session.permanent = True
+        if is_cookie == 1:
+            current_app.permanent_session_lifetime = timedelta(days=7)
+        else:
+            current_app.permanent_session_lifetime = timedelta(minutes=10)
+
+        log_time = get_network_time().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        cursor.execute("""
+            INSERT INTO login_log (`user_id`, ip, time, is_danger, browser, is_cookie, place)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, client_ip, log_time, 0, browser_info, is_cookie, place))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '登录成功'})
 
     except Exception as e:
         print(f"登录失败: {e}")
@@ -379,6 +457,193 @@ def _complete_mfa_login():
     session.pop('pending_user_mail', None)
 
     return jsonify({'success': True, 'message': '登录成功'})
+
+# ════════════════════════════════════════════════════════════════
+#  MFA 多因子认证组合接口
+# ════════════════════════════════════════════════════════════════
+
+@auth_bp.route('/check-mfa-combos', methods=['GET'])
+def check_mfa_combos():
+    """返回当前待登录用户可用的 MFA 组合"""
+    try:
+        if 'pending_user_id' not in session:
+            return jsonify({'success': False, 'message': '验证会话已过期，请重新登录'})
+
+        user_id = session['pending_user_id']
+        user_mail = session.get('pending_user_mail', '')
+        user_phone = session.get('pending_user_phone', '')
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': '数据库连接失败'}), 500
+
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT totp_secret, totp_enabled FROM user_info WHERE id = %s",
+            (user_id,)
+        )
+        user = cursor.fetchone()
+        has_totp = bool(user and user[1] and user[0])
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM security_keys WHERE user_id = %s",
+            (user_id,)
+        )
+        has_webauthn = cursor.fetchone()[0] > 0
+        cursor.close()
+        conn.close()
+
+        has_email = bool(user_mail)
+        has_phone = bool(user_phone)
+
+        combos = []
+        if has_email and has_totp:
+            combos.append('email_totp')
+        if has_phone and has_totp:
+            combos.append('phone_totp')
+        if has_email and has_phone:
+            combos.append('email_phone')
+        if has_email and has_webauthn:
+            combos.append('email_webauthn')
+        if has_phone and has_webauthn:
+            combos.append('phone_webauthn')
+
+        return jsonify({'success': True, 'combos': combos})
+
+    except Exception as e:
+        print(f"获取MFA组合失败: {e}")
+        return jsonify({'success': False, 'message': '获取验证选项失败'})
+
+
+@auth_bp.route('/verify-mfa-combo', methods=['POST'])
+def verify_mfa_combo():
+    """验证 MFA 组合"""
+    try:
+        if 'pending_user_id' not in session:
+            return jsonify({'success': False, 'message': '验证会话已过期，请重新登录'})
+
+        user_id = session['pending_user_id']
+        combo = request.form.get('combo', '')
+        email_code = request.form.get('email_code', '')
+        phone_code = request.form.get('phone_code', '')
+        totp_code = request.form.get('totp_code', '')
+
+        needs_email = combo in ('email_totp', 'email_phone', 'email_webauthn')
+        needs_phone = combo in ('phone_totp', 'email_phone', 'phone_webauthn')
+        needs_totp = combo in ('email_totp', 'phone_totp')
+        needs_webauthn = combo in ('email_webauthn', 'phone_webauthn')
+
+        # ── 验证邮箱验证码 ──
+        if needs_email:
+            if not email_code or len(email_code) != 6 or not email_code.isdigit():
+                return jsonify({'success': False, 'message': '请输入6位邮箱验证码'})
+            stored_code = session.get(f'mfa_email_code_{user_id}')
+            if not stored_code or str(stored_code) != str(email_code):
+                return jsonify({'success': False, 'message': '邮箱验证码错误或已过期'})
+            session.pop(f'mfa_email_code_{user_id}', None)
+
+        # ── 验证手机验证码 ──
+        if needs_phone:
+            if not phone_code or len(phone_code) != 6 or not phone_code.isdigit():
+                return jsonify({'success': False, 'message': '请输入6位手机验证码'})
+            stored_code = session.get(f'mfa_sms_code_{user_id}')
+            if not stored_code or str(stored_code) != str(phone_code):
+                return jsonify({'success': False, 'message': '手机验证码错误或已过期'})
+            session.pop(f'mfa_sms_code_{user_id}', None)
+
+        # ── 验证 TOTP ──
+        if needs_totp:
+            if not totp_code or len(totp_code) != 6 or not totp_code.isdigit():
+                return jsonify({'success': False, 'message': '请输入6位Authenticator验证码'})
+
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': '数据库连接失败'}), 500
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT totp_secret FROM user_info WHERE id = %s AND totp_enabled = 1",
+                (user_id,)
+            )
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not row or not row[0]:
+                return jsonify({'success': False, 'message': '未绑定 Authenticator'})
+
+            totp = pyotp.TOTP(row[0])
+            if not totp.verify(totp_code, valid_window=1):
+                return jsonify({'success': False, 'message': 'Authenticator 验证码错误'})
+
+        # ── 验证 WebAuthn（必须有 session 标记） ──
+        if needs_webauthn:
+            if not session.get('mfa_webauthn_verified'):
+                return jsonify({'success': False, 'message': '请先完成安全密钥验证'})
+            session.pop('mfa_webauthn_verified', None)
+
+        return _complete_mfa_login()
+
+    except Exception as e:
+        print(f"MFA组合验证失败: {e}")
+        return jsonify({'success': False, 'message': '验证失败，请稍后重试'})
+
+
+@auth_bp.route('/send-mfa-email-code', methods=['POST'])
+def send_mfa_email_code():
+    """发送 MFA 邮箱验证码"""
+    try:
+        if 'pending_user_id' not in session:
+            return jsonify({'success': False, 'message': '验证会话已过期，请重新登录'})
+
+        user_id = session['pending_user_id']
+        user_mail = session.get('pending_user_mail', '')
+
+        if not user_mail:
+            return jsonify({'success': False, 'message': '未绑定邮箱'})
+
+        code = generate_verification_code()
+        session[f'mfa_email_code_{user_id}'] = code
+        session.permanent = True
+        current_app.permanent_session_lifetime = timedelta(minutes=5)
+
+        send_success, error_msg = send_verification_email(user_mail, code)
+        if send_success:
+            return jsonify({'success': True, 'message': '验证码已发送到您的邮箱'})
+        else:
+            session.pop(f'mfa_email_code_{user_id}', None)
+            return jsonify({'success': False, 'message': f'发送失败: {error_msg}'})
+
+    except Exception as e:
+        print(f"发送MFA邮箱验证码失败: {e}")
+        return jsonify({'success': False, 'message': '发送失败，请稍后重试'})
+
+
+@auth_bp.route('/send-mfa-sms-code', methods=['POST'])
+def send_mfa_sms_code():
+    """发送 MFA 手机验证码"""
+    try:
+        if 'pending_user_id' not in session:
+            return jsonify({'success': False, 'message': '验证会话已过期，请重新登录'})
+
+        user_id = session['pending_user_id']
+        user_phone = session.get('pending_user_phone', '')
+
+        if not user_phone:
+            return jsonify({'success': False, 'message': '未绑定手机号'})
+
+        success, error_msg, code = send_sms(user_phone)
+        if success:
+            session[f'mfa_sms_code_{user_id}'] = code
+            session.permanent = True
+            current_app.permanent_session_lifetime = timedelta(minutes=5)
+            return jsonify({'success': True, 'message': '验证码已发送到您的手机'})
+        else:
+            return jsonify({'success': False, 'message': f'发送失败: {error_msg}'})
+
+    except Exception as e:
+        print(f"发送MFA短信验证码失败: {e}")
+        return jsonify({'success': False, 'message': '发送失败，请稍后重试'})
+
 
 @auth_bp.route('/check-2fa-phone', methods=['GET'])
 def check_2fa_phone():

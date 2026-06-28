@@ -549,20 +549,64 @@
             <!-- 登录表单 -->
             <div class="auth-content active" id="login-tab">
                 <form id="login-form">
-                    <!-- 用户名 -->
+                    <!-- 登录方式选择 -->
                     <div class="form-group">
-                        <label for="login-username">用户名 *</label>
-                        <input type="text" id="login-username" class="form-input" placeholder="请输入用户名">
-                        <span class="error-message" id="login-username-error"></span>
+                        <label for="login-method">登录方式</label>
+                        <select id="login-method" class="form-input" style="cursor:pointer;">
+                            <option value="password">用户名 + 密码</option>
+                            <option value="email">邮箱 + 验证码</option>
+                            <option value="phone">手机号 + 验证码</option>
+                        </select>
                     </div>
-                    
-                    <!-- 密码 -->
-                    <div class="form-group">
-                        <label for="login-password">密码 *</label>
-                        <input type="password" id="login-password" class="form-input" placeholder="请输入密码">
-                        <span class="error-message" id="login-password-error"></span>
+
+                    <!-- 用户名+密码 区域 -->
+                    <div id="login-password-group">
+                        <div class="form-group">
+                            <label for="login-username">用户名 *</label>
+                            <input type="text" id="login-username" class="form-input" placeholder="请输入用户名">
+                            <span class="error-message" id="login-username-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">密码 *</label>
+                            <input type="password" id="login-password" class="form-input" placeholder="请输入密码">
+                            <span class="error-message" id="login-password-error"></span>
+                        </div>
                     </div>
-                    
+
+                    <!-- 邮箱+验证码 区域 -->
+                    <div id="login-email-group" style="display:none;">
+                        <div class="form-group">
+                            <label for="login-email">邮箱</label>
+                            <input type="email" id="login-email" class="form-input" placeholder="请输入邮箱地址">
+                            <span class="error-message" id="login-email-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-email-code">邮箱验证码</label>
+                            <div style="position: relative; display: inline-block; width: calc(100% - 180px);">
+                                <input type="text" id="login-email-code" class="form-input" placeholder="请输入验证码" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:6px;">
+                            </div>
+                            <button type="button" class="send-code-btn" id="send-login-email-code-btn" style="width:160px;display:inline-block;margin-left:15px;">发送验证码</button>
+                            <span class="error-message" id="login-email-code-error"></span>
+                        </div>
+                    </div>
+
+                    <!-- 手机号+验证码 区域 -->
+                    <div id="login-phone-group" style="display:none;">
+                        <div class="form-group">
+                            <label for="login-phone">手机号</label>
+                            <input type="tel" id="login-phone" class="form-input" placeholder="请输入手机号">
+                            <span class="error-message" id="login-phone-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-phone-code">手机验证码</label>
+                            <div style="position: relative; display: inline-block; width: calc(100% - 180px);">
+                                <input type="text" id="login-phone-code" class="form-input" placeholder="请输入验证码" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:6px;">
+                            </div>
+                            <button type="button" class="send-code-btn" id="send-login-sms-code-btn" style="width:160px;display:inline-block;margin-left:15px;">发送验证码</button>
+                            <span class="error-message" id="login-phone-code-error"></span>
+                        </div>
+                    </div>
+
                     <!-- 保持登录复选框 -->
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label class="checkbox-label" style="display: flex; align-items: center; cursor: pointer; user-select: none;">
@@ -570,12 +614,12 @@
                             <span style="font-size: 14px; color: var(--text-color);">保持登录状态</span>
                         </label>
                     </div>
-                    
+
                     <!-- 忘记密码链接 -->
-                    <div style="text-align: right; margin-bottom: 20px;">
+                    <div style="text-align: right; margin-bottom: 20px;" id="forgot-password-link">
                         <a href="/forgot_password" style="color: var(--danger-color); text-decoration: none;">忘记密码？</a>
                     </div>
-                    
+
                     {% if turnstile_enabled %}
                     <!-- Cloudflare Turnstile 人机验证 -->
                     <div class="form-group" style="margin-bottom: 20px;" id="turnstile-container">
@@ -583,10 +627,10 @@
                         <span class="error-message" id="turnstile-error"></span>
                     </div>
                     {% endif %}
-                    
+
                     <!-- 提交按钮 -->
                     <button type="submit" class="submit-btn" id="login-submit-btn">登录</button>
-                    
+
                     <!-- 登录结果提示 -->
                     <div class="error-message" id="login-error"></div>
                     <div class="success-message" id="login-success"></div>
@@ -644,7 +688,7 @@
                 <form id="mfa-form">
                     <div class="two-factor-container">
                         <div class="two-factor-icon">
-                            <i class="fas fa-fingerprint"></i>
+                            <i class="fas fa-shield-haltered"></i>
                         </div>
                         <h2 class="two-factor-title">多因子身份验证</h2>
                         <p class="two-factor-description" id="mfa-description">
@@ -652,32 +696,47 @@
                         </p>
 
                         <!-- MFA 方式选择 -->
-                        <div id="mfa-options" style="display:flex;gap:12px;margin-bottom:16px;justify-content:center;"></div>
+                        <div id="mfa-options" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;justify-content:center;"></div>
 
-                        <!-- TOTP 验证码输入 -->
+                        <!-- 邮箱验证码输入 -->
+                        <div class="form-group" id="mfa-email-code-group" style="display:none;">
+                            <label for="mfa-email-code">邮箱验证码</label>
+                            <div style="position: relative; display: inline-block; width: calc(100% - 180px);">
+                                <input type="text" id="mfa-email-code" class="form-input" placeholder="请输入6位验证码" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:6px;">
+                            </div>
+                            <button type="button" class="send-code-btn" id="send-mfa-email-code-btn" style="width:160px;display:inline-block;margin-left:15px;">发送验证码</button>
+                            <span class="error-message" id="mfa-email-code-error"></span>
+                        </div>
+
+                        <!-- 手机验证码输入 -->
+                        <div class="form-group" id="mfa-phone-code-group" style="display:none;">
+                            <label for="mfa-phone-code">手机验证码</label>
+                            <div style="position: relative; display: inline-block; width: calc(100% - 180px);">
+                                <input type="text" id="mfa-phone-code" class="form-input" placeholder="请输入6位验证码" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:6px;">
+                            </div>
+                            <button type="button" class="send-code-btn" id="send-mfa-sms-code-btn" style="width:160px;display:inline-block;margin-left:15px;">发送验证码</button>
+                            <span class="error-message" id="mfa-phone-code-error"></span>
+                        </div>
+
+                        <!-- TOTP Authenticator 验证码输入 -->
                         <div class="form-group" id="mfa-totp-group" style="display:none;">
                             <label for="mfa-totp-code">Authenticator 验证码</label>
-                            <input type="text" id="mfa-totp-code" class="form-input"
-                                   placeholder="请输入6位验证码" maxlength="6"
-                                   style="text-align: center; font-size: 24px; letter-spacing: 8px;">
+                            <input type="text" id="mfa-totp-code" class="form-input" placeholder="请输入6位验证码" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px;">
                             <span class="error-message" id="mfa-totp-error"></span>
                         </div>
 
                         <!-- WebAuthn 按钮 -->
                         <div class="form-group" id="mfa-webauthn-group" style="display:none;">
-                            <button type="button" class="submit-btn" id="mfa-webauthn-btn"
-                                    onclick="startWebauthnAuth()">
+                            <button type="button" class="submit-btn" id="mfa-webauthn-btn">
                                 <i class="fas fa-key"></i> 使用安全密钥验证
                             </button>
                             <span class="error-message" id="mfa-webauthn-error"></span>
                         </div>
 
-                        <button type="button" class="submit-btn" id="mfa-submit-btn"
-                                onclick="submitMfaTotp()" style="display:none;margin-top:8px;">
-                            验证
-                        </button>
-                        <div class="login-success" id="mfa-login-success"></div>
+                        <!-- 提交按钮 -->
+                        <button type="button" class="submit-btn" id="mfa-submit-btn" style="display:none;margin-top:8px;">验证并登录</button>
                         <div class="login-error" id="mfa-login-error"></div>
+                        <div class="login-success" id="mfa-login-success"></div>
                     </div>
                 </form>
             </div>
@@ -868,94 +927,156 @@
             // 页面加载时检查URL参数（作为备用）
             checkUrlParams();
             
+            // 登录方式切换
+            const loginMethod = document.getElementById('login-method');
+            const passwordGroup = document.getElementById('login-password-group');
+            const emailGroup = document.getElementById('login-email-group');
+            const phoneGroup = document.getElementById('login-phone-group');
+            const forgotPwdLink = document.getElementById('forgot-password-link');
+
+            loginMethod.addEventListener('change', function() {
+                const v = this.value;
+                passwordGroup.style.display = (v === 'password') ? 'block' : 'none';
+                emailGroup.style.display = (v === 'email') ? 'block' : 'none';
+                phoneGroup.style.display = (v === 'phone') ? 'block' : 'none';
+                forgotPwdLink.style.display = (v === 'password') ? 'block' : 'none';
+                document.getElementById('login-username-error').textContent = '';
+                document.getElementById('login-password-error').textContent = '';
+                document.getElementById('login-email-error').textContent = '';
+                document.getElementById('login-email-code-error').textContent = '';
+                document.getElementById('login-phone-error').textContent = '';
+                document.getElementById('login-phone-code-error').textContent = '';
+                document.getElementById('login-error').textContent = '';
+            });
+
+            // 登录邮箱验证码发送
+            let loginEmailCountdown = 60;
+            let loginEmailTimer = null;
+            document.getElementById('send-login-email-code-btn').addEventListener('click', function() {
+                const email = document.getElementById('login-email').value.trim();
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    document.getElementById('login-email-error').textContent = '请输入有效邮箱';
+                    return;
+                }
+                if (TURNSTILE_ENABLED) {
+                    const tr = document.querySelector('input[name="cf-turnstile-response"]')?.value;
+                    if (!tr) { document.getElementById('turnstile-error').textContent = '请完成人机验证'; return; }
+                }
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = `${loginEmailCountdown}秒后重新发送`;
+                const fd = new FormData();
+                fd.append('email', email);
+                if (TURNSTILE_ENABLED) fd.append('cf-turnstile-response', document.querySelector('input[name="cf-turnstile-response"]')?.value || '');
+                fetch('/send_code', { method: 'POST', body: fd })
+                .then(r => r.json()).then(d => {
+                    if (!d.success) { alert('发送失败：' + d.message); clearInterval(loginEmailTimer); btn.disabled = false; btn.textContent = '发送验证码'; loginEmailCountdown = 60; }
+                }).catch(() => { alert('发送失败'); clearInterval(loginEmailTimer); btn.disabled = false; btn.textContent = '发送验证码'; loginEmailCountdown = 60; });
+                loginEmailTimer = setInterval(() => {
+                    loginEmailCountdown--;
+                    btn.textContent = `${loginEmailCountdown}秒后重新发送`;
+                    if (loginEmailCountdown <= 0) { clearInterval(loginEmailTimer); btn.disabled = false; btn.textContent = '发送验证码'; loginEmailCountdown = 60; }
+                }, 1000);
+            });
+
+            // 登录手机验证码发送
+            let loginPhoneCountdown = 60;
+            let loginPhoneTimer = null;
+            document.getElementById('send-login-sms-code-btn').addEventListener('click', function() {
+                const phone = document.getElementById('login-phone').value.trim();
+                if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+                    document.getElementById('login-phone-error').textContent = '请输入有效手机号';
+                    return;
+                }
+                if (TURNSTILE_ENABLED) {
+                    const tr = document.querySelector('input[name="cf-turnstile-response"]')?.value;
+                    if (!tr) { document.getElementById('turnstile-error').textContent = '请完成人机验证'; return; }
+                }
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = `${loginPhoneCountdown}秒后重新发送`;
+                fetch('/api/send-sms-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                }).then(r => r.json()).then(d => {
+                    if (!d.success) { alert('发送失败：' + d.message); clearInterval(loginPhoneTimer); btn.disabled = false; btn.textContent = '发送验证码'; loginPhoneCountdown = 60; }
+                }).catch(() => { alert('发送失败'); clearInterval(loginPhoneTimer); btn.disabled = false; btn.textContent = '发送验证码'; loginPhoneCountdown = 60; });
+                loginPhoneTimer = setInterval(() => {
+                    loginPhoneCountdown--;
+                    btn.textContent = `${loginPhoneCountdown}秒后重新发送`;
+                    if (loginPhoneCountdown <= 0) { clearInterval(loginPhoneTimer); btn.disabled = false; btn.textContent = '发送验证码'; loginPhoneCountdown = 60; }
+                }, 1000);
+            });
+
             // 登录表单提交
             const loginForm = document.getElementById('login-form');
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
-                    // 清除之前的错误信息
-                    document.getElementById('login-username-error').textContent = '';
-                    document.getElementById('login-password-error').textContent = '';
-                    if (TURNSTILE_ENABLED) {
-                        document.getElementById('turnstile-error').textContent = '';
-                    }
+                    const method = document.getElementById('login-method').value;
                     document.getElementById('login-error').textContent = '';
                     document.getElementById('login-success').textContent = '';
-                    
-                    // 获取表单数据
-                    const username = document.getElementById('login-username').value.trim();
-                    const password = document.getElementById('login-password').value.trim();
+                    document.getElementById('login-username-error').textContent = '';
+                    document.getElementById('login-password-error').textContent = '';
+                    document.getElementById('login-email-error').textContent = '';
+                    document.getElementById('login-email-code-error').textContent = '';
+                    document.getElementById('login-phone-error').textContent = '';
+                    document.getElementById('login-phone-code-error').textContent = '';
+                    if (TURNSTILE_ENABLED) document.getElementById('turnstile-error').textContent = '';
+
                     const isCookie = document.getElementById('keep-login').checked;
-                    
-                    // 简单验证
-                    let isValid = true;
-                    
-                    if (!username) {
-                        document.getElementById('login-username-error').textContent = '请输入用户名';
-                        isValid = false;
-                    }
-                    
-                    if (!password) {
-                        document.getElementById('login-password-error').textContent = '请输入密码';
-                        isValid = false;
-                    }
-                    
-                    // 如果Turnstile未启用，跳过人机验证检查
-                    if (TURNSTILE_ENABLED) {
-                        const turnstileResponse = document.querySelector('input[name="cf-turnstile-response"]')?.value;
-                        if (!turnstileResponse) {
-                            document.getElementById('turnstile-error').textContent = '请完成人机验证';
-                            isValid = false;
-                        }
-                    }
-                    
-                    if (!isValid) return;
-                    
-                    // 提交表单数据
                     const formData = new FormData();
-                    formData.append('username', username);
-                    formData.append('password', password);
+                    formData.append('login_method', method);
                     formData.append('is_cookie', isCookie ? '1' : '0');
                     if (TURNSTILE_ENABLED) {
-                        const turnstileResponse = document.querySelector('input[name="cf-turnstile-response"]')?.value;
-                        formData.append('cf-turnstile-response', turnstileResponse || '');
+                        formData.append('cf-turnstile-response', document.querySelector('input[name="cf-turnstile-response"]')?.value || '');
                     }
-                    
-                    fetch('/login', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
+
+                    let isValid = true;
+                    if (method === 'password') {
+                        const username = document.getElementById('login-username').value.trim();
+                        const password = document.getElementById('login-password').value.trim();
+                        if (!username) { document.getElementById('login-username-error').textContent = '请输入用户名'; isValid = false; }
+                        if (!password) { document.getElementById('login-password-error').textContent = '请输入密码'; isValid = false; }
+                        formData.append('username', username);
+                        formData.append('password', password);
+                    } else if (method === 'email') {
+                        const email = document.getElementById('login-email').value.trim();
+                        const code = document.getElementById('login-email-code').value.trim();
+                        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('login-email-error').textContent = '请输入有效邮箱'; isValid = false; }
+                        if (!code || code.length !== 6) { document.getElementById('login-email-code-error').textContent = '请输入6位验证码'; isValid = false; }
+                        formData.append('email', email);
+                        formData.append('email_code', code);
+                    } else if (method === 'phone') {
+                        const phone = document.getElementById('login-phone').value.trim();
+                        const code = document.getElementById('login-phone-code').value.trim();
+                        if (!phone || !/^1[3-9]\d{9}$/.test(phone)) { document.getElementById('login-phone-error').textContent = '请输入有效手机号'; isValid = false; }
+                        if (!code || code.length !== 6) { document.getElementById('login-phone-code-error').textContent = '请输入6位验证码'; isValid = false; }
+                        formData.append('phone', phone);
+                        formData.append('phone_code', code);
+                    }
+
+                    if (TURNSTILE_ENABLED && !document.querySelector('input[name="cf-turnstile-response"]')?.value) {
+                        document.getElementById('turnstile-error').textContent = '请完成人机验证';
+                        isValid = false;
+                    }
+                    if (!isValid) return;
+
+                    fetch('/login', { method: 'POST', body: formData })
+                    .then(r => r.json())
                     .then(data => {
                         if (data.success) {
                             if (data.requires_2fa) {
-                                // 需要二次验证，显示验证界面
                                 showTwoFactorAuth();
                             } else if (data.requires_mfa) {
-                                // 需要多因子认证
                                 showMfaAuth(data.mfa_types);
                             } else {
                                 document.getElementById('login-success').textContent = data.message;
-                                // 登录成功后保存用户信息到localStorage
-                                fetch('/get_user_info')
-                                    .then(response => response.json())
-                                    .then(userData => {
-                                        if (userData.success) {
-                                            localStorage.setItem('userInfo', JSON.stringify(userData.user));
-                                        }
-                                        // 跳转到首页
-                                        setTimeout(() => {
-                                            window.location.href = '/';
-                                        }, 1000);
-                                    })
-                                    .catch(error => {
-                                        console.error('获取用户信息失败:', error);
-                                        // 即使获取用户信息失败，也要跳转
-                                        setTimeout(() => {
-                                            window.location.href = '/';
-                                        }, 1000);
-                                    });
+                                fetch('/get_user_info').then(r => r.json()).then(ud => {
+                                    if (ud.success) localStorage.setItem('userInfo', JSON.stringify(ud.user));
+                                    setTimeout(() => { window.location.href = '/'; }, 1000);
+                                }).catch(() => { setTimeout(() => { window.location.href = '/'; }, 1000); });
                             }
                         } else {
                             document.getElementById('login-error').textContent = data.message;
@@ -1707,152 +1828,211 @@
             }
 
             // ══════════════════════════════════════════════
-            //  MFA 多因子认证 JavaScript
+            //  MFA 多因子认证 JavaScript（5种组合方式）
             // ══════════════════════════════════════════════
 
-            let currentMfaType = null;
+            let currentMfaCombo = null;  // 当前选择的组合: 'email_totp' | 'phone_totp' | 'email_phone' | 'email_webauthn' | 'phone_webauthn'
 
             function showMfaAuth(mfaTypes) {
-                // 隐藏登录表单和二次验证，显示 MFA 验证
                 document.getElementById('login-tab').style.display = 'none';
                 document.getElementById('two-factor-tab').style.display = 'none';
                 document.getElementById('mfa-tab').style.display = 'block';
 
-                // 清除之前的消息
+                // 清除之前的状态
+                document.getElementById('mfa-email-code-group').style.display = 'none';
+                document.getElementById('mfa-phone-code-group').style.display = 'none';
+                document.getElementById('mfa-totp-group').style.display = 'none';
+                document.getElementById('mfa-webauthn-group').style.display = 'none';
+                document.getElementById('mfa-submit-btn').style.display = 'none';
                 document.getElementById('mfa-totp-error').textContent = '';
                 document.getElementById('mfa-webauthn-error').textContent = '';
+                document.getElementById('mfa-email-code-error').textContent = '';
+                document.getElementById('mfa-phone-code-error').textContent = '';
                 document.getElementById('mfa-login-error').textContent = '';
                 document.getElementById('mfa-login-success').textContent = '';
+                document.getElementById('mfa-totp-code').value = '';
+                document.getElementById('mfa-email-code').value = '';
+                document.getElementById('mfa-phone-code').value = '';
+                currentMfaCombo = null;
 
-                currentMfaType = null;
+                // 获取用户信息以确定可用组合
+                fetch('/check-mfa-combos')
+                    .then(r => r.json())
+                    .then(data => {
+                        const combos = data.combos || [];
+                        const optionsContainer = document.getElementById('mfa-options');
+                        optionsContainer.innerHTML = '';
+
+                        const comboLabels = {
+                            'email_totp': '邮箱验证码 + Authenticator',
+                            'phone_totp': '手机验证码 + Authenticator',
+                            'email_phone': '邮箱验证码 + 手机验证码',
+                            'email_webauthn': '邮箱验证码 + 安全密钥',
+                            'phone_webauthn': '手机验证码 + 安全密钥'
+                        };
+
+                        combos.forEach(combo => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'mfa-option-btn';
+                            btn.setAttribute('data-combo', combo);
+                            btn.textContent = comboLabels[combo] || combo;
+                            btn.addEventListener('click', function() { selectMfaCombo(combo); });
+                            optionsContainer.appendChild(btn);
+                        });
+
+                        if (combos.length === 1) selectMfaCombo(combos[0]);
+                    })
+                    .catch(err => {
+                        console.error('获取 MFA 组合失败:', err);
+                        document.getElementById('mfa-login-error').textContent = '获取验证选项失败';
+                    });
+            }
+
+            function selectMfaCombo(combo) {
+                currentMfaCombo = combo;
+
+                // 更新选项按钮样式
+                document.querySelectorAll('.mfa-option-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('.mfa-option-btn').forEach(b => {
+                    if (b.getAttribute('data-combo') === combo) b.classList.add('selected');
+                });
+
+                // 隐藏所有输入区
+                document.getElementById('mfa-email-code-group').style.display = 'none';
+                document.getElementById('mfa-phone-code-group').style.display = 'none';
                 document.getElementById('mfa-totp-group').style.display = 'none';
                 document.getElementById('mfa-webauthn-group').style.display = 'none';
                 document.getElementById('mfa-submit-btn').style.display = 'none';
 
-                // 渲染 MFA 选项按钮
-                const optionsContainer = document.getElementById('mfa-options');
-                optionsContainer.innerHTML = '';
+                // 根据组合显示对应输入区
+                const needsEmail = ['email_totp', 'email_phone', 'email_webauthn'].includes(combo);
+                const needsPhone = ['phone_totp', 'email_phone', 'phone_webauthn'].includes(combo);
+                const needsTotp = ['email_totp', 'phone_totp'].includes(combo);
+                const needsWebauthn = ['email_webauthn', 'phone_webauthn'].includes(combo);
 
-                const optionLabels = {
-                    'totp': { icon: '📱', label: 'Authenticator 验证码' },
-                    'webauthn': { icon: '🔑', label: '安全密钥' }
-                };
-
-                mfaTypes.forEach(type => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'mfa-option-btn';
-                    btn.innerHTML = `${optionLabels[type]?.icon || '🔒'} ${optionLabels[type]?.label || type}`;
-                    btn.onclick = function() { selectMfaOption(type); };
-                    optionsContainer.appendChild(btn);
-                });
-
-                // 如果只有一种方式，自动选择
-                if (mfaTypes.length === 1) {
-                    selectMfaOption(mfaTypes[0]);
+                if (needsEmail) document.getElementById('mfa-email-code-group').style.display = 'block';
+                if (needsPhone) document.getElementById('mfa-phone-code-group').style.display = 'block';
+                if (needsTotp) {
+                    document.getElementById('mfa-totp-group').style.display = 'block';
+                    document.getElementById('mfa-submit-btn').style.display = 'block';
+                    document.getElementById('mfa-totp-code').focus();
                 }
-            }
+                if (needsWebauthn) {
+                    document.getElementById('mfa-webauthn-group').style.display = 'block';
+                    document.getElementById('mfa-webauthn-btn').style.display = 'block';
+                }
 
-            function selectMfaOption(type) {
-                currentMfaType = type;
-
-                // 更新选项按钮样式
-                document.querySelectorAll('.mfa-option-btn').forEach(btn => btn.classList.remove('selected'));
-                document.querySelectorAll('.mfa-option-btn').forEach(btn => {
-                    if (btn.textContent.includes(type === 'totp' ? 'Authenticator' : '安全密钥')) {
-                        btn.classList.add('selected');
-                    }
-                });
-
-                // 显示对应的输入区域
-                document.getElementById('mfa-totp-group').style.display = (type === 'totp') ? 'block' : 'none';
-                document.getElementById('mfa-webauthn-group').style.display = (type === 'webauthn') ? 'block' : 'none';
-                document.getElementById('mfa-submit-btn').style.display = (type === 'totp') ? 'block' : 'none';
-
-                // 清除错误消息
+                // 清除错误
+                document.getElementById('mfa-email-code-error').textContent = '';
+                document.getElementById('mfa-phone-code-error').textContent = '';
                 document.getElementById('mfa-totp-error').textContent = '';
                 document.getElementById('mfa-webauthn-error').textContent = '';
                 document.getElementById('mfa-login-error').textContent = '';
-
-                if (type === 'totp') {
-                    document.getElementById('mfa-totp-code').value = '';
-                    document.getElementById('mfa-totp-code').focus();
-                }
             }
 
-            function submitMfaTotp() {
-                const code = document.getElementById('mfa-totp-code').value.trim();
-                const errorEl = document.getElementById('mfa-totp-error');
+            // MFA 提交按钮（使用 addEventListener 修复点击无反应 bug）
+            document.getElementById('mfa-submit-btn').addEventListener('click', function() {
+                if (!currentMfaCombo) return;
+                const btn = this;
+                if (btn.disabled) return;
+                const needsEmail = ['email_totp', 'email_phone', 'email_webauthn'].includes(currentMfaCombo);
+                const needsPhone = ['phone_totp', 'email_phone', 'phone_webauthn'].includes(currentMfaCombo);
+                const needsTotp = ['email_totp', 'phone_totp'].includes(currentMfaCombo);
+                const needsWebauthn = ['email_webauthn', 'phone_webauthn'].includes(currentMfaCombo);
 
-                if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
-                    errorEl.textContent = '请输入6位数字验证码';
+                // 如果只包含 WebAuthn（无 TOTP），由 WebAuthn 按钮单独处理
+                if (needsWebauthn && !needsTotp && !needsEmail && !needsPhone) {
                     return;
                 }
-                errorEl.textContent = '';
 
+                let isValid = true;
                 const formData = new FormData();
-                formData.append('totp_code', code);
+                formData.append('combo', currentMfaCombo);
 
-                fetch('/verify-mfa-totp', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
+                if (needsEmail) {
+                    const code = document.getElementById('mfa-email-code').value.trim();
+                    if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+                        document.getElementById('mfa-email-code-error').textContent = '请输入6位邮箱验证码';
+                        isValid = false;
+                    }
+                    formData.append('email_code', code);
+                }
+                if (needsPhone) {
+                    const code = document.getElementById('mfa-phone-code').value.trim();
+                    if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+                        document.getElementById('mfa-phone-code-error').textContent = '请输入6位手机验证码';
+                        isValid = false;
+                    }
+                    formData.append('phone_code', code);
+                }
+                if (needsTotp) {
+                    const code = document.getElementById('mfa-totp-code').value.trim();
+                    if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+                        document.getElementById('mfa-totp-error').textContent = '请输入6位Authenticator验证码';
+                        isValid = false;
+                    }
+                    formData.append('totp_code', code);
+                }
+                if (!isValid) return;
+
+                btn.disabled = true;
+                btn.textContent = '验证中...';
+                document.getElementById('mfa-login-error').textContent = '';
+                fetch('/verify-mfa-combo', { method: 'POST', body: formData })
+                .then(r => r.json())
                 .then(data => {
                     if (data.success) {
                         document.getElementById('mfa-login-success').textContent = data.message;
-                        fetch('/get_user_info')
-                            .then(response => response.json())
-                            .then(userData => {
-                                if (userData.success) {
-                                    localStorage.setItem('userInfo', JSON.stringify(userData.user));
-                                }
-                                setTimeout(() => { window.location.href = '/'; }, 1000);
-                            })
-                            .catch(() => {
-                                setTimeout(() => { window.location.href = '/'; }, 1000);
-                            });
+                        fetch('/get_user_info').then(r => r.json()).then(ud => {
+                            if (ud.success) localStorage.setItem('userInfo', JSON.stringify(ud.user));
+                            setTimeout(() => { window.location.href = '/'; }, 1000);
+                        }).catch(() => { setTimeout(() => { window.location.href = '/'; }, 1000); });
                     } else {
-                        errorEl.textContent = data.message;
+                        document.getElementById('mfa-login-error').textContent = data.message;
+                        btn.disabled = false;
+                        btn.textContent = '验证并登录';
                     }
                 })
                 .catch(error => {
-                    errorEl.textContent = '验证失败，请稍后重试';
-                    console.error('MFA TOTP 验证失败:', error);
+                    document.getElementById('mfa-login-error').textContent = '验证失败，请稍后重试';
+                    console.error('MFA验证失败:', error);
+                    btn.disabled = false;
+                    btn.textContent = '验证并登录';
                 });
-            }
+            });
 
-            async function startWebauthnAuth() {
+            // WebAuthn 认证按钮
+            document.getElementById('mfa-webauthn-btn').addEventListener('click', async function() {
+                if (!currentMfaCombo) return;
+                const needsEmail = ['email_webauthn'].includes(currentMfaCombo);
+                const needsPhone = ['phone_webauthn'].includes(currentMfaCombo);
                 const errorEl = document.getElementById('mfa-webauthn-error');
-                const btn = document.getElementById('mfa-webauthn-btn');
+                const btn = this;
                 errorEl.textContent = '';
                 btn.disabled = true;
                 btn.textContent = '正在准备...';
 
                 try {
-                    // Step 1: 获取认证选项
                     const beginResp = await fetch('/mfa/webauthn/auth/begin', { method: 'POST' });
                     const beginData = await beginResp.json();
                     if (!beginData.success) {
                         errorEl.textContent = beginData.message;
                         btn.disabled = false;
-                        btn.textContent = '使用安全密钥验证';
+                        btn.textContent = '<i class="fas fa-key"></i> 使用安全密钥验证';
                         return;
                     }
 
-                    // Step 2: 调用浏览器 WebAuthn API
                     const options = beginData.options;
                     options.challenge = base64ToArrayBuffer(options.challenge);
                     if (options.allowCredentials) {
                         options.allowCredentials = options.allowCredentials.map(c => ({
-                            ...c,
-                            id: base64ToArrayBuffer(c.id)
+                            ...c, id: base64ToArrayBuffer(c.id)
                         }));
                     }
 
                     const credential = await navigator.credentials.get({ publicKey: options });
 
-                    // Step 3: 发送验证结果到服务器
                     const completeResp = await fetch('/mfa/webauthn/auth/complete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1872,57 +2052,80 @@
                     if (!completeData.success) {
                         errorEl.textContent = completeData.message;
                         btn.disabled = false;
-                        btn.textContent = '使用安全密钥验证';
+                        btn.textContent = '<i class="fas fa-key"></i> 使用安全密钥验证';
                         return;
                     }
 
-                    // Step 4: 完成登录
-                    const loginResp = await fetch('/verify-mfa-webauthn', { method: 'POST' });
-                    const loginData = await loginResp.json();
-                    if (loginData.success) {
-                        document.getElementById('mfa-login-success').textContent = loginData.message;
-                        fetch('/get_user_info')
-                            .then(response => response.json())
-                            .then(userData => {
-                                if (userData.success) {
-                                    localStorage.setItem('userInfo', JSON.stringify(userData.user));
-                                }
-                                setTimeout(() => { window.location.href = '/'; }, 1000);
-                            })
-                            .catch(() => {
-                                setTimeout(() => { window.location.href = '/'; }, 1000);
-                            });
+                    // WebAuthn 验证通过，如果组合还需要验证码，准备提交
+                    if (needsEmail || needsPhone) {
+                        document.getElementById('mfa-webauthn-group').style.display = 'none';
+                        // 显示提交按钮让用户输入验证码后提交
+                        document.getElementById('mfa-submit-btn').style.display = 'block';
+                        document.getElementById('mfa-login-error').textContent = '';
+                        errorEl.textContent = '';
                     } else {
-                        errorEl.textContent = loginData.message;
+                        // 纯 WebAuthn 验证，直接完成登录
+                        const loginResp = await fetch('/verify-mfa-webauthn', { method: 'POST' });
+                        const loginData = await loginResp.json();
+                        if (loginData.success) {
+                            document.getElementById('mfa-login-success').textContent = loginData.message;
+                            fetch('/get_user_info').then(r => r.json()).then(ud => {
+                                if (ud.success) localStorage.setItem('userInfo', JSON.stringify(ud.user));
+                                setTimeout(() => { window.location.href = '/'; }, 1000);
+                            }).catch(() => { setTimeout(() => { window.location.href = '/'; }, 1000); });
+                        } else {
+                            errorEl.textContent = loginData.message;
+                        }
                     }
                 } catch (e) {
                     errorEl.textContent = '安全密钥验证失败: ' + e.message;
                     console.error('WebAuthn 认证失败:', e);
                 }
                 btn.disabled = false;
-                btn.textContent = '使用安全密钥验证';
-            }
+                btn.textContent = '<i class="fas fa-key"></i> 使用安全密钥验证';
+            });
 
-            // Base64 编解码工具（WebAuthn 需要）
-            function base64ToArrayBuffer(b64) {
-                const binary = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                return bytes.buffer;
-            }
+            // MFA 邮箱验证码发送
+            let mfaEmailCountdown = 60;
+            let mfaEmailTimer = null;
+            document.getElementById('send-mfa-email-code-btn').addEventListener('click', function() {
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = `${mfaEmailCountdown}秒后重新发送`;
+                fetch('/send-mfa-email-code', { method: 'POST' })
+                .then(r => r.json()).then(d => {
+                    if (!d.success) { alert('发送失败：' + d.message); clearInterval(mfaEmailTimer); btn.disabled = false; btn.textContent = '发送验证码'; mfaEmailCountdown = 60; }
+                }).catch(() => { alert('发送失败'); clearInterval(mfaEmailTimer); btn.disabled = false; btn.textContent = '发送验证码'; mfaEmailCountdown = 60; });
+                mfaEmailTimer = setInterval(() => {
+                    mfaEmailCountdown--;
+                    btn.textContent = `${mfaEmailCountdown}秒后重新发送`;
+                    if (mfaEmailCountdown <= 0) { clearInterval(mfaEmailTimer); btn.disabled = false; btn.textContent = '发送验证码'; mfaEmailCountdown = 60; }
+                }, 1000);
+            });
 
-            function arrayBufferToBase64(buffer) {
-                const bytes = new Uint8Array(buffer);
-                let binary = '';
-                for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-                return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            }
+            // MFA 手机验证码发送
+            let mfaSmsCountdown = 60;
+            let mfaSmsTimer = null;
+            document.getElementById('send-mfa-sms-code-btn').addEventListener('click', function() {
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = `${mfaSmsCountdown}秒后重新发送`;
+                fetch('/send-mfa-sms-code', { method: 'POST' })
+                .then(r => r.json()).then(d => {
+                    if (!d.success) { alert('发送失败：' + d.message); clearInterval(mfaSmsTimer); btn.disabled = false; btn.textContent = '发送验证码'; mfaSmsCountdown = 60; }
+                }).catch(() => { alert('发送失败'); clearInterval(mfaSmsTimer); btn.disabled = false; btn.textContent = '发送验证码'; mfaSmsCountdown = 60; });
+                mfaSmsTimer = setInterval(() => {
+                    mfaSmsCountdown--;
+                    btn.textContent = `${mfaSmsCountdown}秒后重新发送`;
+                    if (mfaSmsCountdown <= 0) { clearInterval(mfaSmsTimer); btn.disabled = false; btn.textContent = '发送验证码'; mfaSmsCountdown = 60; }
+                }, 1000);
+            });
 
             // 回车键提交 TOTP
             document.getElementById('mfa-totp-code').addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    submitMfaTotp();
+                    document.getElementById('mfa-submit-btn').click();
                 }
             });
         });

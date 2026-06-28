@@ -159,7 +159,7 @@
 
         .status-badge.enabled {
             background: var(--primary-bg);
-            color: var(--bg-gradient-start);
+            color: white;
         }
 
         .status-badge.disabled {
@@ -167,75 +167,31 @@
             color: var(--secondary-text);
         }
 
-        /* 按钮样式 */
-        .btn {
-            padding: 12px 20px;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: var(--danger-bg-hover);
-            color: white;
-            border-color: var(--bg-gradient-middle2);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--danger-shadow);
-            background: var(--danger-bg);
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-            border-color: #dc2626;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
+        /* 按钮样式 - 使用 common.css 的 btn 类，仅补充 MFA 特有样式 */
         .btn-secondary {
-            background: var(--primary-bg);
+            background: linear-gradient(135deg, #9BA4DC 0%, #B8BFE8 100%);
             color: white;
-            border-color: var(--bg-gradient-start);
+            border: none;
         }
 
         .btn-secondary:hover {
-            background: var(--primary-bg-hover);
+            background: linear-gradient(135deg, #B8BFE8 0%, #9BA4DC 100%);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--primary-shadow);
+            box-shadow: 0 4px 12px rgba(155, 164, 220, 0.3);
         }
 
         .btn-cancel {
             background: transparent;
             color: var(--text-color);
-            border-color: var(--card-border);
+            border: 1px solid var(--card-border);
         }
 
         .btn-cancel:hover {
-            background: var(--primary-shadow);
-            box-shadow: 0 4px 12px var(--primary-shadow);
+            background: var(--tag-bg);
+            box-shadow: 0 4px 12px var(--card-shadow);
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* 表单样式 */
+        /* 表单样式（MFA 特有） */
         .form-group {
             margin-bottom: 20px;
         }
@@ -245,24 +201,6 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--text-color);
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background-color: var(--card-bg);
-            color: var(--text-color);
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--bg-gradient-start);
-            box-shadow: 0 0 0 3px var(--primary-shadow);
-            background-color: var(--card-bg);
         }
 
         /* QR 码展示 */
@@ -343,7 +281,7 @@
             color: var(--secondary-text);
         }
 
-        /* 消息提示 */
+        /* 消息提示 - 使用 common.css 的 alert 类，仅补充 MFA 特有样式 */
         .alert {
             padding: 12px 15px;
             border-radius: 8px;
@@ -353,13 +291,13 @@
         }
 
         .alert.success {
-            background: var(--primary-bg);
-            color: var(--bg-gradient-start);
-            border: 1px solid var(--bg-gradient-start);
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
         }
 
         .alert.error {
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(216, 67, 46, 0.1);
             color: var(--danger-color);
             border: 1px solid var(--danger-color);
         }
@@ -608,8 +546,9 @@
         function confirmModal() {
             const pw = document.getElementById('modal-password').value;
             if (!pw) { showMsg('请输入密码', 'error'); return; }
+            const cb = modalCallback;
             closeModal();
-            if (modalCallback) modalCallback(pw);
+            if (cb) cb(pw);
         }
 
         // 回车确认
@@ -643,21 +582,33 @@
 
         function setupTotp() {
             showModal('绑定 Authenticator', async (password) => {
-                const resp = await fetch('/mfa/totp/setup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    document.getElementById('totp-disabled').style.display = 'none';
-                    document.getElementById('totp-setup').style.display = 'block';
-                    document.getElementById('qr-container').innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
-                    document.getElementById('secret-display').textContent = `密钥: ${data.secret}`;
-                    document.getElementById('totp-verify-code').value = '';
-                    showMsg('请扫描二维码并输入验证码', 'success');
-                } else {
-                    showMsg(data.message, 'error');
+                try {
+                    const resp = await fetch('/mfa/totp/setup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    });
+                    let data;
+                    try {
+                        data = await resp.json();
+                    } catch (e) {
+                        showMsg('服务器返回异常，请稍后重试', 'error');
+                        console.error('解析 TOTP setup 响应失败:', e, await resp.text());
+                        return;
+                    }
+                    if (data.success) {
+                        document.getElementById('totp-disabled').style.display = 'none';
+                        document.getElementById('totp-setup').style.display = 'block';
+                        document.getElementById('qr-container').innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
+                        document.getElementById('secret-display').textContent = `密钥: ${data.secret}`;
+                        document.getElementById('totp-verify-code').value = '';
+                        showMsg('请扫描二维码并输入验证码', 'success');
+                    } else {
+                        showMsg(data.message, 'error');
+                    }
+                } catch (e) {
+                    showMsg('请求失败: ' + e.message, 'error');
+                    console.error('TOTP setup 请求失败:', e);
                 }
             });
         }
