@@ -583,7 +583,7 @@ def oauth_send_verification():
                     conn.close()
                     return jsonify({'success': False, 'message': '用户未绑定邮箱'}), 400
 
-                send_success, error_msg = send_verification_email(user_mail, verification_code)
+                send_success, error_msg = send_verification_email(user_mail, verification_code, purpose='developer')
                 if not send_success:
                     cursor.close()
                     conn.close()

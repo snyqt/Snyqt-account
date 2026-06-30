@@ -25,7 +25,10 @@ def _webauthn_serialize(obj):
     - bytes → base64url 字符串
     - snake_case key → camelCase key
     - Enum → 字符串值
+    - None → 跳过（不包含在结果中）
     """
+    if obj is None:
+        return None
     if isinstance(obj, bytes):
         return base64.urlsafe_b64encode(obj).decode('utf-8').rstrip('=')
     elif dataclasses.is_dataclass(obj):
@@ -33,11 +36,13 @@ def _webauthn_serialize(obj):
     elif isinstance(obj, dict):
         result = {}
         for k, v in obj.items():
-            camel_key = ''.join(
-                word.capitalize() if i > 0 else word
-                for i, word in enumerate(k.split('_'))
-            )
-            result[camel_key] = _webauthn_serialize(v)
+            serialized = _webauthn_serialize(v)
+            if serialized is not None:
+                camel_key = ''.join(
+                    word.capitalize() if i > 0 else word
+                    for i, word in enumerate(k.split('_'))
+                )
+                result[camel_key] = serialized
         return result
     elif isinstance(obj, (list, tuple)):
         return [_webauthn_serialize(v) for v in obj]
@@ -49,14 +54,15 @@ def _webauthn_serialize(obj):
 RP_NAME = '少年友晴天-统一账户认证系统'
 
 def _get_webauthn_config():
-    """根据请求 host 动态返回 WebAuthn 配置（本地测试用 localhost，生产用域名）"""
-    host = request.host.split(':')[0] if request else 'account.snyqt.top'
+    """根据请求 host 动态返回 WebAuthn 配置（本地测试用 127.0.0.1/localhost，生产用域名）"""
+    from config import WEBAUTHN_RP_ID, WEBAUTHN_ORIGIN
+    host = request.host.split(':')[0] if request else WEBAUTHN_RP_ID
     if host in ('127.0.0.1', 'localhost'):
-        rp_id = 'localhost'
+        rp_id = host  # WebAuthn 要求 rp_id 与浏览器 origin 域名严格一致
         origin = f'http://{request.host}' if request else 'http://localhost:5000'
     else:
-        rp_id = 'account.snyqt.top'
-        origin = 'https://account.snyqt.top'
+        rp_id = WEBAUTHN_RP_ID
+        origin = WEBAUTHN_ORIGIN
     return rp_id, origin
 
 # ── 认证登录装饰器 ──
@@ -375,7 +381,8 @@ def webauthn_register_begin():
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print(f'[WEBAUTHN-REG-BEGIN] 异常: {e}', flush=True)
+        return jsonify({'success': False, 'message': '安全密钥注册请求失败，请重试'}), 500
 
 
 @mfa_bp.route('/webauthn/register/complete', methods=['POST'])
@@ -390,6 +397,7 @@ def webauthn_register_complete():
 
     try:
         from webauthn.registration.verify_registration_response import verify_registration_response
+        from webauthn.helpers.exceptions import InvalidRegistrationResponse
 
         rp_id, origin = _get_webauthn_config()
 
@@ -436,8 +444,12 @@ def webauthn_register_complete():
         return jsonify({'success': True, 'message': '安全密钥注册成功'})
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
+    except InvalidRegistrationResponse as e:
+        print(f'[WEBAUTHN-REG] 注册验证失败: {e}', flush=True)
+        return jsonify({'success': False, 'message': '安全密钥注册验证失败，请重试'}), 400
     except Exception as e:
-        return jsonify({'success': False, 'message': f'注册失败: {str(e)}'}), 500
+        print(f'[WEBAUTHN-REG] 异常: {e}', flush=True)
+        return jsonify({'success': False, 'message': '安全密钥注册失败，请重试'}), 500
 
 
 @mfa_bp.route('/webauthn/auth/begin', methods=['POST'])
@@ -448,6 +460,7 @@ def webauthn_auth_begin():
         from webauthn.helpers.structs import PublicKeyCredentialDescriptor
 
         rp_id, origin = _get_webauthn_config()
+        print(f'[WEBAUTHN-AUTH] rp_id={rp_id}, origin={origin}', flush=True)
 
         conn = get_db_connection()
         if not conn:
@@ -496,7 +509,8 @@ def webauthn_auth_begin():
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print(f'[WEBAUTHN-AUTH-BEGIN] 异常: {e}', flush=True)
+        return jsonify({'success': False, 'message': '安全密钥认证请求失败，请重试'}), 500
 
 
 @mfa_bp.route('/webauthn/auth/complete', methods=['POST'])
@@ -509,6 +523,7 @@ def webauthn_auth_complete():
 
     try:
         from webauthn.authentication.verify_authentication_response import verify_authentication_response
+        from webauthn.helpers.exceptions import InvalidAuthenticationResponse
 
         rp_id, origin = _get_webauthn_config()
 
@@ -530,7 +545,7 @@ def webauthn_auth_complete():
         if not key:
             cursor.close()
             conn.close()
-            return jsonify({'success': False, 'message': '未知安全密钥'}), 404
+            return jsonify({'success': False, 'message': '未知安全密钥，请确认已注册该密钥'}), 404
 
         verification = verify_authentication_response(
             credential=data,
@@ -555,8 +570,12 @@ def webauthn_auth_complete():
         return jsonify({'success': True, 'message': '安全密钥认证成功'})
     except ImportError:
         return jsonify({'success': False, 'message': 'webauthn 库未安装'}), 500
+    except InvalidAuthenticationResponse as e:
+        print(f'[WEBAUTHN-AUTH] 认证验证失败: {e}', flush=True)
+        return jsonify({'success': False, 'message': '安全密钥验证失败，请确认使用了正确的密钥'}), 400
     except Exception as e:
-        return jsonify({'success': False, 'message': f'认证失败: {str(e)}'}), 500
+        print(f'[WEBAUTHN-AUTH] 异常: {e}', flush=True)
+        return jsonify({'success': False, 'message': '安全密钥认证失败，请重试'}), 500
 
 
 @mfa_bp.route('/webauthn/key/<int:key_id>', methods=['DELETE'])

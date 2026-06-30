@@ -218,15 +218,14 @@ def check_login_risk(user_id, current_ip, current_place, conn):
         return 0
 
 
-def send_verification_email(email, code):
-    print(f'[邮件发送] 开始发送注册验证码邮件到: {email}')
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_CONFIG['sender']
-        msg['To'] = email
-        msg['Subject'] = 'SNYQT统一账户服务平台 注册验证码'
-
-        body = f"""
+def send_verification_email(email, code, purpose='register'):
+    """发送邮箱验证码
+    purpose: 'register' | 'login' | 'mfa' | 'forgot' | 'profile' | 'developer'
+    """
+    templates = {
+        'register': {
+            'subject': 'SNYQT统一账户服务平台 注册验证码',
+            'body': f"""
         尊敬的用户：
 
         您正在注册SNYQT统一账户服务平台，您的验证码是：{code}
@@ -235,7 +234,77 @@ def send_verification_email(email, code):
 
         SNYQT团队
         """
-        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        },
+        'login': {
+            'subject': 'SNYQT统一账户服务平台 登录验证码',
+            'body': f"""
+        尊敬的用户：
+
+        您正在登录SNYQT统一账户服务平台，您的登录验证码是：{code}
+
+        请在5分钟内使用此验证码完成登录，如非本人操作，请立即检查账号安全。
+
+        SNYQT团队
+        """
+        },
+        'mfa': {
+            'subject': 'SNYQT统一账户服务平台 多因子身份验证码',
+            'body': f"""
+        尊敬的用户：
+
+        您正在进行多因子身份验证，您的验证码是：{code}
+
+        请在5分钟内使用此验证码完成验证，如非本人操作，请立即检查账号安全。
+
+        SNYQT团队
+        """
+        },
+        'forgot': {
+            'subject': 'SNYQT统一账户服务平台 找回密码验证码',
+            'body': f"""
+        尊敬的用户：
+
+        您正在找回SNYQT统一账户服务平台账户密码，您的验证码是：{code}
+
+        请在5分钟内使用此验证码完成操作，如非本人操作，请忽略此邮件。
+
+        SNYQT团队
+        """
+        },
+        'profile': {
+            'subject': 'SNYQT统一账户服务平台 更换邮箱验证码',
+            'body': f"""
+        尊敬的用户：
+
+        您正在更换SNYQT统一账户服务平台绑定的邮箱，您的验证码是：{code}
+
+        请在5分钟内使用此验证码完成操作，如非本人操作，请立即检查账号安全。
+
+        SNYQT团队
+        """
+        },
+        'developer': {
+            'subject': 'SNYQT统一账户服务平台 开发者授权验证码',
+            'body': f"""
+        尊敬的用户：
+
+        您正在进行开发者应用授权操作，您的验证码是：{code}
+
+        请在5分钟内使用此验证码完成操作，如非本人操作，请立即检查账号安全。
+
+        SNYQT团队
+        """
+        }
+    }
+    tpl = templates.get(purpose, templates['register'])
+    print(f'[邮件发送] 开始发送{purpose}验证码邮件到: {email}')
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_CONFIG['sender']
+        msg['To'] = email
+        msg['Subject'] = tpl['subject']
+
+        msg.attach(MIMEText(tpl['body'], 'plain', 'utf-8'))
 
         smtp_server = EMAIL_CONFIG['smtp_server']
         smtp_port = EMAIL_CONFIG['port']

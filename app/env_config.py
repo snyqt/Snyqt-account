@@ -52,3 +52,8 @@ def configure_risk_control():
     risk_control['失败次数阈值'] = 3 if is_production else 5
     
     return risk_control
+
+def configure_force_mfa():
+    from config import FORCE_MFA
+    print(f"[配置信息] 强制多因子认证 (FORCE_MFA): {'启用' if FORCE_MFA else '禁用（仅风控异常时触发）'}")
+    return FORCE_MFA

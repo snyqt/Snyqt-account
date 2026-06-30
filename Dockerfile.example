@@ -15,8 +15,8 @@
 #     -e FLASK_ENV=production \
 #     snyqt-account
 
-# 使用 Python 3.11 slim 版本
-FROM python:3.11-slim
+# 使用 Python 3.11 slim 版本（通过 DaoCloud 镜像加速）
+FROM docker.m.daocloud.io/python:3.11-slim
 
 # 设置工作目录
 WORKDIR /app
@@ -85,6 +85,13 @@ ENV TURNSTILE_ENABLED=
 ENV TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 ENV TURNSTILE_SITEKEY=your-turnstile-site-key
 ENV TURNSTILE_VERIFY_URL=https://challenges.cloudflare.com/turnstile/v0/siteverify
+
+# 是否强制每次登录都走MFA（false=仅风控异常时触发，true=每次登录都触发）
+ENV FORCE_MFA=false
+
+# WebAuthn/FIDO2 安全密钥配置（生产环境域名）
+ENV WEBAUTHN_RP_ID=account.snyqt.top
+ENV WEBAUTHN_ORIGIN=https://account.snyqt.top
 
 ENV APP_PORT=5000
 

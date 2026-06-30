@@ -63,6 +63,15 @@ VERIFICATION_CODE_EXPIRE = int(os.getenv('VERIFICATION_CODE_EXPIRE', 300))
 # ==================== 登录安全配置 ====================
 ENABLE_2FA = False
 
+# 是否强制启用多因子认证（MFA）
+# - True: 用户绑定了 MFA 后，每次登录都要求 MFA 验证
+# - False: 仅在风控检测到异常登录时才触发 MFA（默认）
+FORCE_MFA = os.getenv('FORCE_MFA', '').lower() == 'true'
+
+# WebAuthn/FIDO2 安全密钥配置（生产环境域名）
+WEBAUTHN_RP_ID = os.getenv('WEBAUTHN_RP_ID', 'account.snyqt.top')
+WEBAUTHN_ORIGIN = os.getenv('WEBAUTHN_ORIGIN', 'https://account.snyqt.top')
+
 RISK_CONTROL = {
     'enabled': True,
     '异地登录检测': True,

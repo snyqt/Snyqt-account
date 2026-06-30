@@ -8,7 +8,7 @@ try:
         PROJECT_NAME, PROJECT_VERSION, PROJECT_EMAIL, 
         PROJECT_QQ_GROUP, PROJECT_WEBSITE
     )
-    from app.env_config import configure_turnstile, configure_risk_control, auto_configure
+    from app.env_config import configure_turnstile, configure_risk_control, configure_force_mfa, auto_configure
     from app.permission.utils import is_developer as check_is_developer
     from app.middleware.turnstile_middleware import register_global_turnstile_middleware
 except ImportError:
@@ -34,6 +34,7 @@ def create_app():
     turnstile_config = configure_turnstile()
     risk_control = configure_risk_control()
     env_config = auto_configure()
+    force_mfa = configure_force_mfa()
 
     from app.auth import auth_bp
     from app.user import user_bp

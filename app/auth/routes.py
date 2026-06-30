@@ -203,15 +203,28 @@ def login():
         user_totp_secret = user[5]
         user_totp_enabled = bool(user[6])
 
-        # ── MFA 多因子认证检查 ──
+        # ── 风控检查 ──
+        client_ip = request.remote_addr
+        user_agent = request.user_agent.string
+        browser_info = parse_user_agent(user_agent)
+        place = get_ip_location(client_ip)
+        is_danger = check_login_risk(user_id, client_ip, place, conn)
+
+        # ── 读取 FORCE_MFA 配置 ──
+        try:
+            from config import FORCE_MFA
+        except ImportError:
+            FORCE_MFA = False
+
+        # ── 判断是否需要 MFA ──
+        # FORCE_MFA=True: 用户绑定了 MFA 就每次都验证
+        # FORCE_MFA=False: 仅在风控检测到异常（is_danger=1）时才触发 MFA
         mfa_required = False
         mfa_types = []
 
         if user_totp_enabled and user_totp_secret:
-            mfa_required = True
             mfa_types.append('totp')
 
-        # 检查 WebAuthn 安全密钥
         cursor_sk = conn.cursor()
         cursor_sk.execute(
             "SELECT COUNT(*) FROM security_keys WHERE user_id = %s",
@@ -220,8 +233,15 @@ def login():
         has_webauthn = cursor_sk.fetchone()[0] > 0
         cursor_sk.close()
         if has_webauthn:
-            mfa_required = True
             mfa_types.append('webauthn')
+
+        user_has_mfa = len(mfa_types) > 0
+
+        print(f'[MFA-决策] user={user_name}, FORCE_MFA={FORCE_MFA}, is_danger={is_danger}, user_has_mfa={user_has_mfa}, mfa_types={mfa_types}', flush=True)
+
+        if user_has_mfa and (FORCE_MFA or is_danger == 1):
+            mfa_required = True
+            print(f'[MFA-决策] 触发MFA验证', flush=True)
 
         if mfa_required:
             session['pending_user_id'] = user_id
@@ -242,14 +262,8 @@ def login():
                 'mfa_types': mfa_types
             })
 
-        # ── 二次验证风险检查 ──
-        client_ip = request.remote_addr
-        user_agent = request.user_agent.string
-        browser_info = parse_user_agent(user_agent)
-        place = get_ip_location(client_ip)
-        is_danger = check_login_risk(user_id, client_ip, place, conn)
-
-        if is_danger == 1:
+        # ── 无 MFA 时的二次验证（风控异常且未绑定 MFA） ──
+        if is_danger == 1 and not user_has_mfa:
             verification_code = generate_verification_code()
             session[f'2fa_code_{user_id}'] = verification_code
             session.permanent = True
@@ -267,6 +281,9 @@ def login():
             session['pending_is_cookie'] = is_cookie
             session['pending_user_phone'] = user_phone
             session['pending_user_mail'] = user_mail
+
+            cursor.close()
+            conn.close()
 
             return jsonify({
                 'success': True,
@@ -606,7 +623,7 @@ def send_mfa_email_code():
         session.permanent = True
         current_app.permanent_session_lifetime = timedelta(minutes=5)
 
-        send_success, error_msg = send_verification_email(user_mail, code)
+        send_success, error_msg = send_verification_email(user_mail, code, purpose='mfa')
         if send_success:
             return jsonify({'success': True, 'message': '验证码已发送到您的邮箱'})
         else:
@@ -918,32 +935,34 @@ def cleanup_user_authorizations(user_id):
 def send_code():
     try:
         email = request.json.get('email') if request.is_json else request.form.get('email')
+        purpose = request.json.get('purpose', 'register') if request.is_json else request.form.get('purpose', 'register')
         turnstile_response = request.json.get('cf-turnstile-response') if request.is_json else request.form.get('cf-turnstile-response')
         client_ip = request.remote_addr
-        
+
         is_logged_in = session.get('logged_in', False)
-        
+
         print(f'========== 发送邮箱验证码日志 ==========')
         print(f'请求时间: {get_network_time()}')
         print(f'邮箱地址: {email}')
+        print(f'用途: {purpose}')
         print(f'请求IP: {client_ip}')
         print(f'已登录: {is_logged_in}')
         print(f'=======================================')
         
         if not email:
             print(f'[邮箱验证码] 失败：缺少邮箱地址')
-            print(f'[邮箱验证码日志] 已记录 - 邮箱: unknown, 类型: register, 状态: failed, 错误: 缺少邮箱地址')
+            print(f'[邮箱验证码日志] 已记录 - 邮箱: unknown, 类型: {purpose}, 状态: failed, 错误: 缺少邮箱地址')
             return jsonify({'success': False, 'message': '请输入邮箱地址'})
-        
-        if TURNSTILE_ENABLED and not is_logged_in:
+
+        if TURNSTILE_ENABLED and not is_logged_in and purpose != 'login':
             if not turnstile_response:
                 print(f'[邮箱验证码] 失败：未完成人机验证')
-                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: 未完成人机验证')
+                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {purpose}, 状态: failed, 错误: 未完成人机验证')
                 return jsonify({'success': False, 'message': '请完成人机验证'})
-            
+
             if not verify_turnstile(turnstile_response, client_ip):
                 print(f'[邮箱验证码] 失败：人机验证失败')
-                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: 人机验证失败')
+                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {purpose}, 状态: failed, 错误: 人机验证失败')
                 return jsonify({'success': False, 'message': '人机验证失败，请重试'})
 
         code = generate_verification_code()
@@ -955,22 +974,22 @@ def send_code():
         print(f'[邮箱验证码] 验证码已存入Session，有效期5分钟')
 
         print(f'[邮箱验证码] 开始发送邮件...')
-        send_success, error_msg = send_verification_email(email, code)
-        
+        send_success, error_msg = send_verification_email(email, code, purpose=purpose)
+
         if send_success:
             print(f'[邮箱验证码] 发送成功！')
-            print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: success')
+            print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {purpose}, 状态: success')
             return jsonify({'success': True, 'message': '验证码已发送，请查收邮箱'})
         else:
             print(f'[邮箱验证码] 发送失败: {error_msg}')
-            print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: register, 状态: failed, 错误: {error_msg}')
+            print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {purpose}, 状态: failed, 错误: {error_msg}')
             return jsonify({'success': False, 'message': '发送验证码失败，请稍后重试'})
     except Exception as e:
         print(f'[邮箱验证码] 异常: {e}')
         import traceback
         traceback.print_exc()
         email_for_log = request.json.get('email') if request.is_json else request.form.get('email', 'unknown')
-        print(f'[邮箱验证码日志] 已记录 - 邮箱: {email_for_log}, 类型: register, 状态: error, 错误: {str(e)}')
+        print(f'[邮箱验证码日志] 已记录 - 邮箱: {email_for_log}, 类型: {purpose}, 状态: error, 错误: {str(e)}')
         return jsonify({'success': False, 'message': '发送验证码失败，请稍后重试'})
 
 @auth_bp.route('/verify_code', methods=['POST'])
