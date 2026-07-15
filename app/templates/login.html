@@ -1366,16 +1366,7 @@
                     return;
                 }
                 
-                // 如果Turnstile未启用，跳过人机验证检查
-                if (TURNSTILE_ENABLED) {
-                    // 获取Turnstile响应
-                    const turnstileResponse = document.querySelector('#register-tab input[name="cf-turnstile-response"]')?.value;
-
-                    if (!turnstileResponse) {
-                        alert('请先完成人机验证');
-                        return;
-                    }
-                }
+                // Turnstile token 是一次性的，发送验证码不消耗，只在最终提交表单时使用
                 
                 // 禁用按钮并开始倒计时
                 this.disabled = true;
@@ -1385,10 +1376,6 @@
                 const formData = new FormData();
                 formData.append('email', email);
                 formData.append('purpose', 'register');
-                if (TURNSTILE_ENABLED) {
-                    const turnstileResponse = document.querySelector('#register-tab input[name="cf-turnstile-response"]')?.value;
-                    formData.append('cf-turnstile-response', turnstileResponse || '');
-                }
                 
                 fetch('/send_code', {
                     method: 'POST',

@@ -954,16 +954,8 @@ def send_code():
             print(f'[邮箱验证码日志] 已记录 - 邮箱: unknown, 类型: {purpose}, 状态: failed, 错误: 缺少邮箱地址')
             return jsonify({'success': False, 'message': '请输入邮箱地址'})
 
-        if TURNSTILE_ENABLED and not is_logged_in and purpose != 'login':
-            if not turnstile_response:
-                print(f'[邮箱验证码] 失败：未完成人机验证')
-                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {purpose}, 状态: failed, 错误: 未完成人机验证')
-                return jsonify({'success': False, 'message': '请完成人机验证'})
-
-            if not verify_turnstile(turnstile_response, client_ip):
-                print(f'[邮箱验证码] 失败：人机验证失败')
-                print(f'[邮箱验证码日志] 已记录 - 邮箱: {email}, 类型: {purpose}, 状态: failed, 错误: 人机验证失败')
-                return jsonify({'success': False, 'message': '人机验证失败，请重试'})
+        # Turnstile 验证已移至全局中间件（before_request），此处不再重复验证
+        # Token 是一次性的，发送验证码不应消耗 token，只在最终提交表单时使用
 
         code = generate_verification_code()
         print(f'[邮箱验证码] 生成验证码: {code}')
