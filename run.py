@@ -10,4 +10,4 @@ if __name__ == '__main__':
     debug = config['debug']
     environment = config['environment']
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(host='::', port=port, debug=debug)

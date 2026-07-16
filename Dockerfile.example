@@ -5,8 +5,8 @@
 # 构建命令：
 #   docker build -t snyqt-account .
 #
-# 运行命令：
-#   docker run -d --name snyqt-account -p 5000:5000 \
+# 运行命令（IPv4）：
+#   docker run -d --name snyqt-account -p 80:80 \
 #     -e DB_HOST=your_db_host \
 #     -e DB_USER=your_db_user \
 #     -e DB_PASSWORD=your_db_password \
@@ -14,6 +14,15 @@
 #     -e SECRET_KEY=your-secret-key \
 #     -e FLASK_ENV=production \
 #     snyqt-account
+#
+# 运行命令（IPv4+IPv6 双栈）：
+#   docker run -d --name snyqt-account -p 80:80 \
+#     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
+#     -e DB_HOST=your_db_host \
+#     ... \
+#     snyqt-account
+#
+# 注意：Docker 宿主机需要开启 IPv6（/etc/docker/daemon.json 中设置 "ipv6": true）
 
 # 使用 Python 3.11 slim 版本（通过 DaoCloud 镜像加速）
 FROM docker.m.daocloud.io/python:3.11-slim
@@ -109,4 +118,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 # ============================================
 # 启动命令
 # ============================================
-CMD ["uwsgi", "--http", "0.0.0.0:5000", "--wsgi-file", "run.py", "--callable", "app", "--processes", "2", "--threads", "4", "--enable-threads"]
+CMD ["uwsgi", "--http", "[::]:5000", "--wsgi-file", "run.py", "--callable", "app", "--processes", "2", "--threads", "4", "--enable-threads"]
