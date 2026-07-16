@@ -1,5 +1,7 @@
 from app.env import env
 import os
+import urllib.request
+import socket
 
 def auto_configure():
     is_production = env.should_use_production()
@@ -57,3 +59,21 @@ def configure_force_mfa():
     from config import FORCE_MFA
     print(f"[配置信息] 强制多因子认证 (FORCE_MFA): {'启用' if FORCE_MFA else '禁用（仅风控异常时触发）'}")
     return FORCE_MFA
+
+def log_public_ipv6():
+    """输出公网 IPv6 地址"""
+    try:
+        # 方法1：通过外部服务获取 IPv6 地址
+        req = urllib.request.Request('https://ipv6.icanhazip.com', headers={'User-Agent': 'curl/7.0'})
+        resp = urllib.request.urlopen(req, timeout=5)
+        ipv6 = resp.read().decode().strip()
+        print(f"[公网IPv6] {ipv6}")
+    except Exception:
+        # 方法2：尝试备用服务
+        try:
+            req = urllib.request.Request('https://api6.ipify.org', headers={'User-Agent': 'curl/7.0'})
+            resp = urllib.request.urlopen(req, timeout=5)
+            ipv6 = resp.read().decode().strip()
+            print(f"[公网IPv6] {ipv6}")
+        except Exception:
+            print("[公网IPv6] 无法获取（可能未启用IPv6或网络受限）")
