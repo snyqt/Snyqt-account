@@ -69,8 +69,8 @@ ENABLE_2FA = False
 FORCE_MFA = os.getenv('FORCE_MFA', '').lower() == 'true'
 
 # WebAuthn/FIDO2 安全密钥配置（生产环境域名）
-WEBAUTHN_RP_ID = os.getenv('WEBAUTHN_RP_ID', 'account.snyqt.top')
-WEBAUTHN_ORIGIN = os.getenv('WEBAUTHN_ORIGIN', 'https://account.snyqt.top')
+WEBAUTHN_RP_ID = os.getenv('WEBAUTHN_RP_ID', 'snyqt-account.iepose.cn')
+WEBAUTHN_ORIGIN = os.getenv('WEBAUTHN_ORIGIN', 'https://snyqt-account.iepose.cn')
 
 RISK_CONTROL = {
     'enabled': True,
@@ -87,7 +87,7 @@ PROJECT_NAME = '少年友晴天-统一账户认证系统'
 PROJECT_VERSION = '1.0.0'
 PROJECT_EMAIL = 'snyqt@qq.com'
 PROJECT_QQ_GROUP = '1106802055'
-PROJECT_WEBSITE = 'account.snyqt.top'
+PROJECT_WEBSITE = 'snyqt-account.iepose.cn'
 
 # ==================== 记住我功能 ====================
 REMEMBER_ME_COOKIE_DURATION = 7

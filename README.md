@@ -15,7 +15,7 @@
   </p>
 
   <p>
-    <a href="https://account.snyqt.top">在线演示</a> •
+    <a href="https://snyqt-account.iepose.cn">在线演示 </a> •
     <a href="#-快速开始">快速开始</a> •
     <a href="#-开发者平台oauth-20">开发者平台OAuth</a> •
     <a href="#-联系方式">联系方式</a>
