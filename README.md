@@ -732,7 +732,7 @@ CREATE TABLE authorization_log (
 
 | 方式     | 信息                                             |
 | ------ | ---------------------------------------------- |
-| 🌐 网站  | [account.snyqt.top](https://account.snyqt.top) |
+| 🌐 网站  | [snyqt-account.iepose.cn](https://snyqt-account.iepose.cn) |
 | 📧 邮箱  | <snyqt@qq.com>                                 |
 | 💬 QQ群 | 1106802055（SNYQT-ACCOUNT交流群）                   |
 

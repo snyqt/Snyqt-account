@@ -90,8 +90,8 @@ ENV TURNSTILE_VERIFY_URL=https://challenges.cloudflare.com/turnstile/v0/siteveri
 ENV FORCE_MFA=false
 
 # WebAuthn/FIDO2 安全密钥配置（生产环境域名）
-ENV WEBAUTHN_RP_ID=account.snyqt.top
-ENV WEBAUTHN_ORIGIN=https://account.snyqt.top
+ENV WEBAUTHN_RP_ID=snyqt-account.iepose.cn
+ENV WEBAUTHN_ORIGIN=https://snyqt-account.iepose.cn 
 
 ENV APP_PORT=5000
 
