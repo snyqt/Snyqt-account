@@ -7,6 +7,9 @@
 #
 # 运行命令：
 #   docker run -d --name snyqt-account -p 5000:5000 \
+#     -v snyqt-avatars:/app/static/img/user_avatar \
+#     -v snyqt-temp:/app/static/temp \
+#     -v snyqt-logs:/app/logs \
 #     -e DB_HOST=your_db_host \
 #     -e DB_USER=your_db_user \
 #     -e DB_PASSWORD=your_db_password \
@@ -55,6 +58,16 @@ COPY . .
 
 # 创建日志目录
 RUN mkdir -p /app/logs
+
+# ============================================
+# 数据持久化卷（防止容器重建时数据丢失）
+# ============================================
+# 用户头像（用户上传 + 管理员设置）
+VOLUME ["/app/static/img/user_avatar"]
+# 临时上传文件（注册/编辑头像时暂存）
+VOLUME ["/app/static/temp"]
+# 应用日志
+VOLUME ["/app/logs"]
 
 # ============================================
 # 环境变量配置（示例值，请替换为真实配置）
