@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="static/img/logo.png" alt="SNYQT Logo" width="120" height="120" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+  <img src="static/img/LOGO.png" alt="SNYQT Logo" width="120" height="120" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
 
 # 少年友晴天 - 统一账户认证系统
 
