@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者文档 - {{ project_name }} v{{ project_version }}</title>
+    <link rel="icon" href="/static/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/icon/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/theme-toggle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 50%, var(--bg-gradient-middle2) 50%, var(--bg-gradient-end) 100%);
+            opacity: var(--bg-gradient-opacity);
+            z-index: -1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header:hover {
+            box-shadow: 0 3px 15px var(--card-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .logo-link {
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: var(--primary-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .user-profile {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-container {
+            position: relative;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+        }
+
+        .avatar-container:hover {
+            background-color: var(--primary-shadow);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: var(--primary-shadow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            min-width: 200px;
+            margin-top: 10px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .username-item {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .userid-item {
+            color: var(--secondary-text);
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .logout-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--secondary-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-shadow);
+            color: var(--danger-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--card-border);
+            margin: 5px 0;
+        }
+
+        .login-btn {
+            background: var(--danger-bg);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 10px 20px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--danger-shadow);
+            background: var(--danger-bg-hover);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            flex: 1;
+        }
+
+        .page-title {
+            color: var(--text-color);
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-title i {
+            color: var(--danger-color);
+        }
+
+        .version-badge {
+            font-size: 14px;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--primary-bg-hover) 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 15px;
+            box-shadow: var(--primary-shadow);
+        }
+
+        .page-description {
+            color: var(--secondary-text);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            border: 1px solid var(--card-border);
+        }
+
+        .section-title {
+            color: var(--text-color);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .section-title i {
+            color: var(--danger-color);
+            font-size: 28px;
+        }
+
+        .api-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .api-card:hover {
+            box-shadow: 0 4px 15px var(--primary-shadow);
+            transform: translateY(-2px);
+        }
+
+        .api-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 12px;
+            text-transform: uppercase;
+        }
+
+        .method-post {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .method-get {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+            color: white;
+        }
+
+        .method-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .api-endpoint {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            color: var(--text-color);
+            margin: 12px 0;
+            padding: 12px;
+            background: var(--primary-shadow);
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        .api-description {
+            color: var(--secondary-text);
+            margin: 15px 0;
+            line-height: 1.7;
+        }
+
+        .param-table {
+            width: 100%;
+            margin: 15px 0;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .param-table th {
+            background: var(--primary-shadow);
+            color: var(--text-color);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .param-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .param-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .param-table tr:hover {
+            background: var(--primary-shadow);
+        }
+
+        .param-name {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--danger-color);
+        }
+
+        .param-required {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        [data-theme="dark"] .code-block {
+            background: #2d2d2d;
+        }
+
+        [data-theme="light"] .code-block {
+            background: #f6f8fa;
+        }
+
+        .code-block pre {
+            margin: 0;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        [data-theme="light"] .code-block pre {
+            color: #24292e;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] .code-header {
+            border-bottom-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .code-lang {
+            color: #f8f8f2;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        [data-theme="light"] .code-lang {
+            color: #24292e;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8f8f2;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="light"] .copy-btn {
+            background: rgba(0, 0, 0, 0.05);
+            color: #24292e;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] .copy-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-container {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .flow-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 55px;
+            width: 2px;
+            height: calc(100% - 35px);
+            background: linear-gradient(to bottom, var(--danger-color), var(--primary-shadow));
+        }
+
+        .flow-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle1) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-right: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--primary-shadow);
+        }
+
+        .flow-content {
+            flex: 1;
+            padding-top: 5px;
+        }
+
+        .flow-title {
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .flow-desc {
+            color: var(--secondary-text);
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+
+        .flow-code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: var(--primary-shadow);
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: var(--text-color);
+        }
+
+        .callback-box {
+            background: linear-gradient(135deg, rgba(242, 101, 34, 0.1) 0%, rgba(255, 158, 100, 0.1) 100%);
+            border: 2px solid var(--danger-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .callback-title {
+            color: var(--danger-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .callback-url {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text-color);
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 6px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .note-box {
+            background: linear-gradient(135deg, rgba(129, 212, 250, 0.1) 0%, rgba(227, 242, 253, 0.1) 100%);
+            border-left: 4px solid var(--success-color);
+            border-radius: 0 8px 8px 0;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+
+        .note-title {
+            color: var(--success-color);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-content {
+            color: var(--secondary-text);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: rgba(255, 158, 125, 0.1);
+            border-left: 4px solid var(--danger-color);
+            border-radius: 0 8px 8px 0;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+
+        .warning-title {
+            color: var(--danger-color);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .warning-content {
+            color: var(--secondary-text);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--bg-gradient-start);
+            background: var(--primary-shadow);
+        }
+
+        .tab-btn.active {
+            background: var(--primary-bg);
+            color: white;
+            border-color: var(--bg-gradient-start);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            color: var(--secondary-text);
+            font-size: 14px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .api-card {
+                padding: 15px;
+            }
+
+            .param-table {
+                font-size: 13px;
+            }
+
+            .param-table th,
+            .param-table td {
+                padding: 10px;
+            }
+
+            .code-block pre {
+                font-size: 13px;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo-link">
+                <img src="/static/img/logo.png" alt="少年友晴天-统一账户认证系统" class="logo">
+            </a>
+            <h1 class="header-title">少年友晴天-统一账户认证系统</h1>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <a href="/login" class="login-btn" id="login-btn">登录</a>
+
+            <div class="user-profile" id="user-profile" style="display: none;">
+                <div class="avatar-container">
+                    <img src="" alt="用户头像" class="user-avatar" id="user-avatar">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-item username-item" id="dropdown-username"></div>
+                    <div class="dropdown-item userid-item" id="dropdown-userid"></div>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-btn" id="logout-btn">退出登录</button>
+                </div>
+            </div>
+
+            <a href="/developer-app-management" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                返回应用管理
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="page-title">
+            <i class="fas fa-book"></i>
+            开发者接入文档
+            <span class="version-badge">v{{ project_version }}</span>
+        </h2>
+        <p class="page-description">
+            本系统部署于 <strong>https://account.snyqt.top</strong>，提供两种接入方式：<strong>自有 API 接入</strong> 与
+            <strong>OpenID Connect（OIDC）</strong>。所有权限均需开发者显式申请，并在用户授权页与管理员审核页公开展示；
+            未经用户同意，本系统不会向任何应用提供邮箱、手机号等隐私信息。
+        </p>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-network-wired"></i>
+                一、接入方式与服务地址
+            </h3>
+
+            <div class="callback-box">
+                <div class="callback-title"><i class="fas fa-link"></i> 统一服务地址</div>
+                <div class="callback-content">
+                    授权页：<code>https://account.snyqt.top/oauth/authorize</code><br>
+                    OIDC 令牌：<code>https://account.snyqt.top/oauth/token</code><br>
+                    OIDC 用户信息：<code>https://account.snyqt.top/api/oauth/oidc/userinfo</code><br>
+                    OIDC Discovery：<code>https://account.snyqt.top/.well-known/openid-configuration</code><br>
+                    自有 API 用户信息：<code>https://account.snyqt.top/api/oauth/userinfo</code><br>
+                    自有 API 验证码：<code>https://account.snyqt.top/api/oauth/send-verification</code>
+                </div>
+            </div>
+
+            <div class="callback-box">
+                <div class="callback-title"><i class="fas fa-code-branch"></i> 两种方式的区别</div>
+                <div class="callback-content">
+                    <strong>自有 API 接入（native）：</strong>开发者使用 <code>app_id</code> / <code>app_secret</code> 与授权码调用本站接口，
+                    可按需申请五项权限中的任意组合；若申请了验证码权限，可由本站代发邮件 / 短信验证码。<br><br>
+                    <strong>OpenID Connect（oidc）：</strong>标准 OAuth 2.0 授权码流程，可接入 Gitea、Nextcloud 等标准客户端。
+                    仅用于身份认证，固定提供基本信息、邮箱、手机号三项，<strong>不能调用本站验证码发送接口</strong>，验证码需由应用自行发送。
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-title"><i class="fas fa-exclamation-triangle"></i> 重要说明</div>
+                <div class="warning-content">
+                    OIDC 返回的 <code>id_token</code> 为未签名令牌（<code>alg=none</code>），适用于内网或可信环境；
+                    公网生产环境建议在应用侧校验 <code>sub</code> 与 <code>aud</code>，或直接使用 <code>/api/oauth/oidc/userinfo</code> 获取用户信息。
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-key"></i>
+                二、权限范围（scope）
+            </h3>
+
+            <p class="page-description" style="margin-bottom: 15px;">
+                权限公开透明：开发者在「开发者应用管理」中选择，用户在授权页中确认，管理员在审核页中可见。
+            </p>
+
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>scope</th>
+                        <th>名称</th>
+                        <th>说明</th>
+                        <th>是否必选</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>userinfo</code></td>
+                        <td>基本信息</td>
+                        <td>用户名、用户 ID、头像</td>
+                        <td>必选（所有应用）</td>
+                    </tr>
+                    <tr>
+                        <td><code>email</code></td>
+                        <td>读取邮箱</td>
+                        <td>读取用户绑定的完整邮箱地址</td>
+                        <td>可选（自有 API）</td>
+                    </tr>
+                    <tr>
+                        <td><code>phone</code></td>
+                        <td>读取手机号</td>
+                        <td>读取用户绑定的完整手机号</td>
+                        <td>可选（自有 API）</td>
+                    </tr>
+                    <tr>
+                        <td><code>email_code</code></td>
+                        <td>邮件验证码</td>
+                        <td>允许应用通过本站向用户邮箱发送验证码</td>
+                        <td>可选（仅自有 API）</td>
+                    </tr>
+                    <tr>
+                        <td><code>phone_code</code></td>
+                        <td>手机验证码</td>
+                        <td>允许应用通过本站向用户手机发送验证码</td>
+                        <td>可选（仅自有 API）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="note-box">
+                <div class="note-title"><i class="fas fa-info-circle"></i> 权限规则</div>
+                <div class="note-content">
+                    1. <code>userinfo</code> 始终授予，不可取消。<br>
+                    2. 自有 API 未申请 <code>email</code> / <code>phone</code> 时，接口不会返回邮箱 / 手机号原文。<br>
+                    3. OIDC 模式固定授予 <code>userinfo</code> + <code>email</code> + <code>phone</code>，且禁止调用验证码接口。<br>
+                    4. 用户可在「第三方安全」页面逐项开关权限（<code>no_userinfo</code> / <code>no_email</code> /
+                       <code>no_phone</code> / <code>no_email_code</code> / <code>no_phone_code</code>），
+                       该限制优先于应用申请，运行时二次生效。
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-cogs"></i>
+                三、开发者配置流程
+            </h3>
+
+            <div class="flow-container">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <div class="flow-title">创建应用</div>
+                        <div class="flow-desc">登录后进入「开发者应用管理」，填写应用名称、描述、负责人与官网，同时选择授权方式（自有 API / OIDC）与申请权限（scope）。授权方式与权限在创建时一次性确定，之后不可修改；如需调整，只能创建新应用。</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <div class="flow-title">配置回调地址</div>
+                        <div class="flow-desc">
+                            在回调配置弹窗中填写登录回调地址与验证码回调地址。该弹窗中的授权方式与权限为只读展示，不可更改。
+                            OIDC 模式在创建时即锁定为基本信息 + 邮箱 + 手机号。
+                        </div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <div class="flow-title">管理员审核</div>
+                        <div class="flow-desc">管理员在「应用管理 / 待审核应用」中可看到应用申请的授权方式与权限，确认后审批通过并生成 <code>app_secret</code>。</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div class="flow-content">
+                        <div class="flow-title">接入开发</div>
+                        <div class="flow-desc">审核通过后使用 <code>app_id</code> / <code>app_secret</code> 接入对应流程。请妥善保管 <code>app_secret</code>，切勿暴露在前端。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-code"></i>
+                四、自有 API 接入（native）
+            </h3>
+
+            <div class="flow-container">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <div class="flow-title">发起授权</div>
+                        <div class="flow-desc">将用户重定向到授权页，登录并确认权限后，系统会回调你的登录回调地址并携带授权码。</div>
+                        <div class="flow-code">GET https://account.snyqt.top/oauth/authorize?app_id=YOUR_APP_ID&amp;redirect_uri=https://your-app.com/callback&amp;state=STATE</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <div class="flow-title">接收授权码</div>
+                        <div class="flow-desc">授权成功后回调地址会收到 <code>auth_code</code> 与 <code>code</code>（两者相同，兼容标准 OAuth2）。授权码有效期为 5 天。</div>
+                        <div class="flow-code">https://your-app.com/callback?auth_code=AUTH_CODE&amp;code=AUTH_CODE&amp;state=STATE</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <div class="flow-title">获取用户信息</div>
+                        <div class="flow-desc">使用授权码调用用户信息接口，按已申请的 scope 返回对应字段。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="api-method">POST</div>
+                <div class="api-endpoint">/api/oauth/userinfo</div>
+                <div class="flow-desc">获取已授权用户的信息。返回字段受应用 scope 与用户级限制共同控制。</div>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>app_id</code></td><td>string</td><td>是</td><td>应用 ID</td></tr>
+                        <tr><td><code>app_secret</code></td><td>string</td><td>是</td><td>应用密钥</td></tr>
+                        <tr><td><code>auth_code</code></td><td>string</td><td>是</td><td>授权码</td></tr>
+                        <tr><td><code>delete_code</code></td><td>bool</td><td>否</td><td>是否在本次请求后立即失效授权码，默认 false</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="tab-container">
+                    <button class="tab-btn active" onclick="showTab('userinfo-resp', this)">成功响应</button>
+                    <button class="tab-btn" onclick="showTab('userinfo-code', this)">请求示例</button>
+                    <div class="tab-content active" id="userinfo-resp">
+                        <div class="code-block">
+                            <pre>{
+  "success": true,
+  "user": {
+    "user_id": "abc123def456ghi",
+    "username": "示例用户",
+    "avatar": "https://account.snyqt.top/static/img/default_avatar.svg",
+    "email": "user@example.com",     // 仅当应用拥有 email 权限且用户未禁用
+    "phone": "13800138000"           // 仅当应用拥有 phone 权限且用户未禁用
+  }
+}</pre>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="userinfo-code">
+                        <div class="code-block">
+                            <pre>curl -X POST https://account.snyqt.top/api/oauth/userinfo \
+  -H "Content-Type: application/json" \
+  -d '{"app_id":"YOUR_APP_ID","app_secret":"YOUR_APP_SECRET","auth_code":"AUTH_CODE"}'</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-box">
+                    <div class="note-title"><i class="fas fa-shield-alt"></i> 隐私保护</div>
+                    <div class="note-content">
+                        未申请 <code>email</code> / <code>phone</code> 时，响应中不会出现对应字段；
+                        即使用户已绑定邮箱 / 手机号，也必须同时获得应用 scope 与用户许可。
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="api-method">POST</div>
+                <div class="api-endpoint">/api/oauth/send-verification</div>
+                <div class="flow-desc">
+                    通过本站向已授权用户发送验证码。OIDC 接入方式禁止调用，自有 API 需分别申请
+                    <code>email_code</code> / <code>phone_code</code>。
+                </div>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>app_id</code></td><td>string</td><td>是</td><td>应用 ID</td></tr>
+                        <tr><td><code>app_secret</code></td><td>string</td><td>是</td><td>应用密钥</td></tr>
+                        <tr><td><code>auth_code</code></td><td>string</td><td>是</td><td>授权码</td></tr>
+                        <tr><td><code>type</code></td><td>string</td><td>是</td><td><code>email</code> 或 <code>phone</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="tab-container">
+                    <button class="tab-btn active" onclick="showTab('send-resp', this)">成功响应</button>
+                    <button class="tab-btn" onclick="showTab('send-code', this)">请求示例</button>
+                    <div class="tab-content active" id="send-resp">
+                        <div class="code-block">
+                            <pre>{
+  "success": true,
+  "message": "验证码已发送"
+}</pre>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="send-code">
+                        <div class="code-block">
+                            <pre>curl -X POST https://account.snyqt.top/api/oauth/send-verification \
+  -H "Content-Type: application/json" \
+  -d '{"app_id":"YOUR_APP_ID","app_secret":"YOUR_APP_SECRET","auth_code":"AUTH_CODE","type":"email"}'</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-title"><i class="fas fa-ban"></i> 失败场景</div>
+                    <div class="warning-content">
+                        · OIDC 应用调用：返回 403「OpenID Connect 接入方式不支持调用本系统验证码接口」。<br>
+                        · 未申请对应验证码权限：返回 403「该应用未申请对应的验证码发送权限」。<br>
+                        · 用户已设置 <code>no_email</code> / <code>no_phone</code>：返回 403，且不会发送。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-fingerprint"></i>
+                五、OpenID Connect（OIDC）接入
+            </h3>
+
+            <div class="flow-container">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <div class="flow-title">发现配置</div>
+                        <div class="flow-desc">标准客户端可直接读取 Discovery 文档，自动获取各端点与支持能力。</div>
+                        <div class="flow-code">GET https://account.snyqt.top/.well-known/openid-configuration</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <div class="flow-title">发起授权</div>
+                        <div class="flow-desc">参数名使用标准 <code>client_id</code>（即应用 ID），与 <code>app_id</code> 等价。</div>
+                        <div class="flow-code">GET https://account.snyqt.top/oauth/authorize?client_id=YOUR_APP_ID&amp;redirect_uri=https://your-app.com/callback&amp;response_type=code&amp;scope=openid%20profile%20email%20phone&amp;state=STATE</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <div class="flow-title">换取令牌</div>
+                        <div class="flow-desc">
+                            使用授权码换取 <code>access_token</code> 与 <code>id_token</code>，支持
+                            <code>client_secret_basic</code> 与 <code>client_secret_post</code>。
+                        </div>
+                        <div class="flow-code">POST https://account.snyqt.top/oauth/token</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div class="flow-content">
+                        <div class="flow-title">获取用户信息</div>
+                        <div class="flow-desc">携带 Bearer 令牌调用用户信息端点，字段同样受 scope 与用户级限制控制。</div>
+                        <div class="flow-code">GET https://account.snyqt.top/api/oauth/oidc/userinfo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="api-method">POST</div>
+                <div class="api-endpoint">/oauth/token</div>
+                <div class="flow-desc">标准 OAuth 2.0 令牌端点，仅支持 <code>authorization_code</code>。</div>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>grant_type</code></td><td>string</td><td>是</td><td>固定为 <code>authorization_code</code></td></tr>
+                        <tr><td><code>code</code></td><td>string</td><td>是</td><td>授权码</td></tr>
+                        <tr><td><code>client_id</code></td><td>string</td><td>是</td><td>应用 ID</td></tr>
+                        <tr><td><code>client_secret</code></td><td>string</td><td>是</td><td>应用密钥（也可放在 Basic 认证头中）</td></tr>
+                        <tr><td><code>redirect_uri</code></td><td>string</td><td>否</td><td>与授权时保持一致</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="tab-container">
+                    <button class="tab-btn active" onclick="showTab('token-resp', this)">成功响应</button>
+                    <button class="tab-btn" onclick="showTab('token-code', this)">请求示例</button>
+                    <div class="tab-content active" id="token-resp">
+                        <div class="code-block">
+                            <pre>{
+  "access_token": "AUTH_CODE",
+  "token_type": "Bearer",
+  "expires_in": 432000,
+  "scope": "openid profile email phone",
+  "id_token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2V...}."
+}</pre>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="token-code">
+                        <div class="code-block">
+                            <pre>curl -X POST https://account.snyqt.top/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=authorization_code&code=AUTH_CODE&client_id=YOUR_APP_ID&client_secret=YOUR_APP_SECRET&redirect_uri=https://your-app.com/callback"</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="api-method">GET</div>
+                <div class="api-endpoint">/api/oauth/oidc/userinfo</div>
+                <div class="flow-desc">
+                    请求头携带 <code>Authorization: Bearer ACCESS_TOKEN</code>，返回 OpenID 标准声明。
+                </div>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>声明</th><th>说明</th><th>下发条件</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>sub</code></td><td>用户唯一标识</td><td>始终返回（用户禁用 userinfo 时仅返回 sub）</td></tr>
+                        <tr><td><code>name</code></td><td>用户名</td><td>userinfo 权限</td></tr>
+                        <tr><td><code>nickname</code> / <code>preferred_username</code></td><td>登录名</td><td>userinfo 权限</td></tr>
+                        <tr><td><code>picture</code></td><td>头像地址</td><td>userinfo 权限</td></tr>
+                        <tr><td><code>email</code> / <code>email_verified</code></td><td>邮箱与是否已验证</td><td>email 权限且未 <code>no_email</code></td></tr>
+                        <tr><td><code>phone_number</code></td><td>手机号</td><td>phone 权限且未 <code>no_phone</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="tab-container">
+                    <button class="tab-btn active" onclick="showTab('oidc-resp', this)">成功响应</button>
+                    <button class="tab-btn" onclick="showTab('oidc-code', this)">请求示例</button>
+                    <div class="tab-content active" id="oidc-resp">
+                        <div class="code-block">
+                            <pre>{
+  "sub": "abc123def456ghi",
+  "name": "示例用户",
+  "nickname": "abc123def456ghi",
+  "preferred_username": "abc123def456ghi",
+  "picture": "https://account.snyqt.top/static/img/default_avatar.svg",
+  "email": "user@example.com",
+  "email_verified": true,
+  "phone_number": "13800138000"
+}</pre>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="oidc-code">
+                        <div class="code-block">
+                            <pre>curl https://account.snyqt.top/api/oauth/oidc/userinfo \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-box">
+                    <div class="note-title"><i class="fas fa-plug"></i> Gitea 配置示例</div>
+                    <div class="note-content">
+                        在 Gitea 的「认证源 → OAuth2 / OpenID Connect」中填写：<br>
+                        · OpenID Connect Discovery URL：<code>https://account.snyqt.top/.well-known/openid-configuration</code><br>
+                        · Client ID：你的应用 ID<br>
+                        · Client Secret：你的 <code>app_secret</code><br>
+                        · Scopes：<code>openid profile email phone</code><br>
+                        详细步骤参见项目内 <code>docs/gitea-sso-guide.md</code>。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-user-shield"></i>
+                六、用户隐私与二次限制
+            </h3>
+
+            <p class="page-description" style="margin-bottom: 15px;">
+                即使应用已获授权，用户仍可在「第三方安全」页面设置以下限制，系统会在每次接口调用时实时校验：
+            </p>
+
+            <table class="param-table">
+                <thead>
+                    <tr><th>限制项</th><th>效果</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>no_userinfo</code></td><td>自有 API 返回 403；OIDC userinfo 与 id_token 仅保留 <code>sub</code></td></tr>
+                    <tr><td><code>no_email</code></td><td>不返回邮箱原文</td></tr>
+                    <tr><td><code>no_phone</code></td><td>不返回手机号原文</td></tr>
+                    <tr><td><code>no_email_code</code></td><td>禁止调用本站接口发送邮件验证码</td></tr>
+                    <tr><td><code>no_phone_code</code></td><td>禁止调用本站接口发送手机验证码</td></tr>
+                </tbody>
+</table>
+
+            <div class="note-box">
+                <div class="note-title"><i class="fas fa-toggle-on"></i> 用户自助管理</div>
+                <div class="note-content">
+                    用户在「第三方安全」页面看到的开关即上述限制项的反向表达：开关打开表示允许，关闭表示禁止。
+                    为兼容旧数据，历史记录中的 <code>no_email</code> / <code>no_phone</code> 仍会同时阻止对应验证码的发送。
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-title"><i class="fas fa-lock"></i> 最小权限原则</div>
+                <div class="warning-content">
+                    请仅申请业务必需权限。用户拒绝或限制权限时，应用应优雅降级，不得强制要求邮箱 / 手机号。
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-exclamation-circle"></i>
+                七、错误码
+            </h3>
+
+            <table class="param-table">
+                <thead>
+                    <tr><th>HTTP 状态</th><th>错误信息</th><th>说明</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>400</td><td>缺少必要参数 / 参数无效</td><td>检查 app_id、app_secret、auth_code、type 等</td></tr>
+                    <tr><td>401</td><td>app_secret 验证失败</td><td>密钥错误或应用未通过审核</td></tr>
+                    <tr><td>401</td><td>授权码已过期</td><td>授权码有效期 5 天，请重新授权</td></tr>
+                    <tr><td>403</td><td>该应用未申请对应的验证码发送权限</td><td>权限在创建时固定，需创建新应用并申请该权限</td></tr>
+                    <tr><td>403</td><td>OpenID Connect 接入方式不支持调用本系统验证码接口</td><td>OIDC 应用请自行发送验证码</td></tr>
+                    <tr><td>403</td><td>用户已禁止该应用访问个人信息</td><td>用户开启了 no_userinfo</td></tr>
+                    <tr><td>404</td><td>应用不存在或未通过审核</td><td>确认应用状态为已通过</td></tr>
+                    <tr><td>500</td><td>服务器内部错误</td><td>请稍后重试或联系技术支持</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">
+                <i class="fas fa-rocket"></i>
+                八、快速开始
+            </h3>
+
+            <div class="api-card">
+                <div class="flow-title">1. 创建并配置应用</div>
+                <div class="flow-desc">
+                    进入「开发者应用管理」创建应用，选择授权方式与申请权限（创建后不可修改），随后配置回调地址并等待管理员审核。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">2. 选择接入方式</div>
+                <div class="flow-desc">
+                    自有系统推荐「自有 API 接入」；需要对接 Gitea 等标准客户端时选择「OpenID Connect」。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">3. 实现授权流程</div>
+                <div class="flow-desc">
+                    跳转授权页 → 接收授权码 → 调用用户信息接口。OIDC 额外执行 <code>/oauth/token</code> 换取令牌。
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="flow-title">4. 联调与上线</div>
+                <div class="flow-desc">
+                    建议先在测试环境验证 scope 返回、用户限制与错误处理，再切换生产环境。
+                </div>
+            </div>
+
+            <div class="note-box">
+                <div class="note-title">
+                    <i class="fas fa-question-circle"></i>
+                    需要帮助？
+                </div>
+                <div class="note-content">
+                    如果您在开发过程中遇到任何问题，请通过以下方式联系我们：<br>
+                    - 邮箱：<a href="mailto:{{ project_email }}">{{ project_email }}</a><br>
+                    - 技术支持群：QQ {{ project_qq_group }}（SNYQT-ACCOUNT交流群）<br>
+                    - 官方网站：<a href="https://{{ project_website }}" target="_blank">{{ project_website }}</a><br>
+                    <br>
+                    当前系统版本：v{{ project_version }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 {{ project_name }} | 以科技化的方式，无限进步！</p>
+        <p style="margin-top: 10px; font-size: 13px;">
+            联系我们：<a href="mailto:{{ project_email }}" style="color: var(--danger-color);">{{ project_email }}</a> | 
+            QQ群：{{ project_qq_group }} | 
+            <a href="https://{{ project_website }}" target="_blank" style="color: var(--danger-color);">{{ project_website }}</a>
+        </p>
+    </footer>
+
+    <script>
+        function showTab(tabId, btn) {
+            const parent = btn.closest('.tab-container');
+            parent.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            parent.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = '已复制';
+                btn.style.background = 'rgba(40, 167, 69, 0.3)';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('开发者文档页面加载完成');
+            checkUserLoginStatus();
+            setupAvatarDropdown();
+        });
+
+        function checkUserLoginStatus() {
+            const userInfo = localStorage.getItem('userInfo');
+            const loginBtn = document.getElementById('login-btn');
+            const userProfile = document.getElementById('user-profile');
+
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    document.getElementById('dropdown-username').textContent = user.username || '用户';
+                    document.getElementById('dropdown-userid').textContent = `ID: ${user.id || 'N/A'}`;
+
+                    if (user.avatar) {
+                        document.getElementById('user-avatar').src = user.avatar;
+                    } else {
+                        document.getElementById('user-avatar').src = '/static/img/default_avatar.svg';
+                    }
+
+                    loginBtn.style.display = 'none';
+                    userProfile.style.display = 'inline-block';
+                } catch (e) {
+                    console.error('解析用户信息失败:', e);
+                    loginBtn.style.display = 'inline-block';
+                    userProfile.style.display = 'none';
+                }
+            } else {
+                loginBtn.style.display = 'inline-block';
+                userProfile.style.display = 'none';
+            }
+        }
+
+        function setupAvatarDropdown() {
+            const avatarContainer = document.querySelector('.avatar-container');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (avatarContainer) {
+                avatarContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('active');
+                });
+            }
+
+            document.addEventListener('click', function(event) {
+                const userProfile = document.getElementById('user-profile');
+                if (userProfile && !userProfile.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('userInfo');
+                    dropdownMenu.classList.remove('active');
+                    checkUserLoginStatus();
+                });
+            }
+        }
+    </script>
+    <script src="/static/js/theme-toggle.js"></script>
+</body>
+</html>

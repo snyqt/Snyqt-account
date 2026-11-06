@@ -1,0 +1,112 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+.trae/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg、
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask specific
+instance/
+.webassets-cache
+*.log
+
+# Environment variables（真实配置一律不入库，统一由环境变量 / Gitea Secrets 注入）
+.env
+.env.*
+*.local
+
+# 证书与密钥文件
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets/
+
+# 私有部署仓库：config.py 与 Dockerfile 需随仓库一起用于部署，故不忽略
+config.pyc
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+*.tar
+*.out
+
+# 依赖与运行产物
+node_modules/
+logs/
+
+# Database files (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Pytest
+.pytest_cache/
+
+#img（static/img 下的站点资源需要随仓库部署，需单独放行）
+img/
+!static/img/

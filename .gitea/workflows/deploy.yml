@@ -1,0 +1,102 @@
+name: Build and Deploy (39731)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 固定不变：镜像名 / 容器名 / 宿主机端口 / 数据目录
+env:
+  APP: snyqt-account
+  CONTAINER: snyqt-account-1
+  HOST_PORT: "39731"
+  CONTAINER_PORT: "5000"
+  DATA_DIR: /volume1/docker/snyqt-account
+  NETWORK: Snyqt-net
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare directories and network
+        run: |
+          set -e
+          mkdir -p "$DATA_DIR/app_logs" \
+                   "$DATA_DIR/app_static_temp" \
+                   "$DATA_DIR/app_static_img_user_avatar"
+          docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK"
+          echo "数据目录固定为: $DATA_DIR"
+          ls -ld "$DATA_DIR"/app_logs "$DATA_DIR"/app_static_temp "$DATA_DIR"/app_static_img_user_avatar
+
+      - name: Build image
+        run: |
+          set -e
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          echo "SHORT=$SHORT" >> "$GITHUB_ENV"
+          docker build -t "$APP:$SHORT" -t "$APP:latest" .
+          echo "已构建镜像: $APP:$SHORT"
+
+      - name: Replace container
+        run: |
+          set -e
+          # 敏感配置来自 Gitea → Settings → Actions → Secrets（日志自动掩码）
+          # 非敏感配置来自 Gitea → Settings → Actions → Variables（未配置时用默认值兜底）
+          docker rm -f "$CONTAINER" || true
+          docker run -d \
+            --name "$CONTAINER" \
+            --restart unless-stopped \
+            --network "$NETWORK" \
+            -p "$HOST_PORT:$CONTAINER_PORT" \
+            -v "$DATA_DIR/app_logs:/app/logs" \
+            -v "$DATA_DIR/app_static_temp:/app/static/temp" \
+            -v "$DATA_DIR/app_static_img_user_avatar:/app/static/img/user_avatar" \
+            -e "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
+            -e "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            -e "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" \
+            -e "ALIYUN_ACCESS_KEY_ID=${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
+            -e "ALIYUN_ACCESS_KEY_SECRET=${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" \
+            -e "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }}" \
+            -e "DB_HOST=${{ vars.DB_HOST || '192.168.10.10' }}" \
+            -e "DB_PORT=${{ vars.DB_PORT || '3306' }}" \
+            -e "DB_USER=${{ vars.DB_USER || 'snyqt-study' }}" \
+            -e "DB_NAME=${{ vars.DB_NAME || 'Snyqt-account' }}" \
+            -e "SMTP_SERVER=${{ vars.SMTP_SERVER || 'smtp.exmail.qq.com' }}" \
+            -e "SMTP_PORT=${{ vars.SMTP_PORT || '465' }}" \
+            -e "SMTP_SENDER=${{ vars.SMTP_SENDER || 'snyqt-noreply@snyqt.top' }}" \
+            -e "ALIYUN_SIGN_NAME=${{ vars.ALIYUN_SIGN_NAME || '速通互联验证码' }}" \
+            -e "ALIYUN_TEMPLATE_CODE=${{ vars.ALIYUN_TEMPLATE_CODE || '100001' }}" \
+            -e "TURNSTILE_ENABLED=${{ vars.TURNSTILE_ENABLED || 'true' }}" \
+            -e "TURNSTILE_SITEKEY=${{ vars.TURNSTILE_SITEKEY || '0x4AAAAAACyxdKEqrmJV4bJn' }}" \
+            -e "FORCE_MFA=${{ vars.FORCE_MFA || 'true' }}" \
+            -e "VERIFICATION_CODE_EXPIRE=${{ vars.VERIFICATION_CODE_EXPIRE || '300' }}" \
+            -e "WEBAUTHN_RP_ID=${{ vars.WEBAUTHN_RP_ID || 'account.snyqt.top' }}" \
+            -e "WEBAUTHN_ORIGIN=${{ vars.WEBAUTHN_ORIGIN || 'https://account.snyqt.top' }}" \
+            -e "OIDC_ISSUER=${{ vars.OIDC_ISSUER || 'https://account.snyqt.top' }}" \
+            "$APP:$SHORT"
+
+      - name: Verify
+        run: |
+          set -e
+          STATUS="unknown"
+          for i in $(seq 1 24); do
+            STATUS=$(docker inspect --format '{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || echo "unknown")
+            echo "第 $i 次检查 -> health=$STATUS"
+            [ "$STATUS" = "healthy" ] && break
+            sleep 5
+          done
+
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 5 "http://127.0.0.1:$HOST_PORT/" || true)
+          echo "http://127.0.0.1:$HOST_PORT/ 返回 HTTP $CODE"
+
+          if [ "$STATUS" != "healthy" ] || [ "$CODE" = "000" ]; then
+            docker logs --tail 80 "$CONTAINER"
+            exit 1
+          fi
+          echo "部署成功: $CONTAINER，端口 $HOST_PORT -> $CONTAINER_PORT"
+
+      - name: Cleanup old images
+        if: always()
+        run: docker image prune -f --filter "until=168h" >/dev/null 2>&1 || true
