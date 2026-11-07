@@ -21,7 +21,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout (Gitea 内置令牌，不依赖外部 action)
+      - name: Checkout
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
