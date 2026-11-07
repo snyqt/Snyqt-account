@@ -96,8 +96,9 @@ thead th { border-bottom: 2px solid var(--table-border); color: var(--text-color
     background: #FFFFFF;
 }
 
-a { color: #D4693B; transition: color 0.2s ease; }
-a:hover { color: #E8784A; }
+/* 正文链接配色：排除所有按钮类控件（class 含 btn），避免覆盖其白色文字（尤其深色模式） */
+a:not([class*="btn"]) { color: #D4693B; transition: color 0.2s ease; }
+a:not([class*="btn"]):hover { color: #E8784A; }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #EDE9E3; }
@@ -199,8 +200,8 @@ a:hover { color: #E8784A; }
     background: #252545;
 }
 
-[data-theme="dark"] a { color: #F4A261; }
-[data-theme="dark"] a:hover { color: #E8784A; }
+[data-theme="dark"] a:not([class*="btn"]) { color: #F4A261; }
+[data-theme="dark"] a:not([class*="btn"]):hover { color: #E8784A; }
 [data-theme="dark"] ::-webkit-scrollbar-track { background: #0F0F23; }
 [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #3A3A5E; border-radius: 3px; }
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #505080; }
