@@ -487,7 +487,7 @@ docker-compose up -d
 
 ### 部署流程
 
-1. **checkout**：拉取最新代码；
+1. **checkout**：用 Gitea 内置 `GITEA_TOKEN` 直接 `git fetch` 当前仓库，不调用任何外部 action，不访问 GitHub；
 2. **准备目录与网络**：创建数据子目录，确保 Docker 网络 `Snyqt-net` 存在；
 3. **docker build**：构建 `snyqt-account:<commit前7位>` 与 `snyqt-account:latest` 镜像；
 4. **替换容器**：停止并删除旧容器 `snyqt-account-1`，用新镜像启动同名容器；
