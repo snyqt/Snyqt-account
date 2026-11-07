@@ -252,8 +252,11 @@ Snyqt-account/
 | `WEBAUTHN_ORIGIN` | 否 | 否 | WebAuthn 允许的源（完整协议 + 域名） | `https://account.snyqt.top` |
 | `ENVIRONMENT_MODE` | 否 | 否 | 运行环境模式，取值 `auto` / `development` / `production` | `auto` |
 | `OIDC_ISSUER` | 否 | 否 | OIDC 签发者标识；未配置时按请求头推导（部署工作流默认注入 `https://account.snyqt.top`） | `https://account.snyqt.top`（工作流默认） |
+| `PROJECT_EMAIL` | 否 | 否 | 项目联系邮箱（展示与联系信息使用） | `snyqt@qq.com` |
 
 > 空字符串等同未配置：必填项为空会触发启动校验失败，可选变量为空则回退上表默认值，因此 `-e KEY=` 这类空值不会覆盖已有默认配置。整数型变量（`DB_PORT`、`SMTP_PORT`、`APP_PORT`、`VERIFICATION_CODE_EXPIRE`）若无法解析为整数会直接报错。
+>
+> 自动部署时，非敏感变量可放在 Gitea 的 Secrets 或 Variables 任一处，工作流按 `${{ secrets.X || vars.X || 默认值 }}` 依次取值。
 
 ---
 
@@ -311,6 +314,7 @@ FORCE_MFA=true
 VERIFICATION_CODE_EXPIRE=300
 WEBAUTHN_RP_ID=localhost
 WEBAUTHN_ORIGIN=http://localhost:5000
+PROJECT_EMAIL=snyqt@qq.com
 ```
 
 应用读取的是**进程环境变量**，`.env` 不会自动加载，需要先把它导入当前 shell：
@@ -507,7 +511,7 @@ docker-compose up -d
 | Secrets | `${{ secrets.XXX }}` | 加密存储，日志自动掩码为 `***`，适合密钥、密码、AccessKey |
 | Variables | `${{ vars.XXX }}` | 明文存储，可能原样打印在日志中，适合主机、端口、开关等公开配置 |
 
-分工原则：**会泄密的放 Secrets，不怕看的放 Variables**。
+分工原则：**会泄密的放 Secrets，不怕看的放 Variables**。非敏感项放在 Secrets 或 Variables 任一处均可，工作流按 `${{ secrets.X || vars.X || 默认值 }}` 的顺序取值；因此只配置在 Secrets 里也能正常生效。
 
 ### 本项目需要配置的 Secrets
 
@@ -520,7 +524,7 @@ docker-compose up -d
 | `ALIYUN_ACCESS_KEY_SECRET` | 阿里云短信 AccessKey Secret |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 服务端密钥 |
 
-### 可选 Variables
+### 可选配置（Variables 或 Secrets 均可）
 
 | 变量名 | 工作流内默认值 |
 | --- | --- |
@@ -540,8 +544,9 @@ docker-compose up -d
 | `WEBAUTHN_RP_ID` | `account.snyqt.top` |
 | `WEBAUTHN_ORIGIN` | `https://account.snyqt.top` |
 | `OIDC_ISSUER` | `https://account.snyqt.top` |
+| `PROJECT_EMAIL` | `snyqt@qq.com` |
 
-上述 Variables 未配置时，工作流自动使用表中默认值，不影响部署。
+上述变量未配置时，工作流自动使用表中默认值，不影响部署。
 
 ### 部署产物
 

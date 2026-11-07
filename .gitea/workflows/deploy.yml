@@ -43,7 +43,7 @@ jobs:
         run: |
           set -e
           # 敏感配置来自 Gitea → Settings → Actions → Secrets（日志自动掩码）
-          # 非敏感配置来自 Gitea → Settings → Actions → Variables（未配置时用默认值兜底）
+          # 非敏感配置优先取 Secrets，其次取 Variables，最后回退默认值
           docker rm -f "$CONTAINER" || true
           docker run -d \
             --name "$CONTAINER" \
@@ -59,22 +59,23 @@ jobs:
             -e "ALIYUN_ACCESS_KEY_ID=${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
             -e "ALIYUN_ACCESS_KEY_SECRET=${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" \
             -e "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }}" \
-            -e "DB_HOST=${{ vars.DB_HOST || '192.168.10.10' }}" \
-            -e "DB_PORT=${{ vars.DB_PORT || '3306' }}" \
-            -e "DB_USER=${{ vars.DB_USER || 'snyqt-study' }}" \
-            -e "DB_NAME=${{ vars.DB_NAME || 'Snyqt-account' }}" \
-            -e "SMTP_SERVER=${{ vars.SMTP_SERVER || 'smtp.exmail.qq.com' }}" \
-            -e "SMTP_PORT=${{ vars.SMTP_PORT || '465' }}" \
-            -e "SMTP_SENDER=${{ vars.SMTP_SENDER || 'snyqt-noreply@snyqt.top' }}" \
-            -e "ALIYUN_SIGN_NAME=${{ vars.ALIYUN_SIGN_NAME || '速通互联验证码' }}" \
-            -e "ALIYUN_TEMPLATE_CODE=${{ vars.ALIYUN_TEMPLATE_CODE || '100001' }}" \
-            -e "TURNSTILE_ENABLED=${{ vars.TURNSTILE_ENABLED || 'true' }}" \
-            -e "TURNSTILE_SITEKEY=${{ vars.TURNSTILE_SITEKEY || '0x4AAAAAACyxdKEqrmJV4bJn' }}" \
-            -e "FORCE_MFA=${{ vars.FORCE_MFA || 'true' }}" \
-            -e "VERIFICATION_CODE_EXPIRE=${{ vars.VERIFICATION_CODE_EXPIRE || '300' }}" \
-            -e "WEBAUTHN_RP_ID=${{ vars.WEBAUTHN_RP_ID || 'account.snyqt.top' }}" \
-            -e "WEBAUTHN_ORIGIN=${{ vars.WEBAUTHN_ORIGIN || 'https://account.snyqt.top' }}" \
-            -e "OIDC_ISSUER=${{ vars.OIDC_ISSUER || 'https://account.snyqt.top' }}" \
+            -e "DB_HOST=${{ secrets.DB_HOST || vars.DB_HOST || '192.168.10.10' }}" \
+            -e "DB_PORT=${{ secrets.DB_PORT || vars.DB_PORT || '3306' }}" \
+            -e "DB_USER=${{ secrets.DB_USER || vars.DB_USER || 'snyqt-study' }}" \
+            -e "DB_NAME=${{ secrets.DB_NAME || vars.DB_NAME || 'Snyqt-account' }}" \
+            -e "SMTP_SERVER=${{ secrets.SMTP_SERVER || vars.SMTP_SERVER || 'smtp.exmail.qq.com' }}" \
+            -e "SMTP_PORT=${{ secrets.SMTP_PORT || vars.SMTP_PORT || '465' }}" \
+            -e "SMTP_SENDER=${{ secrets.SMTP_SENDER || vars.SMTP_SENDER || 'snyqt-noreply@snyqt.top' }}" \
+            -e "ALIYUN_SIGN_NAME=${{ secrets.ALIYUN_SIGN_NAME || vars.ALIYUN_SIGN_NAME || '速通互联验证码' }}" \
+            -e "ALIYUN_TEMPLATE_CODE=${{ secrets.ALIYUN_TEMPLATE_CODE || vars.ALIYUN_TEMPLATE_CODE || '100001' }}" \
+            -e "TURNSTILE_ENABLED=${{ secrets.TURNSTILE_ENABLED || vars.TURNSTILE_ENABLED || 'true' }}" \
+            -e "TURNSTILE_SITEKEY=${{ secrets.TURNSTILE_SITEKEY || vars.TURNSTILE_SITEKEY || '0x4AAAAAACyxdKEqrmJV4bJn' }}" \
+            -e "FORCE_MFA=${{ secrets.FORCE_MFA || vars.FORCE_MFA || 'true' }}" \
+            -e "VERIFICATION_CODE_EXPIRE=${{ secrets.VERIFICATION_CODE_EXPIRE || vars.VERIFICATION_CODE_EXPIRE || '300' }}" \
+            -e "WEBAUTHN_RP_ID=${{ secrets.WEBAUTHN_RP_ID || vars.WEBAUTHN_RP_ID || 'account.snyqt.top' }}" \
+            -e "WEBAUTHN_ORIGIN=${{ secrets.WEBAUTHN_ORIGIN || vars.WEBAUTHN_ORIGIN || 'https://account.snyqt.top' }}" \
+            -e "OIDC_ISSUER=${{ secrets.OIDC_ISSUER || vars.OIDC_ISSUER || 'https://account.snyqt.top' }}" \
+            -e "PROJECT_EMAIL=${{ secrets.PROJECT_EMAIL || vars.PROJECT_EMAIL || 'snyqt@qq.com' }}" \
             "$APP:$SHORT"
 
       - name: Verify
