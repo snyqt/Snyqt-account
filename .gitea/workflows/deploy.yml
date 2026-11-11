@@ -87,7 +87,7 @@ jobs:
             -e "SMTP_SENDER=${{ secrets.SMTP_SENDER || vars.SMTP_SENDER || 'snyqt-noreply@snyqt.top' }}" \
             -e "ALIYUN_SIGN_NAME=${{ secrets.ALIYUN_SIGN_NAME || vars.ALIYUN_SIGN_NAME || '速通互联验证码' }}" \
             -e "ALIYUN_TEMPLATE_CODE=${{ secrets.ALIYUN_TEMPLATE_CODE || vars.ALIYUN_TEMPLATE_CODE || '100001' }}" \
-            -e "TURNSTILE_ENABLED=${{ secrets.TURNSTILE_ENABLED || vars.TURNSTILE_ENABLED || 'true' }}" \
+            -e "TURNSTILE_ENABLED=${{ secrets.TURNSTILE_ENABLED || vars.TURNSTILE_ENABLED || 'false' }}" \
             -e "TURNSTILE_SITEKEY=${{ secrets.TURNSTILE_SITEKEY || vars.TURNSTILE_SITEKEY || '0x4AAAAAACyxdKEqrmJV4bJn' }}" \
             -e "FORCE_MFA=${{ secrets.FORCE_MFA || vars.FORCE_MFA || 'true' }}" \
             -e "VERIFICATION_CODE_EXPIRE=${{ secrets.VERIFICATION_CODE_EXPIRE || vars.VERIFICATION_CODE_EXPIRE || '300' }}" \

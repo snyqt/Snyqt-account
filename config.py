@@ -111,7 +111,7 @@ ALIYUN_SMS_CONFIG = {
 }
 
 # ==================== Cloudflare Turnstile 配置 ====================
-TURNSTILE_ENABLED = _get_optional('TURNSTILE_ENABLED', 'true')
+TURNSTILE_ENABLED = _get_optional('TURNSTILE_ENABLED', 'false')
 
 TURNSTILE_CONFIG = {
     'secret_key': _get_required('TURNSTILE_SECRET_KEY'),

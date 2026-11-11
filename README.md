@@ -241,7 +241,7 @@ Snyqt-account/
 | `SMTP_PORT` | 否 | 否 | SMTP 端口（必须为整数） | `465` |
 | `ALIYUN_SIGN_NAME` | 否 | 否 | 阿里云短信签名 | `速通互联验证码` |
 | `ALIYUN_TEMPLATE_CODE` | 否 | 否 | 阿里云短信模板 CODE | `100001` |
-| `TURNSTILE_ENABLED` | 否 | 否 | 是否启用全局 Turnstile 验证，取值为 `true` / `false` | `true` |
+| `TURNSTILE_ENABLED` | 否 | 否 | 是否启用全局 Turnstile 验证，取值为 `true` / `false` | `false` |
 | `TURNSTILE_SITEKEY` | 否 | 否 | Turnstile 站点密钥（前端可见） | `0x4AAAAAACyxdKEqrmJV4bJn` |
 | `TURNSTILE_VERIFY_URL` | 否 | 否 | Turnstile 服务端校验接口 | `https://challenges.cloudflare.com/turnstile/v0/siteverify` |
 | `APP_PORT` | 否 | 否 | 应用监听端口（必须为整数） | `5000` |
@@ -537,7 +537,7 @@ docker-compose up -d
 | `SMTP_SENDER` | `snyqt-noreply@snyqt.top` |
 | `ALIYUN_SIGN_NAME` | `速通互联验证码` |
 | `ALIYUN_TEMPLATE_CODE` | `100001` |
-| `TURNSTILE_ENABLED` | `true` |
+| `TURNSTILE_ENABLED` | `false` |
 | `TURNSTILE_SITEKEY` | `0x4AAAAAACyxdKEqrmJV4bJn` |
 | `FORCE_MFA` | `true` |
 | `VERIFICATION_CODE_EXPIRE` | `300` |
